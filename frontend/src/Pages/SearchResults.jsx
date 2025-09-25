@@ -26,7 +26,7 @@ const SearchResults = () => {
       <div className="searchresults-banner">
         <h2>
           {query
-            ? `Kết quả tìm kiếm cho: "${query}"`
+            ? `Result for: "${query}"`
             : "Vui lòng nhập từ khóa tìm kiếm"}
         </h2>
       </div>
@@ -34,12 +34,12 @@ const SearchResults = () => {
       {query && filteredProducts.length > 0 && (
         <div className="searchresults-indexSort">
           <p>
-            <span>{filteredProducts.length}</span> sản phẩm
+            <span>{filteredProducts.length}</span> Item
           </p>
           <select className="searchresults-sort">
-            <option value="default">Sắp xếp</option>
-            <option value="price-asc">Giá tăng dần</option>
-            <option value="price-desc">Giá giảm dần</option>
+            <option value="default">Sort</option>
+            <option value="price-asc">Increase</option>
+            <option value="price-desc">Decrease</option>
           </select>
         </div>
       )}
@@ -67,7 +67,7 @@ const SearchResults = () => {
         </div>
       ) : query ? (
         <p style={{ margin: "20px 170px" }}>
-          Không tìm thấy sản phẩm cho "{query}".
+          Not Found :/ "{query}".
         </p>
       ) : null}
 
