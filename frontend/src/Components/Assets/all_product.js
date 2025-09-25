@@ -58,7 +58,7 @@ let all_product = [
     category: ["Products", "Vegetables"],
     image: p3_img,
     new_price: 60.0,
-    old_price: 100.5,
+    // old_price: 100.5,
   },
   {
     id: 4,
@@ -66,7 +66,7 @@ let all_product = [
     category: ["Products", "Vegetables"],
     image: p4_img,
     new_price: 100.0,
-    old_price: 150.0,
+    // old_price: 150.0,
   },
   {
     id: 5,
