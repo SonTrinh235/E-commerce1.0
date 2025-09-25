@@ -3,7 +3,10 @@
   margin: 30px auto;
   width: 82%;
 }
-
+.searchresults-products .item {
+  text-decoration: none;
+  color: inherit;
+}
 .searchresults-indexSort {
   display: flex;
   margin: 0px 170px;

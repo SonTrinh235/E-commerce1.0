@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { ShopContext } from "../Context/ShopContext";
 import "./CSS/SearchResults.css";
 
@@ -7,15 +7,15 @@ const SearchResults = () => {
   const { all_product = [] } = useContext(ShopContext) || {};
   const location = useLocation();
 
+  // Lấy query từ URL
   const queryParams = new URLSearchParams(location.search);
   const query = queryParams.get("query")?.trim().toLowerCase() || "";
 
+  // Lọc sản phẩm theo tên hoặc category
   const filteredProducts = all_product.filter((product) => {
     const nameMatch = product.name.toLowerCase().includes(query);
     const categoryMatch = Array.isArray(product.category)
-      ? product.category.some((cat) =>
-          cat.toLowerCase().includes(query)
-        )
+      ? product.category.some((cat) => cat.toLowerCase().includes(query))
       : product.category?.toLowerCase().includes(query);
 
     return nameMatch || categoryMatch;
@@ -23,6 +23,7 @@ const SearchResults = () => {
 
   return (
     <div className="searchresults">
+      {/* Banner */}
       <div className="searchresults-banner">
         <h2>
           {query
@@ -31,6 +32,7 @@ const SearchResults = () => {
         </h2>
       </div>
 
+      {/* Sort & Count */}
       {query && filteredProducts.length > 0 && (
         <div className="searchresults-indexSort">
           <p>
@@ -44,10 +46,15 @@ const SearchResults = () => {
         </div>
       )}
 
+      {/* Products */}
       {query && filteredProducts.length > 0 ? (
         <div className="searchresults-products">
           {filteredProducts.map((product) => (
-            <div key={product.id} className="item">
+            <Link
+              key={product.id}
+              to={`/product/${product.id}`} // Link đến chi tiết
+              className="item"
+            >
               <img src={product.image} alt={product.name} />
               <h3>{product.name}</h3>
               <p className="category">
@@ -56,13 +63,16 @@ const SearchResults = () => {
                   : product.category}
               </p>
               <div className="item-prices">
-                <span className="item-price-new">${product.new_price.toFixed(2)}</span>
+                <span className="item-price-new">
+                  ${product.new_price.toFixed(2)}
+                </span>
                 {product.old_price && product.old_price > product.new_price && (
-                 <span className="item-price-old">${product.old_price.toFixed(2)}</span>
+                  <span className="item-price-old">
+                    ${product.old_price.toFixed(2)}
+                  </span>
                 )}
               </div>
-
-            </div>
+            </Link>
           ))}
         </div>
       ) : query ? (
@@ -71,6 +81,7 @@ const SearchResults = () => {
         </p>
       ) : null}
 
+      {/* Load More */}
       {query && filteredProducts.length > 0 && (
         <div className="searchresults-loadmore">Xem thêm</div>
       )}
