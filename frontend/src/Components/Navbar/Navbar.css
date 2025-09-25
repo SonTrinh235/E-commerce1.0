@@ -86,6 +86,39 @@
     color: white;
 }
 
+.nav-search {
+    display: flex;
+    align-items: center;
+    margin: 0 20px;
+    flex: 1;
+    max-width: 350px;
+  }
+  
+  .nav-search input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 20px 0 0 20px;
+    font-size: 16px;
+    outline: none;
+  }
+  
+  .nav-search button {
+    padding: 8px 14px;
+    border: 1px solid #ccc;
+    border-left: none;
+    background: #fde1ff;
+    color: white;
+    font-size: 16px;
+    border-radius: 0 20px 20px 0;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  
+  .nav-search button:hover {
+    background: #aa74e0;
+  }
+
 @media(max-width : 1280px){
     .navbar{
         padding: 12px 50px;
@@ -135,6 +168,9 @@
     .nav-cart-count{
         width: 18px;
         height: 18px;
+    }
+    .nav-search {
+        max-width: 250px;
     }
 }
 

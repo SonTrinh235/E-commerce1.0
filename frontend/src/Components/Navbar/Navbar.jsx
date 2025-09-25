@@ -22,7 +22,7 @@ const Navbar = () => {
     e.currentTarget.classList.toggle('open');
   };
 
-  // Đồng bộ trạng thái "menu" theo URL hiện tại
+  
   useEffect(() => {
     const path = location.pathname.toLowerCase();
     if (path === '/' || path.startsWith('/product')) setMenu('shop');
@@ -80,7 +80,6 @@ const Navbar = () => {
         </li>
       </ul>
 
-      {/* Thanh tìm kiếm */}
       <form className="nav-search" onSubmit={handleSearch}>
         <input
           type="text"
