@@ -7,7 +7,7 @@ import exclusive_image from '../Assets/exclusive_image.png'
 const Offers = () => {
     const navigate = useNavigate();
     const handleClick = () => {
-        navigate("/all-products");
+        navigate("/exclusive-offers");
     };
   return (
     <div className ='offers'>

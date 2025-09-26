@@ -7,14 +7,12 @@ const ShopCategory = (props) => {
   const { all_product = [] } = useContext(ShopContext) || {};
   const [sortOption, setSortOption] = useState("default");
 
-  // Lọc sản phẩm theo category
   const filteredProducts = useMemo(() => {
     return all_product.filter((item) =>
       item.category.includes(props.category)
     );
   }, [all_product, props.category]);
 
-  // Sắp xếp sản phẩm
   const sortedProducts = useMemo(() => {
     let sorted = [...filteredProducts];
     if (sortOption === "price-asc") {
@@ -27,10 +25,8 @@ const ShopCategory = (props) => {
 
   return (
     <div className="shop-category">
-      {/* Banner */}
       <img className="shopcategory-banner" src={props.banner} alt="" />
 
-      {/* Sort & Count */}
       <div className="shopcategory-indexSort">
         <p>
           <span>Showing {sortedProducts.length}</span> results
@@ -46,7 +42,6 @@ const ShopCategory = (props) => {
         </select>
       </div>
 
-      {/* Products */}
       <div className="shopcategory-products">
         {sortedProducts.map((item, i) => (
           <Item
@@ -60,7 +55,6 @@ const ShopCategory = (props) => {
         ))}
       </div>
 
-      {/* Load More */}
       <div className="shopcategory-loadmore">Explore More</div>
     </div>
   );

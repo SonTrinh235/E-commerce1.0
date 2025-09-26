@@ -9,6 +9,7 @@ import Cart from './Pages/Cart';
 import LoginSignup from './Pages/LoginSignup';
 import Footer from './Components/Footer/Footer';
 import SearchResults from './Pages/SearchResults';
+import ExclusiveOffers from "./Pages/ExclusiveOffers";
 
 import meat_banner from './Components/Assets/banner_meats.png';
 import veg_banner from './Components/Assets/banner_vegs.png';
@@ -45,7 +46,7 @@ function App() {
 
           <Route path="/cart" element={<Cart />} />
           <Route path="/login" element={<LoginSignup />} />
-
+          <Route path="/exclusive-offers" element={<ExclusiveOffers />} />
           <Route path='/search' element={<SearchResults />} />
         </Routes>
         <Footer />
