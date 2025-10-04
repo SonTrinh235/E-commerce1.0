@@ -115,3 +115,25 @@
 .cartitems-promobox button:hover{
     background: #333;
 }
+
+.cartitems-quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .cartitems-quantity-control button {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: #ddd;
+    cursor: pointer;
+    font-size: 18px;
+    border-radius: 4px;
+  }
+  
+  .cartitems-quantity-control span {
+    min-width: 20px;
+    text-align: center;
+  }
+  

@@ -10,6 +10,7 @@ import LoginSignup from './Pages/LoginSignup';
 import Footer from './Components/Footer/Footer';
 import SearchResults from './Pages/SearchResults';
 import ExclusiveOffers from "./Pages/ExclusiveOffers";
+import Checkout from "./Components/Checkout/Checkout";
 
 import meat_banner from './Components/Assets/banner_meats.png';
 import veg_banner from './Components/Assets/banner_vegs.png';
@@ -40,14 +41,12 @@ function App() {
             element={<ShopCategory banner={all_banner} category="Products" />}
           />
 
-          <Route path="/product" element={<Product />}>
-            <Route path=":productId" element={<Product />} />
-          </Route>
-
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/product/:productId" element={<Product />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/login" element={<LoginSignup />} />
           <Route path="/exclusive-offers" element={<ExclusiveOffers />} />
-          <Route path='/search' element={<SearchResults />} />
+          <Route path="/search" element={<SearchResults />} />
         </Routes>
         <Footer />
       </BrowserRouter>
