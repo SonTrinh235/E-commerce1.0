@@ -12,10 +12,9 @@ const CartItems = () => {
     cartItems,
     addToCart,
     removeFromCart,
-    setCartItems, // cần lấy setCartItems từ context để xóa hẳn
+    setCartItems,
   } = useContext(ShopContext)
 
-  // Hàm xóa hẳn 1 sản phẩm
   const clearItem = (itemId) => {
     setCartItems((prev) => ({ ...prev, [itemId]: 0 }))
   }
@@ -45,7 +44,6 @@ const CartItems = () => {
                 <p>{e.name}</p>
                 <p>${e.new_price}</p>
 
-                {/* Quantity control */}
                 <div className="cartitems-quantity-control">
                   <button onClick={() => removeFromCart(e.id)}>-</button>
                   <span>{cartItems[e.id]}</span>
@@ -54,7 +52,6 @@ const CartItems = () => {
 
                 <p>${e.new_price * cartItems[e.id]}</p>
 
-                {/* Xóa hẳn sản phẩm */}
                 <img
                   src={remove_icon}
                   onClick={() => clearItem(e.id)}
