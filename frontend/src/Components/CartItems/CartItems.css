@@ -137,3 +137,54 @@
     text-align: center;
   }
   
+
+  .applied-promo {
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #f8f8f8;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .applied-promo button {
+    background: #ff5a5a;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .promo-error {
+    color: #ff5a5a;
+    margin-top: 5px;
+    font-size: 14px;
+  }
+  
+  .available-promos {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f8f8f8;
+    border-radius: 5px;
+  }
+  
+  .available-promos ul {
+    list-style-type: none;
+    padding-left: 10px;
+    margin-top: 5px;
+  }
+  
+  .available-promos li {
+    margin: 5px 0;
+    font-size: 14px;
+  }
+  .free-shipping-badge {
+    font-size: 12px;
+    color: green;
+    background-color: #e6f7e6;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 8px;
+  }
