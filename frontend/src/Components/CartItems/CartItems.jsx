@@ -75,52 +75,53 @@ const CartItems = () => {
 
   return (
     <div className="cartitems">
-      <div className="cartitems-format-main">
-        <p>Products</p>
-        <p>Title</p>
-        <p>Price</p>
-        <p>Quantity</p>
-        <p>Total</p>
-        <p>Remove</p>
-      </div>
-      <hr />
+      <div className="cartitems-cart">
+        <div className="cartitems-format-main">
+          <p>Products</p>
+          <p>Title</p>
+          <p>Price</p>
+          <p>Quantity</p>
+          <p>Total</p>
+          <p>Remove</p>
+        </div>
+        <hr />
 
-      {all_product.map((e) => {
-        if (cartItems[e.id] > 0) {
-          return (
-            <div key={e.id}>
-              <div className="cartitems-format cartitems-format-main">
-                <img
-                  src={e.image}
-                  alt={e.name}
-                  className="carticon-product-icon"
-                />
-                <p>{e.name}</p>
-                <p>${e.new_price}</p>
+        {all_product.map((e) => {
+          if (cartItems[e.id] > 0) {
+            return (
+              <div key={e.id}>
+                <div className="cartitems-format cartitems-format-main">
+                  <img
+                    src={e.image}
+                    alt={e.name}
+                    className="carticon-product-icon"
+                  />
+                  <p>{e.name}</p>
+                  <p>${e.new_price}</p>
 
-                <div className="cartitems-quantity-control">
-                  <button onClick={() => removeFromCart(e.id)}>-</button>
-                  <span>{cartItems[e.id]}</span>
-                  <button onClick={() => addToCart(e.id)}>+</button>
+                  <div className="cartitems-quantity-control">
+                    <button onClick={() => removeFromCart(e.id)}>-</button>
+                    <span>{cartItems[e.id]}</span>
+                    <button onClick={() => addToCart(e.id)}>+</button>
+                  </div>
+
+                  <p>${e.new_price * cartItems[e.id]}</p>
+
+                  <img
+                    src={remove_icon}
+                    onClick={() => clearItem(e.id)}
+                    alt="remove"
+                    className="cartitems-remove-icon"
+                  />
                 </div>
-
-                <p>${e.new_price * cartItems[e.id]}</p>
-
-                <img
-                  src={remove_icon}
-                  onClick={() => clearItem(e.id)}
-                  alt="remove"
-                  className="cartitems-remove-icon"
-                />
+                <hr />
               </div>
-              <hr />
-            </div>
-          )
-        }
-        return null
-      })}
-
-      <div className="cartitems-down">
+            )
+          }
+          return null
+        })}
+      </div>
+      <div className="cartitems-checkout">
         <div className="cartitems-total">
           <h1>Totals</h1>
           <div>

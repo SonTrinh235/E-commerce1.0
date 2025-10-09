@@ -7,6 +7,9 @@ import hand_icon from '../Assets/hand_icon.png';
 import arrow_icon from '../Assets/arrow.png';
 import hero_image from '../Assets/hero_image.png';
 
+import { FiArrowRight } from "react-icons/fi";
+
+
 const Hero = () => {
     const navigate = useNavigate();
 
@@ -18,15 +21,13 @@ const Hero = () => {
         <div className='hero'>
             <div className="hero-left">
                 <div>
-                    <div className="hero-hand-icon">
-                        <p>Welcome</p>
-                        <img src={hand_icon} alt="" />
-                    </div>
-                    <p>To Our Store</p>
+                    <h1>GoodEats</h1>
+                    <h1>Eat Clean Today</h1>
+                    <p>The greenest and freshest of produce, only at GoodEats</p>
                 </div>
                 <div className="hero-discovery-btn" onClick={handleDiscoveryClick}>
-                    <div>Discovery Now</div>
-                    <img src={arrow_icon} alt=""/>
+                    <h2>Shop Now</h2>
+                    <FiArrowRight className="hero-icons"></FiArrowRight>
                 </div>
             </div>
             <div className="hero-right">

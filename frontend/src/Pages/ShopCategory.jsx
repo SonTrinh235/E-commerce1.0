@@ -24,24 +24,29 @@ const ShopCategory = (props) => {
   }, [filteredProducts, sortOption]);
 
   return (
-    <div className="shop-category">
-      <img className="shopcategory-banner" src={props.banner} alt="" />
-
-      <div className="shopcategory-indexSort">
-        <p>
-          <span>Showing {sortedProducts.length}</span> results
-        </p>
-        <select
-          className="shopcategory-sort"
-          value={sortOption}
-          onChange={(e) => setSortOption(e.target.value)}
-        >
-          <option value="default">Sort</option>
-          <option value="price-asc">Increase</option>
-          <option value="price-desc">Decrease</option>
-        </select>
+    <div className="shopcategory">
+      <div className="shopcategory-banner">
+        <img src={props.banner} alt="" />
       </div>
 
+      <div className="shopcategory-indexSort">
+        <div className="shopcategory-index">
+          <p>
+            <b>Showing {sortedProducts.length}</b> results
+          </p>
+        </div>
+        <div className="shopcategory-sort">
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            >
+            <option value="default">Sort</option>
+            <option value="price-asc">Increase</option>
+            <option value="price-desc">Decrease</option>
+          </select>
+        </div>
+      </div>
+        {/* <div className="sidebar">optional sidebar</div> */}
       <div className="shopcategory-products">
         {sortedProducts.map((item, i) => (
           <Item
@@ -54,8 +59,8 @@ const ShopCategory = (props) => {
           />
         ))}
       </div>
+      <div className="shopcategory-loadmore">Load more</div>
 
-      <div className="shopcategory-loadmore">Explore More</div>
     </div>
   );
 };
