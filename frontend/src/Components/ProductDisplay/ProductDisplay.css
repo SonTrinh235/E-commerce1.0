@@ -58,7 +58,7 @@
 }
 
 .productdisplay-right-price-new{
-    color: #e31837;
+    color: rgb(121, 178, 52);
 }
 
 .productdisplay-right-size h1{
@@ -93,8 +93,8 @@
     font-size: 16px;
     font-weight: 600;
     color: white;
-    background: red;
-    border: 1px solid red;
+    background: rgb(121, 178, 52);
+    border: none;
     border-radius: 10px;
     margin-bottom: 40px;
     outline: none;

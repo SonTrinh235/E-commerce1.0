@@ -10,7 +10,7 @@ const Shop = () => {
         <div>
             <Hero/>
             <Popular/>
-            <Offers/>
+            {/* <Offers/> */}
             <NewArrivals/>
             <NewsLetter/>
         </div>
