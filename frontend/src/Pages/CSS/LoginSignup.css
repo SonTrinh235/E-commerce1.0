@@ -1,7 +1,6 @@
 .loginsignup {
     width: 100%;
     height: 100vh;
-    background: #fce3fe;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -43,7 +42,7 @@
     width: 100%;
     height: 72px;
     color: black;
-    background: #ecaee2ef;
+    /* background: #ecaee2ef; */
     margin-top: 30px;
     border: none;
     font-size: 24px;
@@ -55,7 +54,7 @@
   }
   
   .loginsignup-container button:hover {
-    background: #d58de0;
+    background: rgb(121, 178, 52);
   }
   
   .loginsignup-login {

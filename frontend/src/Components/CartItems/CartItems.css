@@ -1,11 +1,17 @@
 .cartitems{
     margin: 100px 170px;
+    /* background: white; */
 }
 
 .cartitems hr{
     height: 3px;
     background: #e2e2e2;
     border: 0;
+}
+
+.cartitems-cart {
+  background: white;
+  padding: 10px;
 }
 
 .cartitems-format-main{
@@ -42,7 +48,7 @@
     background: white;
 }
 
-.cartitems-down{
+.cartitems-checkout{
     display: flex;
     margin: 100px 0px;
 }
@@ -91,7 +97,7 @@
     margin-top: 15px;
     padding-left: 20px;
     height: 58px;
-    background: #eaeaea;
+    background: #ffffff;
 }
 
 .cartitems-promobox input{
