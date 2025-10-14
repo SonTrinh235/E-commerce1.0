@@ -1,11 +1,9 @@
-import React from 'react'
 import './Footer.css'
-import footer_logo from "../Assets/logo_big.png"
 import {FaInstagram, FaWhatsapp, FaPinterest} from 'react-icons/fa'
 
 const Footer = () => {
   return (
-    <div className ='footer'>
+    <footer>
         <div className='footer-references'>
             <div className="footer-logo">
                 <b><span>Good</span>Eats</b>
@@ -34,7 +32,7 @@ const Footer = () => {
             <p>Personal project for personal use</p>
             <p>Page is not trademarked by any person any organisation by any means</p>
         </div>
-    </div>
+    </footer>
   )
 }
 

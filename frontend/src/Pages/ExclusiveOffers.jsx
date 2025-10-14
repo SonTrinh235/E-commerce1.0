@@ -2,7 +2,7 @@ import React, { useContext, useState, useMemo } from "react";
 import { ShopContext } from "../Context/ShopContext";
 import Item from "../Components/Item/Item";
 import "./CSS/ExclusiveOffers.css";
-import exclusive_banner from '../Components/Assets/banner_exclusive.png';
+import exclusive_banner from '../assets/banner_exclusive.png';
 
 const ExclusiveOffers = () => {
   const { all_product = [] } = useContext(ShopContext) || {};

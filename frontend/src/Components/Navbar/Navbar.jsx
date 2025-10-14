@@ -4,7 +4,6 @@ import './Navbar.css';
 import {FiMenu, FiSearch, FiHeart, FiShoppingCart, FiUser } from "react-icons/fi";
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShopContext } from '../../Context/ShopContext';
-import nav_dropdown from '../Assets/nav_dropdown.png';
 
 const Navbar = () => {
   const [menu, setMenu] = useState('shop');

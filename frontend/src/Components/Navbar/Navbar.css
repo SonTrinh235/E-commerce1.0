@@ -13,6 +13,7 @@
         #d0d0d0 85%,
         #fafafa 100%
      );
+    box-shadow: 0 10px 8px rgba(0, 0, 0, 0.2);
     position: sticky;
     top: 0;
     z-index: 999;
@@ -67,7 +68,7 @@
     width: 80%;
     height: 3px;
     border-radius: 10px;
-    background: rgb(121, 178, 52);
+    background: hsl(87, 55%, 55%);
 }
 
 .nav-search {
@@ -97,9 +98,16 @@
     border-bottom-left-radius: 0px;
     height: 100%;
     width: 80px;
-    background: rgb(121, 178, 52);
+    background: hsl(87, 55%, 55%);
     color: rgb(232, 232, 232);
     cursor: pointer;
+}
+
+.nav-search button:hover {
+    background: hsl(87, 55%, 45%);
+}
+.nav-search button:active {
+    background: hsl(87, 55%, 35%);
 }
 
 .nav-profile-container{
@@ -139,6 +147,14 @@
     align-items: center;
     justify-content: space-evenly;
     cursor: pointer;
+}
+
+.nav-user button:hover {
+    background: hsl(0, 0%, 70%);
+}
+
+.nav-user button:active {
+    background: hsl(0, 0%, 60%);
 }
 
 @media(max-width: 800px) {
