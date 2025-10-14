@@ -1,6 +1,5 @@
-import React from 'react'
 import './NewArrivals.css'
-import new_arrivals from '../Assets/new_arrivals'
+import new_arrivals from '../../data/new_arrivals'
 import Item from '../Item/Item'
 
 const NewArrivals = () => {
