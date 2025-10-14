@@ -22,7 +22,7 @@ const Item = (props) => {
             )}
           </div>
         </div>
-        <button className="product-buybutton">Buy now</button>
+        {/* <button className="product-buybutton">Buy now</button> */}
       </Link>
     </div>
   );

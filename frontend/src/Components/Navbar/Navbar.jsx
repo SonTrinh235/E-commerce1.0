@@ -1,7 +1,7 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
 import './Navbar.css';
 
-import {FiMenu, FiSearch, FiHeart, FiShoppingCart, FiUser } from "react-icons/fi";
+import {FiMenu, FiSearch, FiShoppingCart, FiUser } from "react-icons/fi";
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShopContext } from '../../Context/ShopContext';
 
