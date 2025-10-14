@@ -1,0 +1,16 @@
+#root {
+  background: rgb(233, 233, 240);
+  font-family: calibri;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  text-decoration: none;
+  color: black;
+}
+
+/* img {
+  width: 10rem;
+  height: 10rem;
+} */
