@@ -78,6 +78,50 @@
     font-size: 18px;
     font-weight: 500;
   }
+
+  /* --- Bổ sung cho phiên bản đăng nhập bằng số điện thoại & OTP --- */
+
+.otp-info {
+  margin-top: 20px;
+  font-size: 16px;
+  color: #555;
+  text-align: center;
+}
+
+.back-btn {
+  margin-top: 15px;
+  width: 100%;
+  height: 48px;
+  border: 1px solid #ccc;
+  background: #f8f8f8;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+  background: #e8e8e8;
+}
+
+.back-btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media(max-width: 800px) {
+  .otp-info {
+    font-size: 14px;
+  }
+
+  .back-btn {
+    height: 45px;
+    font-size: 15px;
+  }
+}
+
   
 @media(max-width: 1280px) {
     .loginsignup-container {

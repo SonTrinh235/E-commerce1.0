@@ -69,7 +69,7 @@ const CartItems = () => {
   const getFinalTotal = () => {
     const subtotal = getTotalCartAmount();
     const discount = calculateDiscount();
-    const shippingFee = getShippingFee();
+    // const shippingFee = getShippingFee();
     return subtotal - discount + SHIPPING_FEE;
   };
 
