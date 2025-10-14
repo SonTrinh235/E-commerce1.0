@@ -12,10 +12,10 @@ import SearchResults from './Pages/SearchResults';
 import ExclusiveOffers from "./Pages/ExclusiveOffers";
 import Checkout from "./Components/Checkout/Checkout";
 
-import meat_banner from './Components/Assets/banner_meats.png';
-import veg_banner from './Components/Assets/banner_vegs.png';
-import others_banner from './Components/Assets/banner_others.png';
-import all_banner from './Components/Assets/banner_all.png';
+import meat_banner from './assets/banner_meats.png';
+import veg_banner from './assets/banner_vegs.png';
+import others_banner from './assets/banner_others.png';
+import all_banner from './assets/banner_all.png';
 
 function App() {
   return (

@@ -1,7 +1,6 @@
-import React from 'react'
 import { useNavigate } from "react-router-dom";
 import './Offers.css'
-import exclusive_image from '../Assets/exclusive_image.png'
+import exclusive_image from '../../assets/exclusive_image.png'
 
 
 const Offers = () => {
