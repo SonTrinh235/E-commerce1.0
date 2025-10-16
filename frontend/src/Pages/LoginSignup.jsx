@@ -3,7 +3,6 @@ import "./CSS/LoginSignup.css";
 import { auth } from "../firebase";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 
-// Giữ recaptchaVerifier toàn cục
 let recaptchaVerifier = null;
 
 const LoginSignup = () => {
