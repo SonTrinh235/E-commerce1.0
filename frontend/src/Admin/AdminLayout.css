@@ -1,5 +1,14 @@
-.adminlayout {
+.AdminLayout-container {
     display: flex;
     flex-direction: row;
+}
+
+.AdminLayout-container main{
+    display: flex;
+    flex-direction: column;
+    margin-left: clamp(200px,15%,300px);
+    flex-grow: 1;
+    background: rgb(240, 240, 240);
+    padding-bottom: 200px;
     min-height: 100vh;
 }
