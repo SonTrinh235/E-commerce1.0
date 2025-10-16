@@ -1,0 +1,47 @@
+.admin-item-id {
+  width: 5rem;
+}
+
+.admin-item-img img {
+  height: 100%;
+}
+
+.admin-item-actions {
+  width: 15rem;
+}
+
+.admin-item-actions #edit,
+.admin-item-actions #delete {
+  /* display: flex; */
+  width: 5rem;
+  height: 2.5rem;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  margin-left: 10px;
+  /* justify-content: center;
+  align-items: center; */
+}
+.admin-item-actions #edit {
+  background: rgb(0, 91, 196);
+}
+.admin-item-actions #edit:hover{
+  background: rgb(0, 80, 172);
+}
+.admin-item-actions #edit:active{
+  background: rgb(0, 67, 145);
+}
+
+.admin-item-actions #delete {
+  background: rgb(210, 0, 0);
+}
+.admin-item-actions #delete:hover{
+  background: rgb(190, 0, 0);
+}
+.admin-item-actions #delete:active{
+  background: rgb(150, 0, 0);
+}
+
+.admin-item-actions * {
+  color: white;
+}
