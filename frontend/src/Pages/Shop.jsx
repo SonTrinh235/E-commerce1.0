@@ -1,6 +1,6 @@
 import React from "react";
 import Popular from "../Components/Popular/Popular";
-import Offers from "../Components/Offers/Offers";
+// import Offers from "../Components/Offers/Offers";
 import NewsLetter from "../Components/NewsLetter/NewsLetter";
 import NewArrivals from "../Components/NewArrivals/NewArrivals";
 
