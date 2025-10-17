@@ -1,14 +1,14 @@
 import "./ManageProducts.css";
 import React, { useContext, useState, useMemo } from "react";
-import { ShopContext } from "../../../Context/ShopContext";
+import all_product from "../../../data/all_product";
+import usePaginatedData from "../../../Context/usePaginatedData";
 import { FiPlusCircle } from "react-icons/fi";
 
 import AdminItem from "../../Components/Card/AdminItem/AdminItem";
 import ProductForm from "../../Components/ProductForm/ProductForm";
 
 function ManageProducts() {
-  const { all_product, products, productPagination, productIsLoading, productHandlePageChange } =
-    useContext(ShopContext);
+  const productData = usePaginatedData(all_product, 10);
 
   // State to control visibility of  ProductForm
   const [isFormVisible, setIsFormVisible] = useState(false);
@@ -79,24 +79,30 @@ function ManageProducts() {
         {/* 2. Use the pagination metadata */}
         <div>
           <button
-            onClick={() => productHandlePageChange(productPagination.page - 1)}
-            disabled={productPagination.page <= 1}
+            onClick={() =>
+              productData.handlePageChange(productData.pagination.page - 1)
+            }
+            disabled={productData.pagination.page <= 1}
           >
             Previous
           </button>
 
           <span>
-            Page {productPagination.page} of {productPagination.totalPages}
+            Page {productData.pagination.page} of{" "}
+            {productData.pagination.totalPages}
           </span>
 
           <button
-            onClick={() => productHandlePageChange(productPagination.page + 1)}
-            disabled={productPagination.page >= productPagination.totalPages}
+            onClick={() =>
+              productData.handlePageChange(productData.pagination.page + 1)
+            }
+            disabled={
+              productData.pagination.page >= productData.pagination.totalPages
+            }
           >
             Next
           </button>
         </div>
-
 
         <header>Danh sách các sản phẩm</header>
         <table id="table">
@@ -113,7 +119,7 @@ function ManageProducts() {
             </tr>
           </thead>
           <tbody>
-            {products.map((item, i) => (
+            {productData.dataList.map((item, i) => (
               <tr key={i}>
                 {/* The Index Bar Cell */}
                 <td className="index-bar-cell">
