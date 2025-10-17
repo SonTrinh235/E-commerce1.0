@@ -14,6 +14,10 @@ const LoginSignup = () => {
   const [adminCode, setAdminCode] = useState("");
   const [adminPass, setAdminPass] = useState("");
 
+  // admin UI states
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [adminError, setAdminError] = useState("");
+
   // --- Setup Recaptcha (chỉ chạy 1 lần) ---
   const setupRecaptcha = () => {
     if (!recaptchaVerifier) {
@@ -50,7 +54,7 @@ const LoginSignup = () => {
         alert("✅ Mã OTP đã được gửi đến số điện thoại của bạn!");
       } catch (error) {
         console.error("❌ Lỗi gửi OTP:", error);
-        alert("Không gửi được OTP: " + error.message);
+        alert("Không gửi được OTP: " + (error.message || error));
       }
     } else if (step === "otp") {
       if (otp.trim().length !== 6) {
@@ -70,61 +74,87 @@ const LoginSignup = () => {
 
         alert(`🎉 Đăng nhập thành công: ${user.phoneNumber}`);
 
-        // --- Gọi API backend ---
+        // --- Gọi API backend để auth user ---
         const payload = {
           phoneNumber: user.phoneNumber,
           idToken,
           displayName: user.displayName || "",
         };
-        // const res = await fetch("https://www.bachkhoaxanh.xyz/user/auth", {
-        //   method: "POST",
-        //   headers: { "Content-Type": "application/json" },
-        //   body: JSON.stringify(payload),
-        // });
 
-
-
-
-        
-        //TEST API JSONPLACEHOLDER 
-        const res = await fetch("https://jsonplaceholder.typicode.com/posts", {
+        const res = await fetch("https://www.bachkhoaxanh.xyz/user/auth", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-          mode: "cors",
         });
 
-
+        if (!res.ok) {
+          const text = await res.text().catch(() => null);
+          throw new Error(`Server trả lỗi ${res.status}: ${text || res.statusText}`);
+        }
 
         const json = await res.json();
         console.log("📦 API response:", json);
 
         if (json.success) {
+          localStorage.setItem("userToken", json.data?.token || idToken);
+          localStorage.setItem("userInfo", JSON.stringify(json.data?.user || { phone: user.phoneNumber }));
           alert("✅ Đăng nhập thành công!");
-          localStorage.setItem("userInfo", JSON.stringify(json.data));
-          window.location.href = "/"; // Chuyển về trang chủ
+          window.location.href = "/";
         } else {
-          alert("❌ Đăng nhập thất bại: " + json.message);
+          alert("❌ Đăng nhập thất bại: " + (json.message || "Không rõ lỗi"));
         }
       } catch (error) {
         console.error("❌ Lỗi xác minh OTP:", error);
-        alert("Mã OTP không hợp lệ hoặc đã hết hạn!");
+        alert("Mã OTP không hợp lệ hoặc đã hết hạn! " + (error.message || ""));
       }
     }
   };
 
-  // --- Admin login ---
-  const handleAdminLogin = () => {
+  // --- Admin login 
+  const handleAdminLogin = async () => {
+    setAdminError("");
     if (!adminCode || !adminPass) {
-      alert("Vui lòng nhập đầy đủ thông tin!");
+      setAdminError("Vui lòng nhập đầy đủ thông tin!");
       return;
     }
-    if (adminCode === "admin" && adminPass === "admin") {
-      alert("✅ Đăng nhập thành công (Admin)");
-      localStorage.setItem("admin", JSON.stringify({ role: "admin" }));
-      window.location.href = "/admin"; // Trang quản trị
-    } else {
-      alert("❌ Sai mã admin hoặc mật khẩu!");
+
+    try {
+      setAdminLoading(true);
+
+      const payload = {
+        username: adminCode,
+        password: adminPass,
+      };
+
+      const res = await fetch("https://www.bachkhoaxanh.xyz/admin/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => null);
+        throw new Error(`Server trả lỗi ${res.status}: ${text || res.statusText}`);
+      }
+
+      const json = await res.json();
+      console.log("🔐 Admin auth response:", json);
+
+      if (json.success) {
+        // Lưu token / role (không lưu password)
+        // Giữ minimal info trong localStorage
+        localStorage.setItem("adminToken", json.data?.token || "");
+        localStorage.setItem("admin", JSON.stringify({ role: "admin", username: adminCode }));
+        alert("✅ Đăng nhập thành công (Admin)");
+        window.location.href = "/admin";
+      } else {
+        setAdminError(json.message || "Sai username hoặc mật khẩu");
+      }
+    } catch (err) {
+      console.error("❌ Lỗi khi gọi API admin:", err);
+      setAdminError(err.message || "Lỗi mạng hoặc server");
+    } finally {
+      setAdminLoading(false);
     }
   };
 
@@ -140,6 +170,7 @@ const LoginSignup = () => {
       setAdminCode("");
       setAdminPass("");
       setConfirmationResult(null);
+      setAdminError("");
     }
   };
 
@@ -200,7 +231,7 @@ const LoginSignup = () => {
             <div className="loginsignup-fields">
               <input
                 type="text"
-                placeholder="Mã Admin"
+                placeholder="Tên đăng nhập"
                 value={adminCode}
                 onChange={(e) => setAdminCode(e.target.value)}
               />
@@ -211,7 +242,12 @@ const LoginSignup = () => {
                 onChange={(e) => setAdminPass(e.target.value)}
               />
             </div>
-            <button onClick={handleAdminLogin}>Đăng nhập</button>
+
+            {adminError && <p style={{ color: "red", marginBottom: "8px" }}>{adminError}</p>}
+
+            <button onClick={handleAdminLogin} disabled={adminLoading}>
+              {adminLoading ? "Đang đăng nhập..." : "Đăng nhập"}
+            </button>
             <button className="back-btn" onClick={handleBack}>
               ← Quay lại
             </button>
