@@ -1,0 +1,61 @@
+.manage-container {
+  padding: 30px;
+  font-family: Arial, sans-serif;
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.orders-table th,
+.orders-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: center;
+}
+
+.status.confirmed {
+  color: green;
+}
+
+.status.cancelled {
+  color: red;
+}
+
+.status.pending {
+  color: orange;
+}
+
+.confirm-btn,
+.pending-btn,
+.cancel-btn,
+.details-btn {
+  padding: 5px 8px;
+  border: none;
+  margin: 0 2px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.confirm-btn {
+  background-color: #4caf50;
+  color: white;
+}
+.pending-btn{
+  background-color: orange;
+  color: white;
+}
+.cancel-btn {
+  background-color: #f44336;
+  color: white;
+}
+.details-btn {
+  background-color: #2196f3;
+  color: white;
+}
+
+.order-details td {
+  background-color: #fafafa;
+  text-align: left;
+}
