@@ -2,9 +2,35 @@
     position: fixed;
     width: clamp(200px,15%,300px);
     height: 100%;
-    background: rgb(117, 0, 0);
+    background: linear-gradient(hsl(103, 93%, 27%), hsl(49, 52%, 54%));
     position: fixed;
+    /* Do not adjust padding */
+    /* Check AdminSidebar-content */
 }
+
 .AdminSidebar-container * {
     color: white;
+    font-size: 1.4rem;
+}
+
+.AdminSidebar-content {
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+}
+.AdminSidebar-content #title {
+    display: flex;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 30px;
+} 
+
+.AdminSidebar-content .tab {
+    display: flex;
+    align-items: center;
+    min-height: 3rem;
+}
+.AdminSidebar-content .tab .icons {
+    margin-right: 1rem;
 }
