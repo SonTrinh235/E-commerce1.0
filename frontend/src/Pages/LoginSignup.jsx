@@ -14,27 +14,22 @@ const LoginSignup = () => {
   const [adminCode, setAdminCode] = useState("");
   const [adminPass, setAdminPass] = useState("");
 
-  // admin UI states
   const [adminLoading, setAdminLoading] = useState(false);
   const [adminError, setAdminError] = useState("");
 
-  // --- Setup Recaptcha (chỉ chạy 1 lần) ---
+  // --- Setup Recaptcha ---
   const setupRecaptcha = () => {
     if (!recaptchaVerifier) {
-      recaptchaVerifier = new RecaptchaVerifier(
-        auth,
-        "recaptcha-container",
-        {
-          size: "invisible",
-          callback: () => console.log("✅ reCAPTCHA passed"),
-          "expired-callback": () => console.warn("⚠️ reCAPTCHA expired"),
-        }
-      );
+      recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
+        size: "invisible",
+        callback: () => console.log("✅ reCAPTCHA passed"),
+        "expired-callback": () => console.warn("⚠️ reCAPTCHA expired"),
+      });
     }
     return recaptchaVerifier;
   };
 
-  // --- Người dùng: Gửi OTP ---
+  // --- Xử lý user đăng nhập ---
   const handleUserContinue = async () => {
     if (step === "phone") {
       if (phone.trim().length < 9) {
@@ -74,30 +69,26 @@ const LoginSignup = () => {
 
         alert(`🎉 Đăng nhập thành công: ${user.phoneNumber}`);
 
-        // --- Gọi API backend để auth user ---
         const payload = {
           phoneNumber: user.phoneNumber,
           idToken,
           displayName: user.displayName || "",
+          address: "",
         };
 
+        // const res = await fetch("http://localhost:5000/user/auth", {
         const res = await fetch("https://www.bachkhoaxanh.xyz/user/auth", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
 
-        if (!res.ok) {
-          const text = await res.text().catch(() => null);
-          throw new Error(`Server trả lỗi ${res.status}: ${text || res.statusText}`);
-        }
-
         const json = await res.json();
         console.log("📦 API response:", json);
 
         if (json.success) {
           localStorage.setItem("userToken", json.data?.token || idToken);
-          localStorage.setItem("userInfo", JSON.stringify(json.data?.user || { phone: user.phoneNumber }));
+          localStorage.setItem("userInfo", JSON.stringify(json.data || { phone: user.phoneNumber }));
           alert("✅ Đăng nhập thành công!");
           window.location.href = "/";
         } else {
@@ -110,7 +101,7 @@ const LoginSignup = () => {
     }
   };
 
-  // --- Admin login 
+  // --- Admin login ---
   const handleAdminLogin = async () => {
     setAdminError("");
     if (!adminCode || !adminPass) {
@@ -126,23 +117,16 @@ const LoginSignup = () => {
         password: adminPass,
       };
 
-      const res = await fetch("https://www.bachkhoaxanh.xyz/admin/auth", {
+      const res = await fetch("https://www.bachkhoaxanh.xyz/user/admin/signin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) {
-        const text = await res.text().catch(() => null);
-        throw new Error(`Server trả lỗi ${res.status}: ${text || res.statusText}`);
-      }
-
       const json = await res.json();
       console.log("🔐 Admin auth response:", json);
 
       if (json.success) {
-        // Lưu token / role (không lưu password)
-        // Giữ minimal info trong localStorage
         localStorage.setItem("adminToken", json.data?.token || "");
         localStorage.setItem("admin", JSON.stringify({ role: "admin", username: adminCode }));
         alert("✅ Đăng nhập thành công (Admin)");
@@ -179,7 +163,6 @@ const LoginSignup = () => {
       <div className="loginsignup-container">
         <h1>Đăng nhập</h1>
 
-        {/* --- Chọn loại tài khoản --- */}
         {!role ? (
           <>
             <p className="choose-role-text">Chọn loại tài khoản:</p>

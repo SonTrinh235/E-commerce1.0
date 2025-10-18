@@ -2,14 +2,14 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDkYB1EAxerdE-ClcC75pUB12IhAL-gNBg",
-    authDomain: "dath-251-cnpm.firebaseapp.com",
-    projectId: "dath-251-cnpm",
-    storageBucket: "dath-251-cnpm.appspot.com",
-    messagingSenderId: "571811781805",
-    appId: "1:571811781805:web:89e15bf45c80afc8fefa24",
-    measurementId: "G-4J2YQVBMPY"
-  };
+  apiKey: "AIzaSyAjbR9V1NYMnhh73bpKVj--c-J37ML6Bi0",
+  authDomain: "dath-15749.firebaseapp.com",
+  projectId: "dath-15749",
+  storageBucket: "dath-15749.firebasestorage.app",
+  messagingSenderId: "1007151644949",
+  appId: "1:1007151644949:web:63f463c51505dd8c9fa91c",
+  measurementId: "G-E3CXHMKD3H"
+};
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
