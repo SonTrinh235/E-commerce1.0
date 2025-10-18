@@ -2,7 +2,7 @@ import "./ManageProducts.css";
 import React, { useContext, useState, useMemo } from "react";
 import all_product from "../../../data/all_product";
 import usePaginatedData from "../../../Context/usePaginatedData";
-import { FiPlusCircle } from "react-icons/fi";
+import { FaPlusCircle } from "react-icons/fa";
 
 import AdminItem from "../../Components/Card/AdminItem/AdminItem";
 import ProductForm from "../../Components/ProductForm/ProductForm";
@@ -10,12 +10,16 @@ import ProductForm from "../../Components/ProductForm/ProductForm";
 function ManageProducts() {
   const productData = usePaginatedData(all_product, 10);
 
-  // State to control visibility of  ProductForm
+  // State of  ProductForm
   const [isFormVisible, setIsFormVisible] = useState(false);
+  const [formMode, setFormMode] = useState('');
+  const [formCurrentItem, setFormCurrentItem] = useState(null);
 
-  // Function to toggle the form visibility
-  const toggleForm = () => {
-    setIsFormVisible((prev) => !prev);
+  // Open form with mode "add", "edit", "delete"
+  const openForm = (mode, currentItem = null) => {
+    setFormMode(mode);
+    setFormCurrentItem(currentItem);
+    setIsFormVisible(true);
   };
 
   return (
@@ -130,8 +134,8 @@ function ManageProducts() {
                 <AdminItem
                   key={i}
                   {...item}
-                  onEdit={toggleForm}
-                  onDelete={toggleForm}
+                  onEdit={() => openForm('edit', item)}
+                  onDelete={() => openForm('delete', item)}
                 />
               </tr>
             ))}
@@ -139,8 +143,8 @@ function ManageProducts() {
         </table>
       </div>
 
-      <button id="add-product" onClick={toggleForm}>
-        <FiPlusCircle />
+      <button id="add-product" onClick={() => openForm('add')}>
+        <FaPlusCircle />
         Add product
       </button>
 
@@ -148,6 +152,8 @@ function ManageProducts() {
       {isFormVisible && (
         <div id="ProductForm-overlay">
           <ProductForm
+            mode={formMode}
+            currentItem={formCurrentItem}
             onCancel={() => setIsFormVisible(false)} // Pass a function to close the form
           />
         </div>
