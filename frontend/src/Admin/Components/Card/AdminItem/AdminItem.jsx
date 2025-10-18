@@ -1,7 +1,7 @@
 import React from "react";
 import "./AdminItem.css";
 import { Link } from "react-router-dom";
-import { FiEdit, FiTrash } from "react-icons/fi";
+import { FaEdit, FaTrash } from "react-icons/fa";
 
 const AdminItem = (props) => {
   const { onEdit, onDelete } = props;
@@ -23,8 +23,8 @@ const AdminItem = (props) => {
       <td className="admin-item-price-new">${props.new_price}</td>
       <td className="admin-item-price-old">${props.old_price}</td>
       <td className="admin-item-actions">
-        <button id="edit" onClick={onEdit}><FiEdit/>Edit</button>
-        <button id="delete" onClick={onDelete}><FiTrash/>Delete</button>
+        <button id="edit" onClick={onEdit}><FaEdit/>Edit</button>
+        <button id="delete" onClick={onDelete}><FaTrash/>Delete</button>
       </td>
     </>
   );
