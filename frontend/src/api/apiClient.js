@@ -8,7 +8,7 @@ const BASE_URL = "https://www.bachkhoaxanh.xyz";
  */
 export async function apiFetch(endpoint, options = {}) {
   // Set default method to GET
-  const { method, headers, params = {}, body } = options;
+  const { method, params = {}, body } = options;
 
   // 1. BUILD QUERY STRING
   const queryParams = new URLSearchParams(params).toString();
@@ -19,18 +19,27 @@ export async function apiFetch(endpoint, options = {}) {
   // 3. BUILD FETCH CONFIG
   const config = {
     method: method,
-    headers: headers
+    headers: {
+      // Default headers if body not FormData
+      ...(body instanceof FormData ? {} : { 'Content-Type': 'application/json' })
+    },
   };
   // Add body if has
-  if (body) {
-    config.body = JSON.stringify(body);
-  }
+if (body) {
+    // Check if the body is FormData; if so, pass it directly.
+    // Otherwise, stringify it for JSON requests.
+    if (body instanceof FormData) {
+        config.body = body;
+    } else {
+        config.body = JSON.stringify(body);
+    }
+}
 
   // 4. FETCH
   console.log(`[API Fetch] Starting ${method} request...`);
   console.log(`[API Fetch] URL: ${url}`);
-  console.log(`[API Fetch] Headers: ${JSON.stringify(config.headers)}`);
-  console.log(`[API Fetch] Body: ${config.body}`);
+  console.log(`[API Fetch] config Headers: ${JSON.stringify(config.headers)}`);
+  console.log(`[API Fetch] config Body: ${config.body}`);
   try {
     const res = await fetch(url, config); // Pass the config object
 

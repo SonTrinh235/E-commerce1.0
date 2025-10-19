@@ -42,7 +42,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
         productStock: "",
       });
     }
-    console.log('currentItem: ',currentItem);
+    console.log("currentItem: ", currentItem);
   }, [currentItem]);
 
   // Handle change for input fields
@@ -70,7 +70,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
       let response;
 
       if (mode === "add") {
-        // 1. CREATE MODE: Call the API to create a new product
+        // 1. ADD MODE: Call the API to create a new product
         console.log("Submitting new product...");
         const createProductResponse = await createProduct({
           name: formData.productName,
@@ -82,24 +82,28 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
 
         const createdProductId = createProductResponse.data._id;
 
+        // Upload image and update image info
         if (formData.productImage) {
-          const uploadFileResponse = await uploadFile({
-            file: formData.productImage,
-            tempid: formData.productImage.name,
-            targetId: createdProductId,
-            bucket: "dath-product-image",
-            accessLevel: "public",
-          });
+          const uploadData = new FormData();
+          // Append image file
+          uploadData.append("file", formData.productImage);
 
-          const uploadedFileId = uploadFileResponse.data.fileId;
-          const uploadedFileUrl = uploadFileResponse.data.url;
-          const uploadedFileStatus = uploadFileResponse.data.status;
+          // Append the text/string elements directly as key-value pairs
+          uploadData.append("tempid", formData.productImage.name);
+          uploadData.append("targetId", createdProductId);
+          uploadData.append("bucket", "dath-product-image");
+          uploadData.append("accessLevel", "public");
+          const uploadFileResponse = await uploadFile(uploadData);
 
-          updateProductImageInfo(createdProductId, {
-            fileId: uploadedFileId,
-            url: uploadedFileUrl,
-            status: uploadedFileStatus,
-          });
+          const uploadedImageInfo = {
+            imageInfo: {
+              fileId: uploadFileResponse.data.fileId,
+              url: uploadFileResponse.data.url,
+              status: uploadFileResponse.data.status,
+            },
+          };
+
+          updateProductImageInfo(createdProductId, uploadedImageInfo);
         }
 
         alert("Product created successfully!");
@@ -115,6 +119,31 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
           category: formData.productCategory,
           stock: formData.productStock,
         });
+
+        // Upload and update image info if there is
+        if (formData.productImage) {
+          const uploadData = new FormData();
+          // Append image file
+          uploadData.append("file", formData.productImage);
+
+          // Append the text/string elements directly as key-value pairs
+          uploadData.append("tempid", formData.productImage.name);
+          uploadData.append("targetId", productId);
+          uploadData.append("bucket", "dath-product-image");
+          uploadData.append("accessLevel", "public");
+          const uploadFileResponse = await uploadFile(uploadData);
+
+          const uploadedImageInfo = {
+            imageInfo: {
+              fileId: uploadFileResponse.data.fileId,
+              url: uploadFileResponse.data.url,
+              status: uploadFileResponse.data.status,
+            },
+          };
+
+          updateProductImageInfo(productId, uploadedImageInfo);
+        }
+
         alert("Product updated successfully!");
       } else if (mode === "delete") {
         // 3. DELETE MODE: Call the API to delete the existing product
@@ -126,6 +155,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
       }
 
       onSuccess();
+      onCancel();
 
       // Optional: Redirect user, close modal, or clear form here
     } catch (error) {
@@ -176,6 +206,9 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
     submitText = "Delete Item";
   }
 
+  const buttonClass =
+    mode === "delete" ? "btn-delete" : mode === "edit" ? "btn-edit" : "btn-add";
+
   // Form container
   return (
     <div className="ProductForm-container">
@@ -187,7 +220,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
       <form className="product-form" onSubmit={handleSubmit}>
         {/* Image */}
         <div id="section-image">
-          <div>productImage:</div>
+          <div>Product Image</div>
           {imagePreviewUrl ? (
             <img src={imagePreviewUrl} />
           ) : (
@@ -204,7 +237,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
         </div>
         {/* Data  */}
         <div id="section-data">
-          <div>productName:</div>
+          <div>Product Name:</div>
           <input
             name="productName"
             type="text"
@@ -212,7 +245,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
             value={formData.productName}
             onChange={handleChange}
           />
-          <div>productCategory:</div>
+          <div>Product Category:</div>
           <input
             name="productCategory"
             type="text"
@@ -220,7 +253,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
             value={formData.productCategory}
             onChange={handleChange}
           />
-          <div>productPrice:</div>
+          <div>Product Price:</div>
           <input
             name="productPrice"
             type="number"
@@ -228,7 +261,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
             value={formData.productPrice}
             onChange={handleChange}
           />
-          <div>productDescription:</div>
+          <div>Product Description:</div>
           <input
             name="productDescription"
             type="text"
@@ -236,7 +269,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
             value={formData.productDescription}
             onChange={handleChange}
           />
-          <div>productStock:</div>
+          <div>Product Stock:</div>
           <input
             name="productStock"
             type="number"
@@ -245,7 +278,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
             onChange={handleChange}
           />
         </div>
-        <button type="submit" id="ProductForm-submit">
+        <button type="submit" className={buttonClass}>
           {submitText}
         </button>
       </form>
