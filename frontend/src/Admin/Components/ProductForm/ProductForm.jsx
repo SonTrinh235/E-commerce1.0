@@ -2,19 +2,52 @@ import { useEffect, useState } from "react";
 import "./ProductForm.css";
 import DefaultImage from "../../../assets/placeholder-image.png";
 import { FiX, FiUpload } from "react-icons/fi";
+import {
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  updateProductImageInfo,
+} from "../../../api/productService";
+import { uploadFile } from "../../../api/fileService";
 
-function ProductForm({ mode, currentItem = null, onCancel }) {
+function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
+  // Properties of form
   const [formData, setFormData] = useState({
-    productId: "",
+    productImage: null,
     productName: "",
-    productImage: "",
-    productCategory: [],
+    productCategory: "",
     productPrice: "",
-    productOldPrice: "",
+    productDescription: "",
+    productStock: "",
   });
 
+  // UseEffect for initial data of form (currentItem or blank)
+  useEffect(() => {
+    if (currentItem) {
+      setFormData({
+        productImage: null,
+        productName: currentItem.name || "",
+        productCategory: currentItem.category || "",
+        productPrice: currentItem.price || "",
+        productDescription: currentItem.description || "",
+        productStock: currentItem.stock || "",
+      });
+    } else {
+      setFormData({
+        productImage: null,
+        productName: "",
+        productCategory: "",
+        productPrice: "",
+        productDescription: "",
+        productStock: "",
+      });
+    }
+    console.log('currentItem: ',currentItem);
+  }, [currentItem]);
+
+  // Handle change for input fields
   const handleChange = (e) => {
-    if (mode === 'delete') {
+    if (mode === "delete") {
       return;
     }
 
@@ -29,31 +62,80 @@ function ProductForm({ mode, currentItem = null, onCancel }) {
     setFormData((prevData) => ({ ...prevData, [name]: newValue }));
   };
 
-  // UseEffect for init form
-  useEffect(() => {
-    if (currentItem) {
-      setFormData({
-        productId: currentItem.id || "",
-        productName: currentItem.name || "",
-        productImage: currentItem.image || "",
-        productCategory: currentItem.category || [],
-        productPrice: currentItem.new_price || "",
-        productOldPrice: currentItem.old_price || "",
-      });
-    } else {
-      setFormData({
-        productId: "",
-        productName: "",
-        productImage: "",
-        productCategory: [],
-        productPrice: "",
-        productOldPrice: "",
-      });
-    }
-  }, [currentItem]);
+  // Handle Submit based on form mode
+  const handleSubmit = async (e) => {
+    e.preventDefault(); // Prevent default browser form submission
 
+    try {
+      let response;
+
+      if (mode === "add") {
+        // 1. CREATE MODE: Call the API to create a new product
+        console.log("Submitting new product...");
+        const createProductResponse = await createProduct({
+          name: formData.productName,
+          price: formData.productPrice,
+          description: formData.productDescription,
+          category: formData.productCategory,
+          stock: formData.productStock,
+        });
+
+        const createdProductId = createProductResponse.data._id;
+
+        if (formData.productImage) {
+          const uploadFileResponse = await uploadFile({
+            file: formData.productImage,
+            tempid: formData.productImage.name,
+            targetId: createdProductId,
+            bucket: "dath-product-image",
+            accessLevel: "public",
+          });
+
+          const uploadedFileId = uploadFileResponse.data.fileId;
+          const uploadedFileUrl = uploadFileResponse.data.url;
+          const uploadedFileStatus = uploadFileResponse.data.status;
+
+          updateProductImageInfo(createdProductId, {
+            fileId: uploadedFileId,
+            url: uploadedFileUrl,
+            status: uploadedFileStatus,
+          });
+        }
+
+        alert("Product created successfully!");
+      } else if (mode === "edit") {
+        // 2. EDIT MODE: Call the API to update the existing product
+        // productId required
+        const productId = currentItem._id;
+        console.log(`Updating product ${productId}...`);
+        updateProduct(productId, {
+          name: formData.productName,
+          price: formData.productPrice,
+          description: formData.productDescription,
+          category: formData.productCategory,
+          stock: formData.productStock,
+        });
+        alert("Product updated successfully!");
+      } else if (mode === "delete") {
+        // 3. DELETE MODE: Call the API to delete the existing product
+        //  productId required
+        const productId = currentItem._id;
+        console.log(`Deleting product ${productId}...`);
+        deleteProduct(productId);
+        alert("Product Deleted successfully!");
+      }
+
+      onSuccess();
+
+      // Optional: Redirect user, close modal, or clear form here
+    } catch (error) {
+      // console.error("Submission failed:", error);
+      // alert("Error saving product. Check the console for details.");
+    }
+  };
+
+  //  useEffect for image preview on upload
   const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
-//  useEffect for image preview on upload
   useEffect(() => {
     // Check if formData.productImage is a File object (not null/undefined)
     if (formData.productImage instanceof File) {
@@ -75,6 +157,7 @@ function ProductForm({ mode, currentItem = null, onCancel }) {
     }
   }, [formData.productImage]);
 
+  // Set text based on form mode
   let title = "Product Form";
   let subTitle = "Product Form";
   let submitText = "Submit";
@@ -93,19 +176,22 @@ function ProductForm({ mode, currentItem = null, onCancel }) {
     submitText = "Delete Item";
   }
 
+  // Form container
   return (
     <div className="ProductForm-container">
       <header>
         <div id="title">{title}</div>
         <div id="subTitle">{subTitle}</div>
       </header>
-      <form className="product-form">
+      {/* Actual form */}
+      <form className="product-form" onSubmit={handleSubmit}>
+        {/* Image */}
         <div id="section-image">
           <div>productImage:</div>
           {imagePreviewUrl ? (
             <img src={imagePreviewUrl} />
           ) : (
-            <img src={formData.productImage || DefaultImage} />
+            <img src={currentItem?.imageInfo?.url || DefaultImage} />
           )}
           {mode !== "delete" && (
             <input
@@ -116,15 +202,8 @@ function ProductForm({ mode, currentItem = null, onCancel }) {
             />
           )}
         </div>
+        {/* Data  */}
         <div id="section-data">
-          <div>productId:</div>
-          <input
-            name="productId"
-            type="text"
-            placeholder="Enter productId"
-            value={formData.productId}
-            onChange={handleChange}
-            />
           <div>productName:</div>
           <input
             name="productName"
@@ -132,7 +211,7 @@ function ProductForm({ mode, currentItem = null, onCancel }) {
             placeholder="Enter productName"
             value={formData.productName}
             onChange={handleChange}
-            />
+          />
           <div>productCategory:</div>
           <input
             name="productCategory"
@@ -140,7 +219,7 @@ function ProductForm({ mode, currentItem = null, onCancel }) {
             placeholder="Enter productCategory"
             value={formData.productCategory}
             onChange={handleChange}
-            />
+          />
           <div>productPrice:</div>
           <input
             name="productPrice"
@@ -148,20 +227,28 @@ function ProductForm({ mode, currentItem = null, onCancel }) {
             placeholder="Enter productPrice"
             value={formData.productPrice}
             onChange={handleChange}
-            />
-          <div>productOldPrice:</div>
+          />
+          <div>productDescription:</div>
           <input
-            name="productOldPrice"
+            name="productDescription"
+            type="text"
+            placeholder="Enter productDescription"
+            value={formData.productDescription}
+            onChange={handleChange}
+          />
+          <div>productStock:</div>
+          <input
+            name="productStock"
             type="number"
-            placeholder="Enter productOldPrice"
-            value={formData.productOldPrice}
+            placeholder="Enter productStock"
+            value={formData.productStock}
             onChange={handleChange}
           />
         </div>
+        <button type="submit" id="ProductForm-submit">
+          {submitText}
+        </button>
       </form>
-      <button id="ProductForm-submit" onClick={onCancel}>
-        {submitText}
-      </button>
       <button id="ProductForm-cancel" onClick={onCancel}>
         <FiX />
         Cancel

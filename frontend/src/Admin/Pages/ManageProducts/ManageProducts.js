@@ -1,18 +1,36 @@
 import "./ManageProducts.css";
-import React, { useContext, useState, useMemo } from "react";
+import React, { useContext, useState, useMemo, useEffect, use } from "react";
 import all_product from "../../../data/all_product";
-import usePaginatedData from "../../../Context/usePaginatedData";
 import { FaPlusCircle } from "react-icons/fa";
+import { getAllProducts } from "../../../api/productService";
 
 import AdminItem from "../../Components/Card/AdminItem/AdminItem";
 import ProductForm from "../../Components/ProductForm/ProductForm";
 
 function ManageProducts() {
-  const productData = usePaginatedData(all_product, 10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [products, setProducts] = useState([]);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const limit = 20;
+
+  // Fetch products method (from all product)
+  const fetchProducts = async (page = 1, limit = 20) => {
+    const response = await getAllProducts(page, limit);
+    setProducts(response.data.list);
+    setTotalProducts(response.data.total);
+    setTotalPages(response.data.totalPages)
+  };
+
+  // Fetch new page upon page change
+  useEffect(() => {
+    fetchProducts(currentPage, limit);
+  }, [currentPage]);
+
 
   // State of  ProductForm
   const [isFormVisible, setIsFormVisible] = useState(false);
-  const [formMode, setFormMode] = useState('');
+  const [formMode, setFormMode] = useState("");
   const [formCurrentItem, setFormCurrentItem] = useState(null);
 
   // Open form with mode "add", "edit", "delete"
@@ -80,62 +98,57 @@ function ManageProducts() {
           </div>
         </div>
 
-        {/* 2. Use the pagination metadata */}
+        {/* Paging for products */}
         <div>
           <button
-            onClick={() =>
-              productData.handlePageChange(productData.pagination.page - 1)
-            }
-            disabled={productData.pagination.page <= 1}
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage <= 1}
           >
             Previous
           </button>
 
           <span>
-            Page {productData.pagination.page} of{" "}
-            {productData.pagination.totalPages}
+            Page {currentPage} of{" "}
+            {totalPages}
           </span>
 
           <button
-            onClick={() =>
-              productData.handlePageChange(productData.pagination.page + 1)
-            }
-            disabled={
-              productData.pagination.page >= productData.pagination.totalPages
-            }
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage >= totalPages}
           >
             Next
           </button>
         </div>
 
         <header>Danh sách các sản phẩm</header>
+        <div>Hiển thị {totalProducts} sản phẩm</div>
         <table id="table">
           <thead>
             <tr>
-              <th className="index"></th>
-              <th>Product ID</th>
+              <th className="index">#</th>
               <th>Image</th>
               <th>Name</th>
               <th>Category</th>
-              <th>New price</th>
-              <th>Old price</th>
+              <th>Price</th>
+              <th>Description</th>
+              <th>Stock</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {productData.dataList.map((item, i) => (
+            {products.map((item, i) => (
               <tr key={i}>
                 {/* The Index Bar Cell */}
                 <td className="index-bar-cell">
-                  <div className="index-bar"></div>
+                  <div className="index-bar">{i+1+(currentPage-1)*limit}</div>
                 </td>
 
                 {/* The rest of the product data will now be rendered by the AdminItem component */}
                 <AdminItem
                   key={i}
                   {...item}
-                  onEdit={() => openForm('edit', item)}
-                  onDelete={() => openForm('delete', item)}
+                  onEdit={() => openForm("edit", item)}
+                  onDelete={() => openForm("delete", item)}
                 />
               </tr>
             ))}
@@ -143,7 +156,7 @@ function ManageProducts() {
         </table>
       </div>
 
-      <button id="add-product" onClick={() => openForm('add')}>
+      <button id="add-product" onClick={() => openForm("add")}>
         <FaPlusCircle />
         Add product
       </button>
@@ -155,6 +168,7 @@ function ManageProducts() {
             mode={formMode}
             currentItem={formCurrentItem}
             onCancel={() => setIsFormVisible(false)} // Pass a function to close the form
+            onSuccess = {() => fetchProducts(currentPage, limit)}
           />
         </div>
       )}
