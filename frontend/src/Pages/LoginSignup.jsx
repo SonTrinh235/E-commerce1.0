@@ -68,6 +68,7 @@ const LoginSignup = () => {
         const idToken = await user.getIdToken();
 
         alert(`🎉 Đăng nhập thành công: ${user.phoneNumber}`);
+        console.log("Firebase ID Token:", idToken);
 
         const payload = {
           phoneNumber: user.phoneNumber,
@@ -76,7 +77,7 @@ const LoginSignup = () => {
           address: "",
         };
 
-        // const res = await fetch("http://localhost:5000/user/auth", {
+        // const res = await fetch("http://localhost:3000/user/auth", {
         const res = await fetch("https://www.bachkhoaxanh.xyz/user/auth", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
