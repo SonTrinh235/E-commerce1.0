@@ -1,21 +1,43 @@
 import "./ManageProducts.css";
-import React, { useContext, useState, useMemo } from "react";
-import { ShopContext } from "../../../Context/ShopContext";
-import { FiPlusCircle } from "react-icons/fi";
+import React, { useContext, useState, useMemo, useEffect, use } from "react";
+import all_product from "../../../data/all_product";
+import { FaPlusCircle } from "react-icons/fa";
+import { getAllProducts } from "../../../api/productService";
 
 import AdminItem from "../../Components/Card/AdminItem/AdminItem";
 import ProductForm from "../../Components/ProductForm/ProductForm";
 
 function ManageProducts() {
-  const { all_product, products, productPagination, productIsLoading, productHandlePageChange } =
-    useContext(ShopContext);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [products, setProducts] = useState([]);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const limit = 20;
 
-  // State to control visibility of  ProductForm
+  // Fetch products method (from all product)
+  const fetchProducts = async (page = 1, limit = 20) => {
+    const response = await getAllProducts(page, limit);
+    setProducts(response.data.list);
+    setTotalProducts(response.data.total);
+    setTotalPages(response.data.totalPages)
+  };
+
+  // Fetch new page upon page change
+  useEffect(() => {
+    fetchProducts(currentPage, limit);
+  }, [currentPage]);
+
+
+  // State of  ProductForm
   const [isFormVisible, setIsFormVisible] = useState(false);
+  const [formMode, setFormMode] = useState("");
+  const [formCurrentItem, setFormCurrentItem] = useState(null);
 
-  // Function to toggle the form visibility
-  const toggleForm = () => {
-    setIsFormVisible((prev) => !prev);
+  // Open form with mode "add", "edit", "delete"
+  const openForm = (mode, currentItem = null) => {
+    setFormMode(mode);
+    setFormCurrentItem(currentItem);
+    setIsFormVisible(true);
   };
 
   return (
@@ -76,39 +98,40 @@ function ManageProducts() {
           </div>
         </div>
 
-        {/* 2. Use the pagination metadata */}
+        {/* Paging for products */}
         <div>
           <button
-            onClick={() => productHandlePageChange(productPagination.page - 1)}
-            disabled={productPagination.page <= 1}
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage <= 1}
           >
             Previous
           </button>
 
           <span>
-            Page {productPagination.page} of {productPagination.totalPages}
+            Page {currentPage} of{" "}
+            {totalPages}
           </span>
 
           <button
-            onClick={() => productHandlePageChange(productPagination.page + 1)}
-            disabled={productPagination.page >= productPagination.totalPages}
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage >= totalPages}
           >
             Next
           </button>
         </div>
 
-
         <header>Danh sách các sản phẩm</header>
+        <div>Hiển thị {totalProducts} sản phẩm</div>
         <table id="table">
           <thead>
             <tr>
-              <th className="index"></th>
-              <th>Product ID</th>
+              <th className="index">#</th>
               <th>Image</th>
               <th>Name</th>
               <th>Category</th>
-              <th>New price</th>
-              <th>Old price</th>
+              <th>Price</th>
+              <th>Description</th>
+              <th>Stock</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -117,15 +140,15 @@ function ManageProducts() {
               <tr key={i}>
                 {/* The Index Bar Cell */}
                 <td className="index-bar-cell">
-                  <div className="index-bar"></div>
+                  <div className="index-bar">{i+1+(currentPage-1)*limit}</div>
                 </td>
 
                 {/* The rest of the product data will now be rendered by the AdminItem component */}
                 <AdminItem
                   key={i}
                   {...item}
-                  onEdit={toggleForm}
-                  onDelete={toggleForm}
+                  onEdit={() => openForm("edit", item)}
+                  onDelete={() => openForm("delete", item)}
                 />
               </tr>
             ))}
@@ -133,8 +156,8 @@ function ManageProducts() {
         </table>
       </div>
 
-      <button id="add-product" onClick={toggleForm}>
-        <FiPlusCircle />
+      <button id="add-product" onClick={() => openForm("add")}>
+        <FaPlusCircle />
         Add product
       </button>
 
@@ -142,7 +165,10 @@ function ManageProducts() {
       {isFormVisible && (
         <div id="ProductForm-overlay">
           <ProductForm
+            mode={formMode}
+            currentItem={formCurrentItem}
             onCancel={() => setIsFormVisible(false)} // Pass a function to close the form
+            onSuccess = {() => fetchProducts(currentPage, limit)}
           />
         </div>
       )}

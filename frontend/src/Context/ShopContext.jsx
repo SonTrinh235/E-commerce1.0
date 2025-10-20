@@ -1,6 +1,5 @@
 import React, { createContext, useState, useEffect } from "react";
 import all_product from "../data/all_product";
-import usePaginatedData from "./usePaginatedData";
 
 export const ShopContext = createContext(null);
 
@@ -13,9 +12,6 @@ const getDefaultCart = () => {
 };
 
 const ShopContextProvider = (props) => {
-  // Paginated data for products
-  const productData = usePaginatedData(all_product, 10);
-
   // Lấy giỏ hàng từ localStorage nếu có, không thì tạo mặc định
   const storedCart = JSON.parse(localStorage.getItem("cartItems"));
   const [cartItems, setCartItems] = useState(storedCart || getDefaultCart());
@@ -73,10 +69,6 @@ const ShopContextProvider = (props) => {
     addToCart,
     removeFromCart,
     setCartItems,
-    products: productData.dataList,
-    productPagination: productData.pagination,
-    productIsLoading: productData.isLoading,
-    productHandlePageChange: productData.handlePageChange,
   };
 
   return (
