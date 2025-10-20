@@ -125,7 +125,7 @@
   background: rgb(134, 0, 0);
 }
 
-button[type="submit"] {
+#productForm-submit {
   position: absolute;
   left: 50%;
   transform: translate(-50%);

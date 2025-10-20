@@ -85,14 +85,14 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
         // Upload image and update image info
         if (formData.productImage) {
           const uploadData = new FormData();
-          // Append image file
-          uploadData.append("file", formData.productImage);
-
+          
           // Append the text/string elements directly as key-value pairs
           uploadData.append("tempid", formData.productImage.name);
           uploadData.append("targetId", createdProductId);
           uploadData.append("bucket", "dath-product-image");
           uploadData.append("accessLevel", "public");
+          // Append image file
+          uploadData.append("file", formData.productImage);
           const uploadFileResponse = await uploadFile(uploadData);
 
           const uploadedImageInfo = {
@@ -123,14 +123,14 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
         // Upload and update image info if there is
         if (formData.productImage) {
           const uploadData = new FormData();
-          // Append image file
-          uploadData.append("file", formData.productImage);
-
+          
           // Append the text/string elements directly as key-value pairs
           uploadData.append("tempid", formData.productImage.name);
           uploadData.append("targetId", productId);
           uploadData.append("bucket", "dath-product-image");
           uploadData.append("accessLevel", "public");
+          // Append image file
+          uploadData.append("file", formData.productImage);
           const uploadFileResponse = await uploadFile(uploadData);
 
           const uploadedImageInfo = {
@@ -278,7 +278,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
             onChange={handleChange}
           />
         </div>
-        <button type="submit" className={buttonClass}>
+        <button type="submit" id="productForm-submit" className={buttonClass}>
           {submitText}
         </button>
       </form>
