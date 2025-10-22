@@ -17,13 +17,42 @@ const LoginSignup = () => {
   const [adminLoading, setAdminLoading] = useState(false);
   const [adminError, setAdminError] = useState("");
 
+  const [showProfilePopup, setShowProfilePopup] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [address, setAddress] = useState("");
+
+  const handleSaveProfile = async () => {
+    if (!fullName || !address) {
+      alert("Vui lòng nhập đầy đủ thông tin!");
+      return;
+    }
+  
+    const token = localStorage.getItem("userToken");
+    const res = await fetch("https://www.bachkhoaxanh.xyz/user/updateProfile", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ fullName, address }),
+    });
+    
+    const json = await res.json();
+    if (json.success) {
+      alert("Cập nhật thông tin thành công!");
+      setShowProfilePopup(false);
+      window.location.href = "/";
+    } else {
+      alert("Lỗi cập nhật: " + (json.message || "Không rõ lỗi"));
+    }
+  };
   // --- Setup Recaptcha ---
   const setupRecaptcha = () => {
     if (!recaptchaVerifier) {
       recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
         size: "invisible",
-        callback: () => console.log("✅ reCAPTCHA passed"),
-        "expired-callback": () => console.warn("⚠️ reCAPTCHA expired"),
+        callback: () => console.log("reCAPTCHA passed"),
+        "expired-callback": () => console.warn("reCAPTCHA expired"),
       });
     }
     return recaptchaVerifier;
@@ -36,13 +65,13 @@ const LoginSignup = () => {
         alert("Vui lòng nhập số điện thoại hợp lệ!");
         return;
       }
-
+  
       try {
         const appVerifier = setupRecaptcha();
         const phoneNumber = phone.startsWith("+")
           ? phone
           : "+84" + phone.replace(/^0/, "");
-
+  
         const result = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
         setConfirmationResult(result);
         setStep("otp");
@@ -51,56 +80,78 @@ const LoginSignup = () => {
         console.error("❌ Lỗi gửi OTP:", error);
         alert("Không gửi được OTP: " + (error.message || error));
       }
+  
     } else if (step === "otp") {
       if (otp.trim().length !== 6) {
         alert("Vui lòng nhập đủ 6 chữ số OTP!");
         return;
       }
-
+  
       try {
         if (!confirmationResult) {
           alert("⚠️ Phiên OTP không hợp lệ, vui lòng thử lại!");
           return;
         }
-
+  
         const userCredential = await confirmationResult.confirm(otp);
         const user = userCredential.user;
         const idToken = await user.getIdToken();
-
+  
+        // 🪪 Log thông tin chi tiết
+        console.log("🪪 Firebase ID Token:", idToken);
+        console.log("📱 Phone number:", user.phoneNumber);
+        console.log("👤 UID:", user.uid);
+        console.log("⏱ Token expires at:", new Date(user.stsTokenManager.expirationTime));
+  
         alert(`🎉 Đăng nhập thành công: ${user.phoneNumber}`);
-        console.log("Firebase ID Token:", idToken);
-
+  
         const payload = {
           phoneNumber: user.phoneNumber,
           idToken,
           displayName: user.displayName || "",
           address: "",
-        };
-
-        // const res = await fetch("http://localhost:3000/user/auth", {
+        };        
+  
         const res = await fetch("https://www.bachkhoaxanh.xyz/user/auth", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-
+  
         const json = await res.json();
         console.log("📦 API response:", json);
+///////////////////TEST
+// if (json.data) {
+//   json.data.isNewUser = true;
+//   if (json.data.user) {
+//     delete json.data.user.displayName;
+//     delete json.data.user.address;
+//   }
+// }
+///////////////////
 
         if (json.success) {
           localStorage.setItem("userToken", json.data?.token || idToken);
           localStorage.setItem("userInfo", JSON.stringify(json.data || { phone: user.phoneNumber }));
-          alert("✅ Đăng nhập thành công!");
-          window.location.href = "/";
+  
+          // 🔍 Nếu là user mới thì hiện popup nhập thông tin
+          if (json.data?.isNewUser) {
+            setShowProfilePopup(true);
+          } else {
+            alert("✅ Đăng nhập thành công!");
+            window.location.href = "/";
+          }
         } else {
           alert("❌ Đăng nhập thất bại: " + (json.message || "Không rõ lỗi"));
         }
+  
       } catch (error) {
         console.error("❌ Lỗi xác minh OTP:", error);
         alert("Mã OTP không hợp lệ hoặc đã hết hạn! " + (error.message || ""));
       }
     }
   };
+  
 
   // --- Admin login ---
   const handleAdminLogin = async () => {
@@ -245,8 +296,33 @@ const LoginSignup = () => {
           </p>
         </div>
       </div>
+      {/* Popup yêu cầu hoàn thiện thông tin */}
+        {showProfilePopup && (
+          <div className="popup-overlay">
+            <div className="popup">
+              <h2>Hoàn thiện thông tin cá nhân</h2>
+              <p>Vui lòng nhập đầy đủ thông tin trước khi tiếp tục</p>
+              <input
+                type="text"
+                placeholder="Họ và tên"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="Địa chỉ"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
+              <button onClick={handleSaveProfile}>Lưu thông tin</button>
+            </div>
+          </div>
+        )}
+
     </div>
   );
 };
+
+
 
 export default LoginSignup;
