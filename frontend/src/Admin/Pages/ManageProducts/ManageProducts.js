@@ -1,6 +1,6 @@
 import "./ManageProducts.css";
-import React, { useContext, useState, useMemo, useEffect, use } from "react";
-import all_product from "../../../data/all_product";
+import React, { useState, useEffect,} from "react";
+// import all_product from "../../../data/all_product";
 import { FaPlusCircle } from "react-icons/fa";
 import { getAllProducts } from "../../../api/productService";
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./ProductForm.css";
 import DefaultImage from "../../../assets/placeholder-image.png";
-import { FiX, FiUpload } from "react-icons/fi";
+import { FiX} from "react-icons/fi";
 import {
   createProduct,
   updateProduct,
@@ -67,7 +67,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
     e.preventDefault(); // Prevent default browser form submission
 
     try {
-      let response;
+      // let response;
 
       if (mode === "add") {
         // 1. ADD MODE: Call the API to create a new product
@@ -222,9 +222,9 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
         <div id="section-image">
           <div>Product Image</div>
           {imagePreviewUrl ? (
-            <img src={imagePreviewUrl} />
+            <img src={imagePreviewUrl} alt = ""/>
           ) : (
-            <img src={currentItem?.imageInfo?.url || DefaultImage} />
+            <img src={currentItem?.imageInfo?.url || DefaultImage} alt = ""/>
           )}
           {mode !== "delete" && (
             <input
