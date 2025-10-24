@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "./CSS/Cart.css";
 import { Link } from "react-router-dom";
 import promoCodes from "../data/Promo.js";
 import CartItem from "../Components/CartItem/CartItem";
+import { CartContext } from "../Context/CartContext"
 
 // Import APIs
 import {
@@ -14,47 +15,17 @@ import {
 import { getProductById } from "../api/productService";
 
 const Cart = () => {
-  const tempUserId = "68f4edf24a4b075ca9f1ef90";
+  const { tempUserId,
+    cartTotal,
+    setCartTotal,
+    cartItems,
+    setCartItems,
+    productsLookup,
+    setProductsLookup,
+    fetchCart,
+    fetchProductsData } = useContext(CartContext);
+
   const [isLoading, setIsLoading] = useState(true);
-
-  // cartTotal: Total price of cart
-  const [cartTotal, setCartTotal] = useState();
-  // cartItems: Lookup objects of items in cart (productId and count)
-  const [cartItems, setCartItems] = useState({});
-  // productsLookup: Lookup objects of products in cart (full product data)
-  const [productsLookup, setProductsLookup] = useState({});
-
-  // function: Fetch cart with product id and count
-  const fetchCart = async (userId) => {
-    const response = await getCartByUserId(userId);
-
-    setCartTotal(response.data.totalPrice);
-
-    const newCart = response.data.productsInfo;
-    const cartMap = {};
-    newCart.forEach((entry) => {
-      cartMap[entry.productId] = entry;
-    });
-
-    setCartItems(cartMap);
-    return newCart;
-  };
-
-  // function: Fetch product data for each product in cart
-  const fetchProductsData = async (productIds) => {
-    // Fetch product data for each and await all
-    const fetchPromises = productIds.map((id) => getProductById(id));
-    const results = await Promise.all(fetchPromises);
-
-    // Set lookup map
-    const productsMap = {};
-    results.forEach((response) => {
-      const product = response.data;
-      productsMap[product._id] = product;
-    });
-
-    setProductsLookup(productsMap);
-  };
 
   // function: fetch cart and product data
   const initializeCartAndProductsLookup = async () => {
