@@ -1,0 +1,8 @@
+
+.CartItem-img {
+    height: 120px;
+}
+.CartItem-img img {
+    object-fit: contain;
+    height: 100%
+}
