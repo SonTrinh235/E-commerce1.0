@@ -9,7 +9,7 @@ import Cart from "./Pages/Cart";
 import LoginSignup from "./Pages/LoginSignup";
 import SearchResults from "./Pages/SearchResults";
 import ExclusiveOffers from "./Pages/ExclusiveOffers";
-import Checkout from "./Components/Checkout/Checkout";
+import Checkout from "./Pages/Checkout";
 
 // === Admin Pages ===
 import AdminDashboard from "./Admin/Pages/AdminDashboard/AdminDashboard";
