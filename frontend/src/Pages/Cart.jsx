@@ -1,9 +1,11 @@
 import React, { useContext, useEffect, useState } from "react";
 import "./CSS/Cart.css";
 import { ShopContext } from "../Context/ShopContext";
-import remove_icon from "../assets/cart_cross_icon.png";
 import { Link } from "react-router-dom";
 import promoCodes from "../data/Promo.js";
+import CartItem from "../Components/CartItem/CartItem";
+
+// Import APIs
 import {
   getCartByUserId,
   addProductToCart,
@@ -11,25 +13,25 @@ import {
   removeProductFromCart,
 } from "../api/cartService";
 import { getProductById } from "../api/productService";
-import DefaultImage from "../assets/placeholder-image.png";
-import CartItem from "../Components/CartItem/CartItem";
 
 const Cart = () => {
-  const { getTotalCartAmount, all_product, addToCart, removeFromCart } =
-    useContext(ShopContext);
-
   const tempUserId = "68f4edf24a4b075ca9f1ef90";
   const [isLoading, setIsLoading] = useState(true);
 
-  // Cart items and Products data of lookup type
+  // cartTotal: Total price of cart
+  const [cartTotal, setCartTotal] = useState();
+  // cartItems: Lookup objects of items in cart (productId and count)
   const [cartItems, setCartItems] = useState({});
+  // productsLookup: Lookup objects of products in cart (full product data)
   const [productsLookup, setProductsLookup] = useState({});
 
   // function: Fetch cart with product id and count
-  const fetchCartItems = async (userId) => {
+  const fetchCart = async (userId) => {
     const response = await getCartByUserId(userId);
-    const newCart = response.data.productsInfo;
 
+    setCartTotal(response.data.totalPrice);
+
+    const newCart = response.data.productsInfo;
     const cartMap = {};
     newCart.forEach((entry) => {
       cartMap[entry.productId] = entry;
@@ -59,7 +61,7 @@ const Cart = () => {
   const initializeCartAndProductsLookup = async () => {
     setIsLoading(true);
 
-    const newCart = await fetchCartItems(tempUserId);
+    const newCart = await fetchCart(tempUserId);
     const productIds = newCart.map((item) => item.productId);
     await fetchProductsData(productIds);
 
@@ -132,12 +134,21 @@ const Cart = () => {
     const response = await removeProductFromCart(tempUserId, productId);
   };
 
+  function getCartTotal() {
+    let totalAmount = 0;
+    Object.values(cartItems).map((item, i) => {
+      totalAmount += item.price*item.quantity
+    });
+    return totalAmount;
+  }
+
   useEffect(() => {
     initializeCartAndProductsLookup();
   }, []);
 
   useEffect(() => {
     console.log("Cart: cartItems changed: ", cartItems);
+    console.log("Cart total: ", cartTotal);
   }, [cartItems]);
 
   useEffect(() => {
@@ -147,7 +158,7 @@ const Cart = () => {
   // ============ LEAVE BELOW UNTOUCHED =============================
   // =========== LEAVE BELOW UNTOUCHED ===========================
 
-  const SHIPPING_FEE = 2;
+  const SHIPPING_FEE = 50000;
 
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState(null);
@@ -185,7 +196,7 @@ const Cart = () => {
   const calculateDiscount = () => {
     if (!appliedPromo) return 0;
     if (appliedPromo.type === "percentage") {
-      const subtotal = getTotalCartAmount();
+      const subtotal = getCartTotal();
       return (subtotal * appliedPromo.discount) / 100;
     }
     return 0;
@@ -199,7 +210,7 @@ const Cart = () => {
   };
 
   const getFinalTotal = () => {
-    const subtotal = getTotalCartAmount();
+    const subtotal = getCartTotal();
     const discount = calculateDiscount();
     // const shippingFee = getShippingFee();
     return subtotal - discount + SHIPPING_FEE;
@@ -209,7 +220,7 @@ const Cart = () => {
   // ================ LEAVE ABOVE UNTOUCHED =======================
 
   return (
-    <div className="cartitems">
+    <div className="Cart-container">
       {/* TEMPORARY CART CONTROL BUTTONS FOR TESTING */}
       <div>
         <button
@@ -238,22 +249,24 @@ const Cart = () => {
         </button>
       </div>
 
+      <h1 className="Cart-header"> Your Cart </h1>
+
       {/* LIST CART ITEM */}
       {/* LIST CART ITEM */}
-      <div className="cartitems-cart">
+      <div className="Cart-cart">
         {isLoading ? (
           <div>Loading cart ... </div>
         ) : (
           <table id="table">
             <thead>
               <tr>
-                <th className="index">#</th>
-                <th>Product</th>
-                <th>Name</th>
-                <th>Price</th>
-                <th>Quantity</th>
-                <th>Total</th>
-                <th>Remove</th>
+                <th id="index-col">#</th>
+                <th id="image-col">Product</th>
+                <th id="name-col">Name</th>
+                <th id="price-col">Price</th>
+                <th id="quantity-col">Quantity</th>
+                <th id="total-col">Total</th>
+                <th id="remove-col">Remove</th>
               </tr>
             </thead>
             <tbody>
@@ -265,9 +278,7 @@ const Cart = () => {
                   // Cart item card
                   <tr key={i}>
                     <td className="index-bar-cell">
-                      <div className="index-bar">
-                        {i + 1}
-                      </div>
+                      <div className="index-bar">{i + 1}</div>
                     </td>
                     <CartItem
                       {...item}
@@ -302,7 +313,7 @@ const Cart = () => {
           <div>
             <div className="cartitems-total-item">
               <p>Subtotal</p>
-              <p>${getTotalCartAmount()}</p>
+              <p>${getCartTotal()}</p>
             </div>
             <hr />
             {appliedPromo && (
