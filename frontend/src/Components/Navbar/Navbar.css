@@ -181,3 +181,78 @@
     }
 }
 
+/* === Admin logged===================== */
+
+.nav-profile-container{
+    width: auto; 
+    gap: 8px;
+  }
+  
+  .nav-admin-shortcut button{
+    padding: 6px 12px;
+    border: none;
+    border-radius: 5px;
+    background: hsl(87, 55%, 55%);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.06);
+    transition: background .15s ease, transform .06s ease-in-out, box-shadow .15s ease;
+  }
+  .nav-admin-shortcut button:hover{
+    background: hsl(87, 55%, 45%);
+  }
+  .nav-admin-shortcut button:active{
+    background: hsl(87, 55%, 40%);
+    transform: translateY(1px);
+  }
+  
+  .nav-admin-actions{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-admin-greeting{
+    font-weight: 600;
+    white-space: nowrap;
+    color: #161616;
+  }
+  
+  .nav-admin-actions button{
+    padding: 6px 10px;
+    border: none;
+    border-radius: 5px;
+    background: #e6e6e6;
+    color: #111;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background .15s ease, transform .06s ease-in-out;
+  }
+  .nav-admin-actions button:hover{
+    background: #d0d0d0;
+  }
+  .nav-admin-actions button:active{
+    background: #c4c4c4;
+    transform: translateY(1px);
+  }
+  
+  .nav-admin-actions .nav-icons{
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+  
+  @media (max-width: 800px){
+    .nav-admin-greeting{
+      display: none;
+    }
+    .nav-admin-shortcut button,
+    .nav-admin-actions button{
+      padding: 6px 10px;
+    }
+  }
+  
