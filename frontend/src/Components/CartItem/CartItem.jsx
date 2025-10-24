@@ -1,17 +1,18 @@
 import "./CartItem.css";
-import remove_icon from "../../assets/cart_cross_icon.png";
+import { Link } from "react-router-dom";
 import DefaultImage from "../../assets/placeholder-image.png";
+import { FaTrashAlt } from "react-icons/fa";
 
 function CartItem(props) {
   const { onIncrease, onDecrease, onRemove } = props;
   return (
     <>
       <td className="CartItem-img">
-        <img
-          src={props.imageInfo?.url || DefaultImage}
-          alt={""}
-        />
+        <Link to={"#"}>
+          <img src={props.imageInfo?.url || DefaultImage} alt={""} />
+        </Link>
       </td>
+
       <td className="CartItem-name">{props.name}</td>
       <td className="CartItem-price">${props.price}</td>
 
@@ -23,12 +24,11 @@ function CartItem(props) {
 
       <td className="CartItem-total">${props.price * props.quantity}</td>
 
-      <img
-        src={remove_icon}
-        onClick={onRemove}
-        alt="remove"
-        className="cartitems-remove-icon"
-      />
+      <td className="CartItem-remove">
+        <button onClick={onRemove} >
+          <FaTrashAlt />
+        </button>
+      </td>
     </>
   );
 }
