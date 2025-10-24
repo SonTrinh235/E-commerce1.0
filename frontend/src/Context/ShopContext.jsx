@@ -48,7 +48,7 @@ const ShopContextProvider = (props) => {
   const reloadCartForCurrentIdentity = useCallback(() => {
     const uid = getCurrentUserId();
     if (uid) {
-      // merge guest vào user nếu có
+      
       try {
         const guestRaw = localStorage.getItem("cart:guest");
         const guest = guestRaw ? JSON.parse(guestRaw) : {};
@@ -56,13 +56,13 @@ const ShopContextProvider = (props) => {
         const userRaw = localStorage.getItem(userKey);
         const user = userRaw ? JSON.parse(userRaw) : {};
 
-        // merge cộng dồn
+
         const merged = { ...user };
         for (const [pid, qty] of Object.entries(guest)) {
           merged[pid] = (merged[pid] || 0) + Number(qty || 0);
         }
         localStorage.setItem(userKey, JSON.stringify(merged));
-        // localStorage.removeItem("cart:guest");
+        localStorage.removeItem("cart:guest");
       } catch {}
     }
 
