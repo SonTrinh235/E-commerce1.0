@@ -3,13 +3,11 @@ import all_product from "../data/all_product";
 
 export const ShopContext = createContext(null);
 
-/* ===== Helpers: xác định user hiện tại & key giỏ hàng ===== */
 const getCurrentUserId = () => {
   try {
     const raw = localStorage.getItem("userInfo") || "{}";
     const info = JSON.parse(raw);
     const u = info?.user || info || {};
-    // Ưu tiên _id backend; fallback firebaseUid; cuối cùng phoneNumber
     return u._id || u.firebaseUid || u.phoneNumber || null;
   } catch {
     return null;
@@ -36,19 +34,16 @@ const saveCart = (cartObj) => {
 };
 
 const ShopContextProvider = (props) => {
-  // Giỏ hiện hành theo key (guest/user)
   const [cartItems, setCartItems] = useState(() => loadCart());
-
-  /* ===== Đồng bộ localStorage mỗi khi cartItems đổi ===== */
   useEffect(() => {
     saveCart(cartItems);
   }, [cartItems]);
 
-  /* ===== Merge guest -> user khi login; load lại giỏ khi auth thay đổi ===== */
+  /* ===== Merge guest  ===== */
   const reloadCartForCurrentIdentity = useCallback(() => {
     const uid = getCurrentUserId();
     if (uid) {
-      
+
       try {
         const guestRaw = localStorage.getItem("cart:guest");
         const guest = guestRaw ? JSON.parse(guestRaw) : {};
