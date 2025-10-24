@@ -1,6 +1,5 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./CSS/Cart.css";
-import { ShopContext } from "../Context/ShopContext";
 import { Link } from "react-router-dom";
 import promoCodes from "../data/Promo.js";
 import CartItem from "../Components/CartItem/CartItem";
@@ -75,7 +74,7 @@ const Cart = () => {
     const productData = productResponse.data;
 
     console.log("log", productData);
-    const response = await addProductToCart(tempUserId, {
+    addProductToCart(tempUserId, {
       productId: productId,
       quantity: 1,
       price: productData.price,
@@ -87,7 +86,7 @@ const Cart = () => {
 
   // function: Update product quantity
   // params: productId, quantity
-  const cartUpdateProductQuantity = async (productId, quantity) => {
+  const cartUpdateProductQuantity = (productId, quantity) => {
     setCartItems((prevCart) => {
       return {
         ...prevCart,
@@ -97,7 +96,7 @@ const Cart = () => {
         },
       };
     });
-    const response = await updateProductQuantity(tempUserId, {
+    updateProductQuantity(tempUserId, {
       productId: productId,
       quantity: quantity,
       price: productsLookup[productId].price,
@@ -105,7 +104,7 @@ const Cart = () => {
 
     // For local cart: remove item on quantity 0
     // Remote cart is handled already
-    if (quantity == 0) {
+    if (quantity === 0) {
       setCartItems((prevCart) => {
         const { [productId]: removedItem, ...restOfCart } = prevCart;
         return restOfCart;
@@ -120,7 +119,7 @@ const Cart = () => {
 
   // function: Update product quantity
   // params: productId, quantity
-  const cartRemoveProductFromCart = async (productId) => {
+  const cartRemoveProductFromCart = (productId) => {
     // For local cart: remove item
     setCartItems((prevCart) => {
       const { [productId]: removedItem, ...restOfCart } = prevCart;
@@ -131,13 +130,14 @@ const Cart = () => {
         prevProductsLookup;
       return restOfProductsLookup;
     });
-    const response = await removeProductFromCart(tempUserId, productId);
+    removeProductFromCart(tempUserId, productId);
   };
 
   function getCartTotal() {
     let totalAmount = 0;
     Object.values(cartItems).map((item, i) => {
-      totalAmount += item.price*item.quantity
+      totalAmount += item.price * item.quantity;
+      return(0);
     });
     return totalAmount;
   }
@@ -148,7 +148,7 @@ const Cart = () => {
 
   useEffect(() => {
     console.log("Cart: cartItems changed: ", cartItems);
-    console.log("Cart total: ", cartTotal);
+    setCartTotal(getCartTotal());
   }, [cartItems]);
 
   useEffect(() => {
@@ -158,22 +158,20 @@ const Cart = () => {
   // ============ LEAVE BELOW UNTOUCHED =============================
   // =========== LEAVE BELOW UNTOUCHED ===========================
 
-  const SHIPPING_FEE = 50000;
+  const SHIPPING_FEE = 0;
 
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [error, setError] = useState("");
-
-  const clearItem = (itemId) => {
-    setCartItems((prev) => ({ ...prev, [itemId]: 0 }));
-  };
 
   const handlePromoCodeChange = (e) => {
     setPromoCode(e.target.value);
     setError("");
   };
 
-  const applyPromoCode = () => {
+  const applyPromoCode = (event) => {
+    // Prevent page refresh on submit
+    event.preventDefault();
     if (!promoCode.trim()) {
       setError("Please enter a promo code");
       return;
@@ -196,7 +194,7 @@ const Cart = () => {
   const calculateDiscount = () => {
     if (!appliedPromo) return 0;
     if (appliedPromo.type === "percentage") {
-      const subtotal = getCartTotal();
+      const subtotal = cartTotal;
       return (subtotal * appliedPromo.discount) / 100;
     }
     return 0;
@@ -210,7 +208,7 @@ const Cart = () => {
   };
 
   const getFinalTotal = () => {
-    const subtotal = getCartTotal();
+    const subtotal = cartTotal;
     const discount = calculateDiscount();
     // const shippingFee = getShippingFee();
     return subtotal - discount + SHIPPING_FEE;
@@ -307,25 +305,25 @@ const Cart = () => {
 
       {/* CHECKOUT */}
       {/* CHECKOUT */}
-      <div className="cartitems-checkout">
-        <div className="cartitems-total">
-          <h1>Totals</h1>
+      <div className="Cart-checkout">
+        <div className="Cart-total">
+          <h1>Total</h1>
           <div>
-            <div className="cartitems-total-item">
+            <div className="Cart-total-item">
               <p>Subtotal</p>
-              <p>${getCartTotal()}</p>
+              <p>${cartTotal}</p>
             </div>
             <hr />
             {appliedPromo && (
               <>
-                <div className="cartitems-total-item">
+                <div className="Cart-total-item">
                   <p>Discount ({appliedPromo.discount}%)</p>
                   <p>-${calculateDiscount().toFixed(2)}</p>
                 </div>
                 <hr />
               </>
             )}
-            <div className="cartitems-total-item">
+            <div className="Cart-total-item">
               <p>Shipping Fee</p>
               <p>${getShippingFee().toFixed(2)}</p>
               {appliedPromo && appliedPromo.type === "freeshipping" && (
@@ -335,7 +333,7 @@ const Cart = () => {
               )}
             </div>
             <hr />
-            <div className="cartitems-total-item">
+            <div className="Cart-total-item">
               <h3>Total</h3>
               <h3>${getFinalTotal().toFixed(2)}</h3>
             </div>
@@ -344,7 +342,7 @@ const Cart = () => {
             <button>PROCEED TO CHECKOUT</button>
           </Link>
         </div>
-        <div className="cartitems-promocode">
+        <div className="Cart-promocode">
           <p>PROMO CODE HERE</p>
           {appliedPromo && (
             <div className="applied-promo">
@@ -354,7 +352,7 @@ const Cart = () => {
               <button onClick={() => setAppliedPromo(null)}>Remove</button>
             </div>
           )}
-          <div className="cartitems-promobox">
+          <form className="Cart-promobox" onSubmit={applyPromoCode}>
             <input
               type="text"
               placeholder="Enter your code"
@@ -362,7 +360,7 @@ const Cart = () => {
               onChange={handlePromoCodeChange}
             />
             <button onClick={applyPromoCode}>APPLY</button>
-          </div>
+          </form>
           {error && <p className="promo-error">{error}</p>}
 
           {/* testing */}

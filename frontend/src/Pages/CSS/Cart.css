@@ -1,12 +1,10 @@
 .Cart-container {
   margin: 100px 170px;
-  /* background: white; */
 }
 
 
 .Cart-cart #table {
   background: white;
-  border-radius: 30px;
   width: 100%;
   font-size: 1.1rem;
   overflow: hidden;
@@ -28,7 +26,7 @@
   height: 3rem;
   border-right: 1px solid lightgrey;
   border-bottom: 1px solid lightgrey;
-  background: lightgrey;
+  background: hsl(0, 0%, 94%);
 }
 
 .Cart-cart #table td {
@@ -45,7 +43,7 @@
 }
 
 .Cart-cart #table .index-bar-cell {
-  background: rgb(240, 240, 240);
+  background: hsl(0, 0%, 94%);
   border-right: 1px solid lightgrey;
 }
 
@@ -65,27 +63,29 @@
 
 /* BELOW UNTOUCHED */
 
-.cartitems-checkout {
+.Cart-checkout {
   display: flex;
   margin: 100px 0px;
 }
 
 
-.cartitems-total {
+.Cart-total {
   flex: 1;
   display: flex;
   flex-direction: column;
   margin-right: 200px;
   gap: 40px;
+  background: white;
+  padding: 50px;
 }
 
-.cartitems-total-item {
+.Cart-total-item {
   display: flex;
   justify-content: space-between;
   padding: 15px 0px;
 }
 
-.cartitems-total button {
+.Cart-total button {
   width: 262px;
   height: 58px;
   outline: none;
@@ -96,21 +96,21 @@
   font-weight: 600;
   cursor: pointer;
 }
-.cartitems-total button:hover {
+.Cart-total button:hover {
   background: #e04e4e;
 }
 
-.cartitems-promocode {
+.Cart-promocode {
   flex: 1;
   font-size: 16px;
   font-weight: 500;
 }
 
-.cartitems-promocode p {
+.Cart-promocode p {
   color: #555;
 }
 
-.cartitems-promobox {
+.Cart-promobox {
   width: 504px;
   margin-top: 15px;
   padding-left: 20px;
@@ -118,7 +118,7 @@
   background: #ffffff;
 }
 
-.cartitems-promobox input {
+.Cart-promobox input {
   border: none;
   outline: none;
   background: transparent;
@@ -127,7 +127,7 @@
   height: 50px;
 }
 
-.cartitems-promobox button {
+.Cart-promobox button {
   width: 170px;
   height: 58px;
   font-size: 16px;
@@ -136,17 +136,17 @@
   cursor: pointer;
 }
 
-.cartitems-promobox button:hover {
+.Cart-promobox button:hover {
   background: #333;
 }
 
-.cartitems-quantity-control {
+.Cart-quantity-control {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.cartitems-quantity-control button {
+.Cart-quantity-control button {
   width: 28px;
   height: 28px;
   border: none;
@@ -156,7 +156,7 @@
   border-radius: 4px;
 }
 
-.cartitems-quantity-control span {
+.Cart-quantity-control span {
   min-width: 20px;
   text-align: center;
 }
