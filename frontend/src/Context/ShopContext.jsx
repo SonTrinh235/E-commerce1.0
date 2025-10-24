@@ -1,50 +1,124 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useCallback } from "react";
 import all_product from "../data/all_product";
 
 export const ShopContext = createContext(null);
 
-const getDefaultCart = () => {
-  let cart = {};
-  for (let index = 0; index < all_product.length + 1; index++) {
-    cart[index] = 0;
+/* ===== Helpers: xác định user hiện tại & key giỏ hàng ===== */
+const getCurrentUserId = () => {
+  try {
+    const raw = localStorage.getItem("userInfo") || "{}";
+    const info = JSON.parse(raw);
+    const u = info?.user || info || {};
+    // Ưu tiên _id backend; fallback firebaseUid; cuối cùng phoneNumber
+    return u._id || u.firebaseUid || u.phoneNumber || null;
+  } catch {
+    return null;
   }
-  return cart;
+};
+
+const getCartKey = () => {
+  const uid = getCurrentUserId();
+  return uid ? `cart:${uid}` : "cart:guest";
+};
+
+/* ===== Load/Save theo key ===== */
+const loadCart = () => {
+  try {
+    const raw = localStorage.getItem(getCartKey());
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+};
+
+const saveCart = (cartObj) => {
+  localStorage.setItem(getCartKey(), JSON.stringify(cartObj || {}));
 };
 
 const ShopContextProvider = (props) => {
-  // Lấy giỏ hàng từ localStorage nếu có, không thì tạo mặc định
-  const storedCart = JSON.parse(localStorage.getItem("cartItems"));
-  const [cartItems, setCartItems] = useState(storedCart || getDefaultCart());
+  // Giỏ hiện hành theo key (guest/user)
+  const [cartItems, setCartItems] = useState(() => loadCart());
 
-  // Đồng bộ với localStorage mỗi khi cartItems thay đổi
+  /* ===== Đồng bộ localStorage mỗi khi cartItems đổi ===== */
   useEffect(() => {
-    localStorage.setItem("cartItems", JSON.stringify(cartItems));
+    saveCart(cartItems);
   }, [cartItems]);
 
-  // Thêm vào giỏ
+  /* ===== Merge guest -> user khi login; load lại giỏ khi auth thay đổi ===== */
+  const reloadCartForCurrentIdentity = useCallback(() => {
+    const uid = getCurrentUserId();
+    if (uid) {
+      // merge guest vào user nếu có
+      try {
+        const guestRaw = localStorage.getItem("cart:guest");
+        const guest = guestRaw ? JSON.parse(guestRaw) : {};
+        const userKey = `cart:${uid}`;
+        const userRaw = localStorage.getItem(userKey);
+        const user = userRaw ? JSON.parse(userRaw) : {};
+
+        // merge cộng dồn
+        const merged = { ...user };
+        for (const [pid, qty] of Object.entries(guest)) {
+          merged[pid] = (merged[pid] || 0) + Number(qty || 0);
+        }
+        localStorage.setItem(userKey, JSON.stringify(merged));
+        // localStorage.removeItem("cart:guest");
+      } catch {}
+    }
+
+    setCartItems(loadCart());
+  }, []);
+
+  useEffect(() => {
+    const onAuth = () => reloadCartForCurrentIdentity();
+    window.addEventListener("auth-changed", onAuth);
+    window.addEventListener("storage", onAuth);
+    return () => {
+      window.removeEventListener("auth-changed", onAuth);
+      window.removeEventListener("storage", onAuth);
+    };
+  }, [reloadCartForCurrentIdentity]);
+
+
+  /* ===== API giỏ hàng ===== */
   const addToCart = (itemId) => {
-    setCartItems((prev) => ({ ...prev, [itemId]: prev[itemId] + 1 }));
-    console.log("Added:", itemId, cartItems);
+    setCartItems((prev) => {
+      const next = { ...prev, [itemId]: (prev[itemId] || 0) + 1 };
+      return next;
+    });
   };
 
-  // Xóa khỏi giỏ
   const removeFromCart = (itemId) => {
-    setCartItems((prev) => ({
-      ...prev,
-      [itemId]: prev[itemId] > 0 ? prev[itemId] - 1 : 0,
-    }));
-    console.log("Removed:", itemId, cartItems);
+    setCartItems((prev) => {
+      const cur = prev[itemId] || 0;
+      const left = Math.max(cur - 1, 0);
+      const next = { ...prev };
+      if (left === 0) delete next[itemId];
+      else next[itemId] = left;
+      return next;
+    });
+  };
+
+
+  const setCartItemsExternal = (updaterOrObj) => {
+    setCartItems((prev) =>
+      typeof updaterOrObj === "function" ? updaterOrObj(prev) : updaterOrObj || {}
+    );
   };
 
   const getTotalCartAmount = () => {
     let totalAmount = 0;
-    for (const item in cartItems) {
-      if (cartItems[item] > 0) {
-        let itemInfo = all_product.find(
-          (product) => product.id === Number(item)
+    for (const [itemId, qty] of Object.entries(cartItems)) {
+      if (qty > 0) {
+        const itemInfo = all_product.find(
+          (p) => (p.id ?? p._id) === Number(itemId) || String(p.id ?? p._id) === String(itemId)
         );
         if (itemInfo) {
-          totalAmount += itemInfo.new_price * cartItems[item];
+          const price =
+            itemInfo.new_price ??
+            itemInfo.price ??
+            (typeof itemInfo.old_price === "number" ? itemInfo.old_price : 0);
+          totalAmount += Number(price || 0) * Number(qty || 0);
         }
       }
     }
@@ -52,23 +126,21 @@ const ShopContextProvider = (props) => {
   };
 
   const getTotalCartItems = () => {
-    let totalItems = 0;
-    for (const item in cartItems) {
-      if (cartItems[item] > 0) {
-        totalItems += cartItems[item];
-      }
+    let total = 0;
+    for (const qty of Object.values(cartItems)) {
+      total += Number(qty || 0);
     }
-    return totalItems;
+    return total;
   };
 
   const contextValue = {
-    getTotalCartItems,
-    getTotalCartAmount,
     all_product,
     cartItems,
     addToCart,
     removeFromCart,
-    setCartItems,
+    setCartItems: setCartItemsExternal,
+    getTotalCartItems,
+    getTotalCartAmount,
   };
 
   return (
