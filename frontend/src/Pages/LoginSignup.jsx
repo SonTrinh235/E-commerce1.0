@@ -26,26 +26,47 @@ const LoginSignup = () => {
       alert("Vui lòng nhập đầy đủ thông tin!");
       return;
     }
-  
+
     const token = localStorage.getItem("userToken");
-    const res = await fetch("https://www.bachkhoaxanh.xyz/user/updateProfile", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ fullName, address }),
-    });
-    
-    const json = await res.json();
-    if (json.success) {
-      alert("Cập nhật thông tin thành công!");
-      setShowProfilePopup(false);
-      window.location.href = "/";
-    } else {
-      alert("Lỗi cập nhật: " + (json.message || "Không rõ lỗi"));
+    try {
+      const res = await fetch("https://www.bachkhoaxanh.xyz/user/updateProfile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ fullName, address }),
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        // Cập nhật ngay localStorage để Navbar hiển thị tên mới
+        try {
+          const old = JSON.parse(localStorage.getItem("userInfo") || "{}");
+          const updated = {
+            ...old,
+            user: {
+              ...(old?.user || {}),
+              displayName: fullName, // map fullName -> displayName để UI dùng đồng nhất
+              address,
+            },
+          };
+          localStorage.setItem("userInfo", JSON.stringify(updated));
+          window.dispatchEvent(new Event("auth-changed"));
+        } catch {}
+
+        alert("Cập nhật thông tin thành công!");
+        setShowProfilePopup(false);
+        window.location.href = "/";
+      } else {
+        alert("Lỗi cập nhật: " + (json.message || "Không rõ lỗi"));
+      }
+    } catch (e) {
+      alert("Lỗi mạng khi cập nhật hồ sơ!");
+      console.error(e);
     }
   };
+
   // --- Setup Recaptcha ---
   const setupRecaptcha = () => {
     if (!recaptchaVerifier) {
@@ -65,13 +86,13 @@ const LoginSignup = () => {
         alert("Vui lòng nhập số điện thoại hợp lệ!");
         return;
       }
-  
+
       try {
         const appVerifier = setupRecaptcha();
         const phoneNumber = phone.startsWith("+")
           ? phone
           : "+84" + phone.replace(/^0/, "");
-  
+
         const result = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
         setConfirmationResult(result);
         setStep("otp");
@@ -80,61 +101,53 @@ const LoginSignup = () => {
         console.error("❌ Lỗi gửi OTP:", error);
         alert("Không gửi được OTP: " + (error.message || error));
       }
-  
     } else if (step === "otp") {
       if (otp.trim().length !== 6) {
         alert("Vui lòng nhập đủ 6 chữ số OTP!");
         return;
       }
-  
+
       try {
         if (!confirmationResult) {
           alert("⚠️ Phiên OTP không hợp lệ, vui lòng thử lại!");
           return;
         }
-  
+
         const userCredential = await confirmationResult.confirm(otp);
         const user = userCredential.user;
         const idToken = await user.getIdToken();
-  
-        // 🪪 Log thông tin chi tiết
+
         console.log("🪪 Firebase ID Token:", idToken);
         console.log("📱 Phone number:", user.phoneNumber);
         console.log("👤 UID:", user.uid);
         console.log("⏱ Token expires at:", new Date(user.stsTokenManager.expirationTime));
-  
+
         alert(`🎉 Đăng nhập thành công: ${user.phoneNumber}`);
-  
+
         const payload = {
           phoneNumber: user.phoneNumber,
           idToken,
           displayName: user.displayName || "",
           address: "",
-        };        
-  
+        };
+
         const res = await fetch("https://www.bachkhoaxanh.xyz/user/auth", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-  
+
         const json = await res.json();
         console.log("📦 API response:", json);
-///////////////////TEST
-// if (json.data) {
-//   json.data.isNewUser = true;
-//   if (json.data.user) {
-//     delete json.data.user.displayName;
-//     delete json.data.user.address;
-//   }
-// }
-///////////////////
 
         if (json.success) {
           localStorage.setItem("userToken", json.data?.token || idToken);
           localStorage.setItem("userInfo", JSON.stringify(json.data || { phone: user.phoneNumber }));
-  
-          // 🔍 Nếu là user mới thì hiện popup nhập thông tin
+
+          // Cho UI (Navbar...) cập nhật ngay
+          window.dispatchEvent(new Event("auth-changed"));
+
+          // user mới thì hiện popup nhập thông tin
           if (json.data?.isNewUser) {
             setShowProfilePopup(true);
           } else {
@@ -144,14 +157,12 @@ const LoginSignup = () => {
         } else {
           alert("❌ Đăng nhập thất bại: " + (json.message || "Không rõ lỗi"));
         }
-  
       } catch (error) {
         console.error("❌ Lỗi xác minh OTP:", error);
         alert("Mã OTP không hợp lệ hoặc đã hết hạn! " + (error.message || ""));
       }
     }
   };
-  
 
   // --- Admin login ---
   const handleAdminLogin = async () => {
@@ -164,10 +175,7 @@ const LoginSignup = () => {
     try {
       setAdminLoading(true);
 
-      const payload = {
-        username: adminCode,
-        password: adminPass,
-      };
+      const payload = { username: adminCode, password: adminPass };
 
       const res = await fetch("https://www.bachkhoaxanh.xyz/user/admin/signin", {
         method: "POST",
@@ -179,10 +187,17 @@ const LoginSignup = () => {
       console.log("🔐 Admin auth response:", json);
 
       if (json.success) {
-        localStorage.setItem("adminToken", json.data?.token || "");
+        // Luôn lưu token truthy để guard không fail nếu server trả "" (edge case)
+        localStorage.setItem("adminToken", json.data?.token ?? "admin-session");
         localStorage.setItem("admin", JSON.stringify({ role: "admin", username: adminCode }));
+
+        // Báo UI cập nhật ngay (AdminNavbar, guard…)
+        window.dispatchEvent(new Event("auth-changed"));
+
         alert("✅ Đăng nhập thành công (Admin)");
-        window.location.href = "/admin";
+        // Admin vẫn xem được store như user (public routes).
+        // Chuyển thẳng vào dashboard admin:
+        window.location.href = "/admin/dashboard";
       } else {
         setAdminError(json.message || "Sai username hoặc mật khẩu");
       }
@@ -296,33 +311,31 @@ const LoginSignup = () => {
           </p>
         </div>
       </div>
-      {/* Popup yêu cầu hoàn thiện thông tin */}
-        {showProfilePopup && (
-          <div className="popup-overlay">
-            <div className="popup">
-              <h2>Hoàn thiện thông tin cá nhân</h2>
-              <p>Vui lòng nhập đầy đủ thông tin trước khi tiếp tục</p>
-              <input
-                type="text"
-                placeholder="Họ và tên"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder="Địa chỉ"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-              />
-              <button onClick={handleSaveProfile}>Lưu thông tin</button>
-            </div>
-          </div>
-        )}
 
+      {/* Popup yêu cầu hoàn thiện thông tin */}
+      {showProfilePopup && (
+        <div className="popup-overlay">
+          <div className="popup">
+            <h2>Hoàn thiện thông tin cá nhân</h2>
+            <p>Vui lòng nhập đầy đủ thông tin trước khi tiếp tục</p>
+            <input
+              type="text"
+              placeholder="Họ và tên"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="Địa chỉ"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+            <button onClick={handleSaveProfile}>Lưu thông tin</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
-
 
 export default LoginSignup;

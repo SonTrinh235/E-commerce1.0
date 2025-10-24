@@ -1,17 +1,29 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
 import './Navbar.css';
 
-import {FiMenu, FiSearch, FiShoppingCart, FiUser } from "react-icons/fi";
+import { FiMenu, FiSearch, FiShoppingCart, FiUser, FiLogOut } from "react-icons/fi";
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShopContext } from '../../Context/ShopContext';
+
+// Firebase Auth (cho user)
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "../../firebase";
 
 const Navbar = () => {
   const [menu, setMenu] = useState('shop');
   const [searchTerm, setSearchTerm] = useState('');
   const { getTotalCartItems } = useContext(ShopContext);
-  const menuRef = useRef();
+  const menuRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
+
+  // --- Auth UI state ---
+  const [isUser, setIsUser] = useState(!!localStorage.getItem('userToken'));
+  const [userName, setUserName] = useState('Account');
+
+  // Lưu ý: dùng !== null để coi là "đang đăng nhập admin" miễn có key
+  const [isAdmin, setIsAdmin] = useState(localStorage.getItem('adminToken') !== null);
+  const [adminName, setAdminName] = useState('Admin');
 
   const dropdown_toggle = (e) => {
     if (menuRef.current) {
@@ -20,7 +32,7 @@ const Navbar = () => {
     e.currentTarget.classList.toggle('open');
   };
 
-  
+  // Highlight menu by path
   useEffect(() => {
     const path = location.pathname.toLowerCase();
     if (path === '/' || path.startsWith('/product')) setMenu('shop');
@@ -44,9 +56,74 @@ const Navbar = () => {
     }
   };
 
+  // Read auth info from localStorage (user + admin)
+  const loadAuthFromStorage = () => {
+    const hasUser = !!localStorage.getItem('userToken');
+    const hasAdmin = localStorage.getItem('adminToken') !== null;
+    setIsUser(hasUser);
+    setIsAdmin(hasAdmin);
+
+    try {
+      const raw = localStorage.getItem('userInfo') || '{}';
+      const info = JSON.parse(raw);
+      const u = info?.user || info || {};
+      const display = u.displayName || u.fullName || '';
+      setUserName(display || 'Account');
+    } catch {
+      setUserName('Account');
+    }
+
+    try {
+      const rawAdmin = localStorage.getItem('admin') || '{}';
+      const a = JSON.parse(rawAdmin);
+      setAdminName(a?.username || 'Admin');
+    } catch {
+      setAdminName('Admin');
+    }
+  };
+
+  // Sync UI: custom + storage + Firebase user state
+  useEffect(() => {
+    loadAuthFromStorage();
+
+    const updateFromStorage = () => loadAuthFromStorage();
+    window.addEventListener('auth-changed', updateFromStorage);
+    window.addEventListener('storage', updateFromStorage);
+
+    const unsub = onAuthStateChanged(auth, (fbUser) => {
+      setIsUser(!!fbUser);
+      if (fbUser) {
+        setUserName(prev => (prev && prev !== 'Account') ? prev : (fbUser.displayName || 'Account'));
+      } else {
+        setUserName('Account');
+      }
+    });
+
+    return () => {
+      window.removeEventListener('auth-changed', updateFromStorage);
+      window.removeEventListener('storage', updateFromStorage);
+      unsub();
+    };
+  }, []);
+
+  // --- Logout: tách riêng user/admin ---
+  const handleUserLogout = async () => {
+    try { await signOut(auth); } catch (e) { console.warn('signOut error:', e); }
+    localStorage.removeItem('userToken');
+    localStorage.removeItem('userInfo');
+    window.dispatchEvent(new Event('auth-changed'));
+    navigate('/'); // ở lại store
+  };
+
+  const handleAdminLogout = () => {
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('admin');
+    window.dispatchEvent(new Event('auth-changed'));
+    navigate('/'); // hoặc '/login'
+  };
+
   return (
     <div className="navbar">
-      
       <div className="nav_logo">
         <Link to="/" onClick={() => handleItemClick('shop')}>
           <b><span>Good</span>Eats</b>
@@ -54,7 +131,7 @@ const Navbar = () => {
       </div>
 
       <div className='nav-dropdown'>
-      <FiMenu className='nav-icons' onClick={dropdown_toggle}></FiMenu>
+        <FiMenu className='nav-icons' onClick={dropdown_toggle} />
       </div>
 
       <ul ref={menuRef} className="nav_menu">
@@ -63,15 +140,15 @@ const Navbar = () => {
           {menu === 'shop' ? <hr /> : null}
         </li>
         <li onClick={() => handleItemClick('meats')}>
-          <Link style={{ textDecoration: 'none' }} to="/meats"><b>Meats</b></Link>
+          <Link style={{ textDecoration: 'none' }} to="/meats"><b>Category1</b></Link>
           {menu === 'meats' ? <hr /> : null}
         </li>
         <li onClick={() => handleItemClick('vegs')}>
-          <Link style={{ textDecoration: 'none' }} to="/vegs"><b>Vegs</b></Link>
+          <Link style={{ textDecoration: 'none' }} to="/vegs"><b>Category2</b></Link>
           {menu === 'vegs' ? <hr /> : null}
         </li>
         <li onClick={() => handleItemClick('others')}>
-          <Link style={{ textDecoration: 'none' }} to="/others"><b>Others</b></Link>
+          <Link style={{ textDecoration: 'none' }} to="/others"><b>Category3</b></Link>
           {menu === 'others' ? <hr /> : null}
         </li>
         <li onClick={() => handleItemClick('products')}>
@@ -87,27 +164,56 @@ const Navbar = () => {
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
-        <button type="submit"><FiSearch></FiSearch></button>
+        <button type="submit"><FiSearch /></button>
       </form>
 
       <div className="nav-profile-container">
-        <div className='nav-cart'>
-          <Link to="/cart">
-            <FiShoppingCart className='nav-icons'></FiShoppingCart>
-          </Link>
-          <b><div className="nav-cart-count">{getTotalCartItems()}</div></b>
-        </div>
-        
-        <div className='nav-user'>
-          <Link to="/login">
-            <button>
-              <FiUser className='nav-icons'></FiUser>
-              <span>Log in</span>
+        {/* Nếu ADMIN đăng nhập và không phải user => ẨN GIỎ HÀNG, THAY BẰNG ADMIN PANEL */}
+        {isAdmin && !isUser ? (
+          <div className="nav-admin-shortcut">
+            <button onClick={() => navigate('/admin/dashboard')}>
+              Admin Panel
             </button>
-          </Link>
+          </div>
+        ) : (
+          <div className='nav-cart'>
+            <Link to="/cart">
+              <FiShoppingCart className='nav-icons' />
+            </Link>
+            <b><div className="nav-cart-count">{getTotalCartItems()}</div></b>
+          </div>
+        )}
+
+        <div className='nav-user'>
+          {isUser ? (
+            // USER đang đăng nhập
+            <button onClick={handleUserLogout}>
+              <FiLogOut className='nav-icons' />
+              <span>
+                {userName && userName !== 'Account' ? `Log out (${userName})` : 'Log out'}
+              </span>
+            </button>
+          ) : isAdmin ? (
+            // ADMIN đang đăng nhập (không có user)
+            <div className="nav-admin-actions" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <span className="nav-admin-greeting">Hello, {adminName}</span>
+              {/* Không lặp lại Admin Panel ở đây nữa */}
+              <button onClick={handleAdminLogout}>
+                <FiLogOut className='nav-icons' />
+                <span>Log out (Admin)</span>
+              </button>
+            </div>
+          ) : (
+            // Không đăng nhập
+            <Link to="/login">
+              <button>
+                <FiUser className='nav-icons' />
+                <span>Log in</span>
+              </button>
+            </Link>
+          )}
         </div>
       </div>
-
     </div>
   );
 };
