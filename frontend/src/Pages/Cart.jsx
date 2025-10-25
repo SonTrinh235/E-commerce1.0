@@ -6,7 +6,7 @@ import CartItem from "../Components/CartItem/CartItem";
 import { CartContext } from "../Context/CartContext";
 
 const Cart = () => {
-  // Import cart from CartContext 
+  // Import cart from CartContext
   const {
     // Cart is loading
     isCartLoading,
@@ -99,23 +99,6 @@ const Cart = () => {
           }}
         >
           Add Meat 1
-        </button>
-        <button
-          onClick={() => {
-            cartUpdateProductQuantity(
-              "68f9cf79c3d1a3fe39a50e90",
-              cartItems[3].quantity - 1
-            );
-          }}
-        >
-          -1 Meat 1
-        </button>
-        <button
-          onClick={() => {
-            cartRemoveProductFromCart("68f9cf79c3d1a3fe39a50e90");
-          }}
-        >
-          Remove Meat 1
         </button>
       </div>
 
