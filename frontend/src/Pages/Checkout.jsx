@@ -10,33 +10,14 @@ import { getProductById } from "../api/productService";
 import { createOrder } from "../api/orderService";
 
 const Checkout = () => {
-  const [isLoading, setIsLoading] = useState(true);
 
   const {
-    tempUserId,
+    isCartLoading,
     cartTotal,
-    setCartTotal,
     cartItems,
-    setCartItems,
     productsLookup,
-    setProductsLookup,
-    fetchCart,
-    fetchProductsData,
   } = useContext(CartContext);
 
-  const initializeCartAndProductsLookup = async () => {
-    setIsLoading(true);
-
-    const newCart = await fetchCart(tempUserId);
-    const productIds = newCart.map((item) => item.productId);
-    await fetchProductsData(productIds);
-
-    setIsLoading(false);
-  };
-
-  useEffect(() => {
-    initializeCartAndProductsLookup();
-  }, []);
 
   // const { cartItems, all_product, getTotalCartAmount } =
   //   useContext(ShopContext);
@@ -80,7 +61,7 @@ const Checkout = () => {
         <p>Your cart is empty</p>
       ) : (
         <div className="checkout-content">
-          {isLoading ? (
+          {isCartLoading ? (
           <div>Loading cart ... </div>
         ) : (
           // Cart content

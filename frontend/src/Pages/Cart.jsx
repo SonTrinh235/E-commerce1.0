@@ -1,133 +1,34 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useState } from "react";
 import "./CSS/Cart.css";
 import { Link } from "react-router-dom";
 import promoCodes from "../data/Promo.js";
 import CartItem from "../Components/CartItem/CartItem";
-import { CartContext } from "../Context/CartContext"
-
-// Import APIs
-import {
-  getCartByUserId,
-  addProductToCart,
-  updateProductQuantity,
-  removeProductFromCart,
-} from "../api/cartService";
-import { getProductById } from "../api/productService";
+import { CartContext } from "../Context/CartContext";
 
 const Cart = () => {
-  const { tempUserId,
+  // Import cart from CartContext 
+  const {
+    // Cart is loading
+    isCartLoading,
+
+    // cartTotal: Total cart price
     cartTotal,
-    setCartTotal,
+    // cartItems: Items in cart with prod id and count
     cartItems,
-    setCartItems,
+    // productsLookup: Lookup objects of products in cart (full product data)
     productsLookup,
-    setProductsLookup,
-    fetchCart,
-    fetchProductsData } = useContext(CartContext);
 
-  const [isLoading, setIsLoading] = useState(true);
+    // Implemented API callers
+    // cartAddProductToCart(productId)
+    cartAddProductToCart,
+    // cartUpdateProductQuantity(productId,quantity)
+    cartUpdateProductQuantity,
+    // cartRemoveProductFromCart(productId)
+    cartRemoveProductFromCart,
+  } = useContext(CartContext);
 
-  // function: fetch cart and product data
-  const initializeCartAndProductsLookup = async () => {
-    setIsLoading(true);
-
-    const newCart = await fetchCart(tempUserId);
-    const productIds = newCart.map((item) => item.productId);
-    await fetchProductsData(productIds);
-
-    setIsLoading(false);
-  };
-
-  // function: Add product
-  //  params: productId
-  const cartAddProductToCart = async (productId) => {
-    const productResponse = await getProductById(productId);
-    const productData = productResponse.data;
-
-    console.log("log", productData);
-    addProductToCart(tempUserId, {
-      productId: productId,
-      quantity: 1,
-      price: productData.price,
-    });
-
-    // Call fetch needed for product info (price, image)
-    await initializeCartAndProductsLookup();
-  };
-
-  // function: Update product quantity
-  // params: productId, quantity
-  const cartUpdateProductQuantity = (productId, quantity) => {
-    setCartItems((prevCart) => {
-      return {
-        ...prevCart,
-        [productId]: {
-          ...prevCart[productId],
-          quantity: quantity,
-        },
-      };
-    });
-    updateProductQuantity(tempUserId, {
-      productId: productId,
-      quantity: quantity,
-      price: productsLookup[productId].price,
-    });
-
-    // For local cart: remove item on quantity 0
-    // Remote cart is handled already
-    if (quantity === 0) {
-      setCartItems((prevCart) => {
-        const { [productId]: removedItem, ...restOfCart } = prevCart;
-        return restOfCart;
-      });
-      setProductsLookup((prevProductsLookup) => {
-        const { [productId]: removedItem, ...restOfProductsLookup } =
-          prevProductsLookup;
-        return restOfProductsLookup;
-      });
-    }
-  };
-
-  // function: Update product quantity
-  // params: productId, quantity
-  const cartRemoveProductFromCart = (productId) => {
-    // For local cart: remove item
-    setCartItems((prevCart) => {
-      const { [productId]: removedItem, ...restOfCart } = prevCart;
-      return restOfCart;
-    });
-    setProductsLookup((prevProductsLookup) => {
-      const { [productId]: removedItem, ...restOfProductsLookup } =
-        prevProductsLookup;
-      return restOfProductsLookup;
-    });
-    removeProductFromCart(tempUserId, productId);
-  };
-
-  function getCartTotal() {
-    let totalAmount = 0;
-    Object.values(cartItems).map((item, i) => {
-      totalAmount += item.price * item.quantity;
-      return(0);
-    });
-    return totalAmount;
-  }
-
-  useEffect(() => {
-    initializeCartAndProductsLookup();
-  }, []);
-
-  useEffect(() => {
-    console.log("Cart: cartItems changed: ", cartItems);
-    setCartTotal(getCartTotal());
-  }, [cartItems]);
-
-  useEffect(() => {
-    console.log("Cart: productsLookup changed: ", productsLookup);
-  }, [productsLookup]);
-
-  // ============ LEAVE BELOW UNTOUCHED =============================
-  // =========== LEAVE BELOW UNTOUCHED ===========================
+  // ============ BELOW IGNORED =============================
+  // =========== BELOW IGNORED ===========================
 
   const SHIPPING_FEE = 0;
 
@@ -185,8 +86,8 @@ const Cart = () => {
     return subtotal - discount + SHIPPING_FEE;
   };
 
-  // ================ LEAVE ABOVE UNTOUCHED =======================
-  // ================ LEAVE ABOVE UNTOUCHED =======================
+  // ================ ABOVE IGNORED =======================
+  // ================ ABOVE IGNORED =======================
 
   return (
     <div className="Cart-container">
@@ -223,7 +124,7 @@ const Cart = () => {
       {/* LIST CART ITEM */}
       {/* LIST CART ITEM */}
       <div className="Cart-cart">
-        {isLoading ? (
+        {isCartLoading ? (
           <div>Loading cart ... </div>
         ) : (
           <table id="table">
