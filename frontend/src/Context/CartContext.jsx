@@ -15,12 +15,12 @@ import { getProductById } from "../api/productService";
 export const CartContext = createContext();
 
 export const CartContextProvider = ({ children }) => {
-
   // userId: Should be fetched from shop context or auth context
+  // userId could be null
   const { userId } = useContext(ShopContext);
-  
+
   // Cart Is Loading
-  const [isCartLoading, setIsCartLoading] = useState(true);
+  const [isCartLoading, setIsCartLoading] = useState(false);
 
   // cartTotal: Total price of cart
   const [cartTotal, setCartTotal] = useState();
@@ -78,15 +78,63 @@ export const CartContextProvider = ({ children }) => {
     const productResponse = await getProductById(productId);
     const productData = productResponse.data;
 
-    console.log("log", productData);
-    addProductToCart(userId, {
-      productId: productId,
-      quantity: 1,
-      price: productData.price,
+    // Set local cart
+    setCartItems((prevCart) => {
+      const existingItem = prevCart[productId];
+
+      if (existingItem) {
+        // Case A: EXISTS Item
+        return {
+          ...prevCart, // Copy other items
+          [productId]: {
+            ...existingItem, // Copy existing item details
+            quantity: existingItem.quantity + 1, // +1 quantity
+          },
+        };
+      } else {
+        // Case B: Item NEW
+        return {
+          ...prevCart, // Copy all existing items
+          [productId]: {
+            // Add new item
+            productId: productId,
+            quantity: 1,
+            price: productData.price,
+          },
+        };
+      }
     });
 
-    // Call fetch needed for product info (price, image)
-    await initializeCartAndProductsLookup();
+    setProductsLookup((prevLookup) => {
+      const existingItem = prevLookup[productId];
+
+      if (existingItem) {
+        // Case A: EXISTS Item
+        return {
+          ...prevLookup, // Copy other items
+        };
+      } else {
+        // Case B: Item NEW
+        return {
+          ...prevLookup, // Copy all existing items
+          [productId]: {
+            // Add new item
+            ...productData,
+          },
+        };
+      }
+    });
+
+    // Only call API if logged in
+    if (userId) {
+      addProductToCart(userId, {
+        productId: productId,
+        quantity: 1,
+        price: productData.price,
+      });
+      // Call fetch needed for product info (price, image)
+      await initializeCartAndProductsLookup();
+    }
   };
 
   // function: Update product quantity
@@ -101,11 +149,15 @@ export const CartContextProvider = ({ children }) => {
         },
       };
     });
-    updateProductQuantity(userId, {
-      productId: productId,
-      quantity: quantity,
-      price: productsLookup[productId].price,
-    });
+
+    // Only call API if logged in
+    if (userId) {
+      updateProductQuantity(userId, {
+        productId: productId,
+        quantity: quantity,
+        price: productsLookup[productId].price,
+      });
+    }
 
     // For local cart: remove item on quantity 0
     // Remote cart is handled already
@@ -135,7 +187,11 @@ export const CartContextProvider = ({ children }) => {
         prevProductsLookup;
       return restOfProductsLookup;
     });
-    removeProductFromCart(userId, productId);
+
+    // Only call API if logged in
+    if (userId) {
+      removeProductFromCart(userId, productId);
+    }
   };
 
   function getCartTotal() {
@@ -147,13 +203,31 @@ export const CartContextProvider = ({ children }) => {
     return totalAmount;
   }
 
+  // useEffect: init cart
+  // Currently bugged: userId is not changing
   useEffect(() => {
-    initializeCartAndProductsLookup();
-  }, []);
+    console.log("USER ID CHANGE: ", userId);
+    if (userId) {
+      initializeCartAndProductsLookup();
+    } else {
+      // Local cart for not logged in
+      setIsCartLoading(true);
+      const storedCart = localStorage.getItem("localCart");
+      setCartItems(storedCart ? JSON.parse(storedCart) : {});
+      // Local lookup for not logged in
+      const storedCartLookup = localStorage.getItem("localCartLookup");
+      setProductsLookup(storedCartLookup ? JSON.parse(storedCartLookup) : {});
+      setIsCartLoading(false);
+    }
+  }, [userId]);
 
   useEffect(() => {
     console.log("Cart: cartItems changed: ", cartItems);
     setCartTotal(getCartTotal());
+    if (!userId) {
+      localStorage.setItem("localCart", JSON.stringify(cartItems));
+      localStorage.setItem("localCartLookup", JSON.stringify(productsLookup));
+    }
   }, [cartItems]);
 
   useEffect(() => {
