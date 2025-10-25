@@ -1,11 +1,29 @@
-import React, { useContext, useState } from "react";
-import { ShopContext } from "../../Context/ShopContext";
-import "./Checkout.css";
+import React, { useContext, useEffect, useState } from "react";
+import { ShopContext } from "../Context/ShopContext";
+import { CartContext } from "../Context/CartContext";
+import "./CSS/Checkout.css";
+import DefaultImage from "../assets/placeholder-image.png";
+
+// Import APIs
+import { getCartByUserId } from "../api/cartService";
+import { getProductById } from "../api/productService";
+import { createOrder } from "../api/orderService";
 
 const Checkout = () => {
-  const { cartItems, all_product, getTotalCartAmount } = useContext(ShopContext);
 
-  const itemsInCart = all_product.filter((p) => cartItems[p.id] > 0);
+  const {
+    isCartLoading,
+    cartTotal,
+    cartItems,
+    productsLookup,
+  } = useContext(CartContext);
+
+
+  // const { cartItems, all_product, getTotalCartAmount } =
+  //   useContext(ShopContext);
+
+  // cartItems
+  // const itemsInCart = all_product.filter((p) => cartItems[p.id] > 0);
 
   // state cho form
   const [formData, setFormData] = useState({
@@ -22,42 +40,59 @@ const Checkout = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!itemsInCart.length) {
+    if (!true) {
       alert("Your cart is empty!");
       return;
     }
-    alert(`Order placed successfully!\n\nName: ${formData.name}\nAddress: ${formData.address}\nPhone: ${formData.phone}\nEmail: ${formData.email}\n\nTotal: $${getTotalCartAmount().toFixed(2)}`);
+    alert(
+      `Order placed successfully!\n\nName: ${formData.name}\nAddress: ${
+        formData.address
+      }\nPhone: ${formData.phone}\nEmail: ${
+        formData.email
+      }\n\nTotal: $${cartTotal.toFixed(2)}`
+    );
   };
 
   return (
+    
     <div className="checkout-page">
       <h2>Checkout</h2>
-      {itemsInCart.length === 0 ? (
+      {true === 0 ? (
         <p>Your cart is empty</p>
       ) : (
         <div className="checkout-content">
-          {/* Left: items */}
+          {isCartLoading ? (
+          <div>Loading cart ... </div>
+        ) : (
+          // Cart content
           <div className="checkout-items">
-            {itemsInCart.map((item) => (
-              <div key={item.id} className="checkout-item">
-                <img src={item.image} alt={item.name} />
-                <div>
-                  <h3>{item.name}</h3>
-                  <p>
-                    ${item.new_price} x {cartItems[item.id]} = $
-                    {(item.new_price * cartItems[item.id]).toFixed(2)}
-                  </p>
+            {Object.values(cartItems).map((item) => {
+              const currentItemData = productsLookup[item.productId];
+              return (
+                <div className="checkout-item">
+                  <img
+                    src={currentItemData.imageInfo?.url || DefaultImage}
+                    alt={currentItemData.name}
+                  />
+                  <div>
+                    <h3>{currentItemData.name}</h3>
+                    <p>
+                      ${item.price} x {item.quantity} = $
+                      {item.price * item.quantity}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+        )}
 
           {/* Right: summary + form */}
           <div className="checkout-right">
             <div className="checkout-summary">
               <h3>Order Summary</h3>
-              <p>Total Items: {itemsInCart.length}</p>
-              <h3>Total: ${getTotalCartAmount().toFixed(2)}</h3>
+              <p>Total Items: {Object.keys(cartItems).length}</p>
+              <h3>Total: ${cartTotal}</h3>
             </div>
 
             <div className="checkout-form">
