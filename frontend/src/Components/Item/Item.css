@@ -16,7 +16,7 @@
 /* product image */
 .item img {
   width: 100%;
-  aspect-ratio: 1/1;
+  aspect-ratio: 1 / 1;
   object-fit: cover;
   transition: transform 0.4s ease;
 }
@@ -25,23 +25,33 @@
   transform: scale(1.05);
 }
 
-/* product description */
-.product-description {
+/* product name */
+.item-name {
   padding: 10px;
-  transition: opacity 0.3s ease;
-}
-
-.product-description p {
   font-size: 1rem;
   font-weight: 500;
   color: #333;
-  margin-bottom: 6px;
-}
-
-.item-prices {
+  text-align: center;
+  margin: 0;
+  height: 45px;
+  overflow: hidden;
   display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+}
+
+.item-name a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* price section */
+.item-prices {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 8px;
+  padding-bottom: 10px;
 }
 
 .item-price-new {
@@ -56,8 +66,8 @@
   text-decoration: line-through;
 }
 
-/* buy button */
-.product-buybutton {
+/* Add to cart button */
+.item-add-btn {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -75,61 +85,37 @@
   cursor: pointer;
 }
 
-
-
-.item:hover .product-buybutton {
+.item:hover .item-add-btn {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
 }
 
-.product-buybutton:hover {
+.item-add-btn:hover {
   background: #d9441f;
 }
 
-
-/* @media(max-width: 1280px){
-    .item{
-        width: 220px;
-        font-size: 14px;
-    }
-    .item img{
-        width : 220px;
-    }
-    .item-price-old{
-        font-size: 14px;
-    }
-}
-@media(max-width: 1024px){
-    .item{
-        width: 170px;
-        font-size: 13px;
-    }
-    .item img{
-        width : 170px;
-    }
-    .item-price-old{
-        font-size: 13px;
-    }
-}
-@media(max-width: 800px){
-    .item{
-        width: 120px;
-        font-size: 12px;
-    }
-    .item img{
-        width : 120px;
-    }
-    .item-price-old{
-        font-size: 12px;
-    }
+/* Responsive giữ nguyên kích thước (chỉ chỉnh font nếu cần) */
+@media (max-width: 1280px) {
+  .item {
+    font-size: 14px;
+  }
 }
 
-@media(max-width: 500px){
-    .item{
-        width: 160px;
-    }
-    .item img{
-        width : 160px;
-    }
-} */
+@media (max-width: 1024px) {
+  .item {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 800px) {
+  .item {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 500px) {
+  .item {
+    width: 160px;
+  }
+}
