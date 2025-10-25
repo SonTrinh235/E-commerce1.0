@@ -1,5 +1,6 @@
 // CartContext.js
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { ShopContext } from "./ShopContext";
 
 // Import APIs
 import {
@@ -14,10 +15,12 @@ import { getProductById } from "../api/productService";
 export const CartContext = createContext();
 
 export const CartContextProvider = ({ children }) => {
+
+  // userId: Should be fetched from shop context or auth context
+  const { userId } = useContext(ShopContext);
+  
   // Cart Is Loading
   const [isCartLoading, setIsCartLoading] = useState(true);
-  // userId: Should be fetched from shop context or auth context
-  const tempUserId = "68f4edf24a4b075ca9f1ef90";
 
   // cartTotal: Total price of cart
   const [cartTotal, setCartTotal] = useState();
@@ -62,7 +65,7 @@ export const CartContextProvider = ({ children }) => {
   const initializeCartAndProductsLookup = async () => {
     setIsCartLoading(true);
 
-    const newCart = await fetchCart(tempUserId);
+    const newCart = await fetchCart(userId);
     const productIds = newCart.map((item) => item.productId);
     await fetchProductsData(productIds);
 
@@ -76,7 +79,7 @@ export const CartContextProvider = ({ children }) => {
     const productData = productResponse.data;
 
     console.log("log", productData);
-    addProductToCart(tempUserId, {
+    addProductToCart(userId, {
       productId: productId,
       quantity: 1,
       price: productData.price,
@@ -98,7 +101,7 @@ export const CartContextProvider = ({ children }) => {
         },
       };
     });
-    updateProductQuantity(tempUserId, {
+    updateProductQuantity(userId, {
       productId: productId,
       quantity: quantity,
       price: productsLookup[productId].price,
@@ -132,7 +135,7 @@ export const CartContextProvider = ({ children }) => {
         prevProductsLookup;
       return restOfProductsLookup;
     });
-    removeProductFromCart(tempUserId, productId);
+    removeProductFromCart(userId, productId);
   };
 
   function getCartTotal() {
