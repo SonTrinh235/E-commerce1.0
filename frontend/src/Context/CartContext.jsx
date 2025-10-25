@@ -20,7 +20,20 @@ import { getProductById } from "../api/productService";
 // Context
 export const CartContext = createContext();
 
-/* ===== Helpers: per-user local storage ===== */
+/* ===== Helpers ===== */
+
+const getStorageUid = () => {
+  try {
+    const raw = localStorage.getItem("userInfo") || "{}";
+    const info = JSON.parse(raw);
+    const u = info?.user || info || {};
+    return u._id || u.firebaseUid || u.phoneNumber || null; // null => guest
+  } catch {
+    return null;
+  }
+};
+
+// localStorage keys
 const getCartKey = (uid) => (uid ? `cart:${uid}` : "cart:guest");
 const getLookupKey = (uid) => (uid ? `cartLookup:${uid}` : "cartLookup:guest");
 
@@ -39,22 +52,30 @@ const saveLocal = (uid, cart, lookup) => {
   localStorage.setItem(getLookupKey(uid), JSON.stringify(lookup || {}));
 };
 
-// Đảm bảo lấy product dù getProductById trả res.data hay object
 const pickProduct = (res) => (res?.data ? res.data : res || {});
 
 export const CartContextProvider = ({ children }) => {
-  const { userId } = useContext(ShopContext); // có thể null
+  const { userId } = useContext(ShopContext);
+
+  const [storageUid, setStorageUid] = useState(getStorageUid());
+  useEffect(() => {
+    const sync = () => setStorageUid(getStorageUid());
+    window.addEventListener("auth-changed", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("auth-changed", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
 
   const [isCartLoading, setIsCartLoading] = useState(false);
   const [cartTotal, setCartTotal] = useState(0);
-  // cartItems: { [productId: string]: { productId, quantity, price } }
   const [cartItems, setCartItems] = useState({});
-  // productsLookup: { [productId: string]: product }
   const [productsLookup, setProductsLookup] = useState({});
 
   /* =============== Fetchers =============== */
 
-  // Lấy cart cho user từ backend
+  // Lấy cart từ backend
   const fetchCart = async (uid) => {
     const response = await getCartByUserId(uid);
     const newCart = response?.data?.productsInfo ?? [];
@@ -74,16 +95,13 @@ export const CartContextProvider = ({ children }) => {
     return newCart;
   };
 
-  // Lấy full product cho từng id
   const fetchProductsData = async (productIds) => {
     const ids = [...new Set(productIds.filter(Boolean))].map(String);
     if (!ids.length) {
       setProductsLookup({});
       return;
     }
-
     const results = await Promise.allSettled(ids.map((id) => getProductById(id)));
-
     const productsMap = {};
     results.forEach((r, i) => {
       if (r.status === "fulfilled") {
@@ -92,11 +110,9 @@ export const CartContextProvider = ({ children }) => {
         productsMap[pid] = product;
       }
     });
-
     setProductsLookup(productsMap);
   };
 
-  // Init cả cart và productsLookup (memoized, không capture userId)
   const initializeCartAndProductsLookup = useCallback(async (uid) => {
     if (!uid) return;
     setIsCartLoading(true);
@@ -116,11 +132,9 @@ export const CartContextProvider = ({ children }) => {
 
   /* =============== Actions =============== */
 
-  // Thêm 1 sản phẩm
   const cartAddProductToCart = async (productId) => {
     const key = String(productId);
 
-    // Lấy product để có price/name/ảnh
     let productData = {};
     try {
       productData = pickProduct(await getProductById(key));
@@ -128,7 +142,6 @@ export const CartContextProvider = ({ children }) => {
       console.warn("[Cart] getProductById failed, still add local with price 0", e);
     }
 
-    // Optimistic local
     setCartItems((prev) => {
       const existing = prev[key];
       if (existing) {
@@ -155,7 +168,6 @@ export const CartContextProvider = ({ children }) => {
       };
     });
 
-    // Call API nếu đã đăng nhập
     if (userId) {
       try {
         await addProductToCart(userId, {
@@ -170,7 +182,6 @@ export const CartContextProvider = ({ children }) => {
     }
   };
 
-  // Cập nhật số lượng
   const cartUpdateProductQuantity = (productId, quantity) => {
     const key = String(productId);
     let priceSafeLocal = 0;
@@ -204,7 +215,6 @@ export const CartContextProvider = ({ children }) => {
     }
   };
 
-  // Xoá 1 sản phẩm khỏi giỏ
   const cartRemoveProductFromCart = (productId) => {
     const key = String(productId);
 
@@ -227,44 +237,46 @@ export const CartContextProvider = ({ children }) => {
 
   /* =============== Effects =============== */
 
-  // Init theo userId (backend) / guest (local)
   useEffect(() => {
     let cancelled = false;
 
     const run = async () => {
       if (userId) {
-        // 1) Load cart từ backend
         await initializeCartAndProductsLookup(userId);
-
-        // 2) Merge guest -> user (backend) nếu có
         try {
-          const guest = loadLocal(null);
-          const guestItems = Object.values(guest.cart || {});
-          if (guestItems.length) {
-            for (const it of guestItems) {
+          const toMerge = [];
+          if (storageUid) toMerge.push(storageUid);
+          toMerge.push(null); // guest
+
+          for (const src of toMerge) {
+            const { cart, lookup } = loadLocal(src);
+            const items = Object.values(cart || {});
+            if (!items.length) continue;
+
+            for (const it of items) {
               const pid = String(it.productId);
-              const price = Number(guest.lookup?.[pid]?.price ?? it.price ?? 0);
-              if (pid && it.quantity > 0) {
+              const price = Number(lookup?.[pid]?.price ?? it.price ?? 0);
+              const qty = Number(it.quantity ?? 0);
+              if (pid && qty > 0) {
                 await addProductToCart(userId, {
                   productId: pid,
-                  quantity: Number(it.quantity),
+                  quantity: qty,
                   price,
                 });
               }
             }
-            // clear guest local
-            localStorage.removeItem(getCartKey(null));
-            localStorage.removeItem(getLookupKey(null));
-            // reload backend sau merge
-            await initializeCartAndProductsLookup(userId);
+
+            localStorage.removeItem(getCartKey(src));
+            localStorage.removeItem(getLookupKey(src));
           }
+          await initializeCartAndProductsLookup(userId);
         } catch (e) {
-          console.warn("[Cart] merge guest→user failed:", e);
+          console.warn("[Cart] merge local→backend failed:", e);
         }
       } else {
         setIsCartLoading(true);
         try {
-          const { cart, lookup } = loadLocal(null); // guest
+          const { cart, lookup } = loadLocal(storageUid);
           if (!cancelled) {
             setCartItems(cart);
             setProductsLookup(lookup);
@@ -279,9 +291,8 @@ export const CartContextProvider = ({ children }) => {
     return () => {
       cancelled = true;
     };
-  }, [userId, initializeCartAndProductsLookup]);
+  }, [userId, storageUid, initializeCartAndProductsLookup]);
 
-  // Tính tổng & sync local (cho cả guest và user – mỗi người một key)
   useEffect(() => {
     const total = Object.values(cartItems).reduce((sum, item) => {
       const price = Number(item?.price ?? 0);
@@ -290,9 +301,8 @@ export const CartContextProvider = ({ children }) => {
     }, 0);
     setCartTotal(total);
 
-    // luôn lưu theo user hiện tại (guest hoặc user)
-    saveLocal(userId, cartItems, productsLookup);
-  }, [cartItems, productsLookup, userId]);
+    saveLocal(storageUid, cartItems, productsLookup);
+  }, [cartItems, productsLookup, storageUid]);
 
   /* =============== Context Value =============== */
   const contextValue = {

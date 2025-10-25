@@ -109,36 +109,40 @@ const Cart = () => {
               </tr>
             </thead>
             <tbody>
-              {cartArray.map((item, i) => {
-                const pid = String(item.productId);
-                const current = productsLookup[pid] || {};
-                const safePrice = Number(current.price ?? item.price ?? 0);
-                const qty = Number(item.quantity ?? 0);
+              {Object.values(cartItems)
+                .filter(Boolean)                           // 👈 lọc null/undefined
+                .map((raw, i) => {
+                  const item = raw || {};
+                  const pid = String(item.productId || ""); // 👈 phòng thủ
+                  if (!pid) return null;                    // 👈 bỏ qua item lỗi
 
-                return (
-                  <tr key={pid || i}>
-                    <td className="index-bar-cell">
-                      <div className="index-bar">{i + 1}</div>
-                    </td>
+                  const current = productsLookup[pid] || {};
+                  const safePrice = Number(current.price ?? item.price ?? 0);
+                  const qty = Number(item.quantity ?? 0);
 
-                    <CartItem
-                      productId={pid}
-                      imageInfo={current.imageInfo}
-                      name={current.name || item.name || "Unnamed"}
-                      price={safePrice}
-                      quantity={qty}
-                      onIncrease={() =>
-                        cartUpdateProductQuantity(pid, qty + 1) 
-                      }
-                      onDecrease={() =>
-                        cartUpdateProductQuantity(pid, Math.max(0, qty - 1))
-                      }
-                      onRemove={() => cartRemoveProductFromCart(pid)}
-                    />
-                  </tr>
-                );
-              })}
+                  return (
+                    <tr key={pid || i}>
+                      <td className="index-bar-cell">
+                        <div className="index-bar">{i + 1}</div>
+                      </td>
+
+                      <CartItem
+                        productId={pid}
+                        imageInfo={current.imageInfo || item.imageInfo}          // fallback local
+                        name={current.name || item.name || "Unnamed"}            // lookup > local > fallback
+                        price={safePrice}
+                        quantity={qty}
+                        onIncrease={() => cartUpdateProductQuantity(pid, qty + 1)}
+                        onDecrease={() =>
+                          cartUpdateProductQuantity(pid, Math.max(0, qty - 1))
+                        }
+                        onRemove={() => cartRemoveProductFromCart(pid)}
+                      />
+                    </tr>
+                  );
+                })}
             </tbody>
+
           </table>
         )}
       </div>
