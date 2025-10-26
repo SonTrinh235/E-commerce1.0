@@ -39,7 +39,6 @@ const Checkout = () => {
     alert(
       `Đặt hàng thành công!\n\nHọ tên: ${formData.name}\nĐịa chỉ: ${formData.address}\nĐiện thoại: ${formData.phone}\nEmail: ${formData.email}\n\nTổng: ${currency.format(cartTotal)} đ`
     );
-    // TODO: gọi createOrder(...) nếu bạn đã có API đặt hàng
   };
 
   return (
