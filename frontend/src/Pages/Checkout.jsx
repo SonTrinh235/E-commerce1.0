@@ -8,19 +8,16 @@ const currency = new Intl.NumberFormat("vi-VN"); // #,### đ
 const Checkout = () => {
   const { isCartLoading, cartTotal, cartItems, productsLookup } = useContext(CartContext);
 
-  // Danh sách item an toàn (lọc null/undefined)
   const cartArray = useMemo(
     () => Object.values(cartItems || {}).filter(Boolean),
     [cartItems]
   );
 
-  // Tổng số lượng = sum quantity (không phải số key)
   const totalQty = useMemo(
     () => cartArray.reduce((sum, it) => sum + Number(it?.quantity || 0), 0),
     [cartArray]
   );
 
-  // state form giao hàng
   const [formData, setFormData] = useState({
     name: "",
     address: "",
