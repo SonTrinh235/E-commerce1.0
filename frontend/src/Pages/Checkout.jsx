@@ -51,7 +51,6 @@ const Checkout = () => {
         <p>Giỏ hàng của bạn đang trống.</p>
       ) : (
         <div className="checkout-content">
-          {/* Left: danh sách sản phẩm */}
           <div className="checkout-items">
             {cartArray.map((raw, i) => {
               const item = raw || {};
@@ -88,7 +87,6 @@ const Checkout = () => {
             })}
           </div>
 
-          {/* Right: summary + form */}
           <div className="checkout-right">
             <div className="checkout-summary">
               <h3>Order Summary</h3>
