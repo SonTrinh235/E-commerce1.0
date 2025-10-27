@@ -1,23 +1,31 @@
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
+import { ShopContext } from "../Context/ShopContext";
+import { CartContext } from "../Context/CartContext";
 import "./CSS/Checkout.css";
 import DefaultImage from "../assets/placeholder-image.png";
-import { CartContext } from "../Context/CartContext";
 
-const currency = new Intl.NumberFormat("vi-VN"); // #,### đ
+// Import APIs
+import { getCartByUserId } from "../api/cartService";
+import { getProductById } from "../api/productService";
+import { createOrder } from "../api/orderService";
 
 const Checkout = () => {
-  const { isCartLoading, cartTotal, cartItems, productsLookup } = useContext(CartContext);
 
-  const cartArray = useMemo(
-    () => Object.values(cartItems || {}).filter(Boolean),
-    [cartItems]
-  );
+  const {
+    isCartLoading,
+    cartTotal,
+    cartItems,
+    productsLookup,
+  } = useContext(CartContext);
 
-  const totalQty = useMemo(
-    () => cartArray.reduce((sum, it) => sum + Number(it?.quantity || 0), 0),
-    [cartArray]
-  );
 
+  // const { cartItems, all_product, getTotalCartAmount } =
+  //   useContext(ShopContext);
+
+  // cartItems
+  // const itemsInCart = all_product.filter((p) => cartItems[p.id] > 0);
+
+  // state cho form
   const [formData, setFormData] = useState({
     name: "",
     address: "",
@@ -32,66 +40,59 @@ const Checkout = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (cartArray.length === 0) {
-      alert("Giỏ hàng của bạn đang trống!");
+    if (!true) {
+      alert("Your cart is empty!");
       return;
     }
     alert(
-      `Đặt hàng thành công!\n\nHọ tên: ${formData.name}\nĐịa chỉ: ${formData.address}\nĐiện thoại: ${formData.phone}\nEmail: ${formData.email}\n\nTổng: ${currency.format(cartTotal)} đ`
+      `Order placed successfully!\n\nName: ${formData.name}\nAddress: ${
+        formData.address
+      }\nPhone: ${formData.phone}\nEmail: ${
+        formData.email
+      }\n\nTotal: $${cartTotal.toFixed(2)}`
     );
   };
 
   return (
+    
     <div className="checkout-page">
       <h2>Checkout</h2>
-
-      {isCartLoading ? (
-        <div>Loading cart ...</div>
-      ) : cartArray.length === 0 ? (
-        <p>Giỏ hàng của bạn đang trống.</p>
+      {true === 0 ? (
+        <p>Your cart is empty</p>
       ) : (
         <div className="checkout-content">
+          {isCartLoading ? (
+          <div>Loading cart ... </div>
+        ) : (
+          // Cart content
           <div className="checkout-items">
-            {cartArray.map((raw, i) => {
-              const item = raw || {};
-              const pid = String(item.productId || "");
-              if (!pid) return null;
-
-              const product = productsLookup?.[pid] || {};
-              const name = product.name || item.name || "Unnamed";
-              const imgSrc =
-                product.imageInfo?.url ||
-                item.imageInfo?.url ||
-                product.imageUrl ||
-                item.imageUrl ||
-                product.image ||
-                item.image ||
-                DefaultImage;
-
-              const price = Number(product.price ?? item.price ?? 0);
-              const qty = Number(item.quantity ?? 0);
-              const lineTotal = price * qty;
-
+            {Object.values(cartItems).map((item) => {
+              const currentItemData = productsLookup[item.productId];
               return (
-                <div className="checkout-item" key={pid || i}>
-                  <img src={imgSrc} alt={name} />
+                <div className="checkout-item">
+                  <img
+                    src={currentItemData.imageInfo?.url || DefaultImage}
+                    alt={currentItemData.name}
+                  />
                   <div>
-                    <h3>{name}</h3>
+                    <h3>{currentItemData.name}</h3>
                     <p>
-                      {currency.format(price)} đ × {qty} ={" "}
-                      <b>{currency.format(lineTotal)} đ</b>
+                      ${item.price} x {item.quantity} = $
+                      {item.price * item.quantity}
                     </p>
                   </div>
                 </div>
               );
             })}
           </div>
+        )}
 
+          {/* Right: summary + form */}
           <div className="checkout-right">
             <div className="checkout-summary">
               <h3>Order Summary</h3>
-              <p>Total Items: {totalQty}</p>
-              <h3>Total: {currency.format(cartTotal)} đ</h3>
+              <p>Total Items: {Object.keys(cartItems).length}</p>
+              <h3>Total: ${cartTotal}</h3>
             </div>
 
             <div className="checkout-form">

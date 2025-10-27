@@ -16,7 +16,7 @@
 /* product image */
 .item img {
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 1/1;
   object-fit: cover;
   transition: transform 0.4s ease;
 }
@@ -25,33 +25,23 @@
   transform: scale(1.05);
 }
 
-/* product name */
-.item-name {
+/* product description */
+.product-description {
   padding: 10px;
+  transition: opacity 0.3s ease;
+}
+
+.product-description p {
   font-size: 1rem;
   font-weight: 500;
   color: #333;
-  text-align: center;
-  margin: 0;
-  height: 45px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  margin-bottom: 6px;
 }
 
-.item-name a {
-  text-decoration: none;
-  color: inherit;
-}
-
-/* price section */
 .item-prices {
   display: flex;
-  justify-content: center;
-  align-items: baseline;
-  gap: 8px;
-  padding-bottom: 10px;
+  align-items: center;
+  gap: 6px;
 }
 
 .item-price-new {
@@ -66,8 +56,8 @@
   text-decoration: line-through;
 }
 
-/* Add to cart button */
-.item-add-btn {
+/* buy button */
+.product-buybutton {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -85,37 +75,61 @@
   cursor: pointer;
 }
 
-.item:hover .item-add-btn {
+
+
+.item:hover .product-buybutton {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
 }
 
-.item-add-btn:hover {
+.product-buybutton:hover {
   background: #d9441f;
 }
 
-/* Responsive giữ nguyên kích thước (chỉ chỉnh font nếu cần) */
-@media (max-width: 1280px) {
-  .item {
-    font-size: 14px;
-  }
+
+/* @media(max-width: 1280px){
+    .item{
+        width: 220px;
+        font-size: 14px;
+    }
+    .item img{
+        width : 220px;
+    }
+    .item-price-old{
+        font-size: 14px;
+    }
+}
+@media(max-width: 1024px){
+    .item{
+        width: 170px;
+        font-size: 13px;
+    }
+    .item img{
+        width : 170px;
+    }
+    .item-price-old{
+        font-size: 13px;
+    }
+}
+@media(max-width: 800px){
+    .item{
+        width: 120px;
+        font-size: 12px;
+    }
+    .item img{
+        width : 120px;
+    }
+    .item-price-old{
+        font-size: 12px;
+    }
 }
 
-@media (max-width: 1024px) {
-  .item {
-    font-size: 13px;
-  }
-}
-
-@media (max-width: 800px) {
-  .item {
-    font-size: 12px;
-  }
-}
-
-@media (max-width: 500px) {
-  .item {
-    width: 160px;
-  }
-}
+@media(max-width: 500px){
+    .item{
+        width: 160px;
+    }
+    .item img{
+        width : 160px;
+    }
+} */

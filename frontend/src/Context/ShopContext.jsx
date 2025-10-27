@@ -14,6 +14,8 @@ const getCurrentUserId = () => {
   }
 };
 
+const userId = getCurrentUserId();
+
 const getCartKey = () => {
   const uid = getCurrentUserId();
   return uid ? `cart:${uid}` : "cart:guest";
@@ -129,6 +131,7 @@ const ShopContextProvider = (props) => {
   };
 
   const contextValue = {
+    userId,
     all_product,
     cartItems,
     addToCart,

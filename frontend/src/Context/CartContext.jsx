@@ -1,14 +1,8 @@
-// CartContext.jsx
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-} from "react";
+// CartContext.js
+import React, { createContext, useContext, useState, useEffect } from "react";
 import { ShopContext } from "./ShopContext";
 
-// APIs
+// Import APIs
 import {
   getCartByUserId,
   addProductToCart,
@@ -17,308 +11,257 @@ import {
 } from "../api/cartService";
 import { getProductById } from "../api/productService";
 
-// Context
+// 1. Create the Context object
 export const CartContext = createContext();
 
-/* ===== Helpers ===== */
-
-const getStorageUid = () => {
-  try {
-    const raw = localStorage.getItem("userInfo") || "{}";
-    const info = JSON.parse(raw);
-    const u = info?.user || info || {};
-    return u._id || u.firebaseUid || u.phoneNumber || null; // null => guest
-  } catch {
-    return null;
-  }
-};
-
-// localStorage keys
-const getCartKey = (uid) => (uid ? `cart:${uid}` : "cart:guest");
-const getLookupKey = (uid) => (uid ? `cartLookup:${uid}` : "cartLookup:guest");
-
-const loadLocal = (uid) => {
-  try {
-    const cart = JSON.parse(localStorage.getItem(getCartKey(uid)) || "{}");
-    const lookup = JSON.parse(localStorage.getItem(getLookupKey(uid)) || "{}");
-    return { cart, lookup };
-  } catch {
-    return { cart: {}, lookup: {} };
-  }
-};
-
-const saveLocal = (uid, cart, lookup) => {
-  localStorage.setItem(getCartKey(uid), JSON.stringify(cart || {}));
-  localStorage.setItem(getLookupKey(uid), JSON.stringify(lookup || {}));
-};
-
-const pickProduct = (res) => (res?.data ? res.data : res || {});
-
 export const CartContextProvider = ({ children }) => {
+  // userId: Should be fetched from shop context or auth context
+  // userId could be null
   const { userId } = useContext(ShopContext);
 
-  const [storageUid, setStorageUid] = useState(getStorageUid());
-  useEffect(() => {
-    const sync = () => setStorageUid(getStorageUid());
-    window.addEventListener("auth-changed", sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener("auth-changed", sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
-
+  // Cart Is Loading
   const [isCartLoading, setIsCartLoading] = useState(false);
-  const [cartTotal, setCartTotal] = useState(0);
+
+  // cartTotal: Total price of cart
+  const [cartTotal, setCartTotal] = useState();
+  // cartItems: Lookup objects of items in cart (productId and count)
   const [cartItems, setCartItems] = useState({});
+  // productsLookup: Lookup objects of products in cart (full product data)
   const [productsLookup, setProductsLookup] = useState({});
 
-  /* =============== Fetchers =============== */
+  // function: Fetch cart with product id and count
+  const fetchCart = async (userId) => {
+    const response = await getCartByUserId(userId);
 
-  // Lấy cart từ backend
-  const fetchCart = async (uid) => {
-    const response = await getCartByUserId(uid);
-    const newCart = response?.data?.productsInfo ?? [];
+    setCartTotal(response.data.totalPrice);
+
+    const newCart = response.data.productsInfo;
     const cartMap = {};
     newCart.forEach((entry) => {
-      if (entry?.productId) {
-        const key = String(entry.productId);
-        cartMap[key] = {
-          ...entry,
-          productId: key,
-          price: Number(entry.price ?? 0),
-          quantity: Number(entry.quantity ?? 0),
-        };
-      }
+      cartMap[entry.productId] = entry;
     });
+
     setCartItems(cartMap);
     return newCart;
   };
 
+  // function: Fetch product data for each product in cart
   const fetchProductsData = async (productIds) => {
-    const ids = [...new Set(productIds.filter(Boolean))].map(String);
-    if (!ids.length) {
-      setProductsLookup({});
-      return;
-    }
-    const results = await Promise.allSettled(ids.map((id) => getProductById(id)));
+    // Fetch product data for each and await all
+    const fetchPromises = productIds.map((id) => getProductById(id));
+    const results = await Promise.all(fetchPromises);
+
+    // Set lookup map
     const productsMap = {};
-    results.forEach((r, i) => {
-      if (r.status === "fulfilled") {
-        const product = pickProduct(r.value);
-        const pid = String(product?._id ?? ids[i]);
-        productsMap[pid] = product;
-      }
+    results.forEach((response) => {
+      const product = response.data;
+      productsMap[product._id] = product;
     });
+
     setProductsLookup(productsMap);
   };
 
-  const initializeCartAndProductsLookup = useCallback(async (uid) => {
-    if (!uid) return;
+  // function: fetch cart and product data
+  const initializeCartAndProductsLookup = async () => {
     setIsCartLoading(true);
-    try {
-      const newCart = await fetchCart(uid);
-      const productIds = newCart.map((item) => String(item.productId));
-      await fetchProductsData(productIds);
-    } catch (err) {
-      console.error("[Cart] initialize failed:", err);
-      setCartItems({});
-      setProductsLookup({});
-      setCartTotal(0);
-    } finally {
-      setIsCartLoading(false);
-    }
-  }, []);
 
-  /* =============== Actions =============== */
+    const newCart = await fetchCart(userId);
+    const productIds = newCart.map((item) => item.productId);
+    await fetchProductsData(productIds);
 
+    setIsCartLoading(false);
+  };
+
+  // function: Add product
+  //  params: productId
   const cartAddProductToCart = async (productId) => {
-    const key = String(productId);
+    const productResponse = await getProductById(productId);
+    const productData = productResponse.data;
 
-    let productData = {};
-    try {
-      productData = pickProduct(await getProductById(key));
-    } catch (e) {
-      console.warn("[Cart] getProductById failed, still add local with price 0", e);
-    }
+    // Set local cart
+    setCartItems((prevCart) => {
+      const existingItem = prevCart[productId];
 
-    setCartItems((prev) => {
-      const existing = prev[key];
-      if (existing) {
+      if (existingItem) {
+        // Case A: EXISTS Item
         return {
-          ...prev,
-          [key]: { ...existing, quantity: Number(existing.quantity ?? 0) + 1 },
+          ...prevCart, // Copy other items
+          [productId]: {
+            ...existingItem, // Copy existing item details
+            quantity: existingItem.quantity + 1, // +1 quantity
+          },
+        };
+      } else {
+        // Case B: Item NEW
+        return {
+          ...prevCart, // Copy all existing items
+          [productId]: {
+            // Add new item
+            productId: productId,
+            quantity: 1,
+            price: productData.price,
+          },
         };
       }
+    });
+
+    setProductsLookup((prevLookup) => {
+      const existingItem = prevLookup[productId];
+
+      if (existingItem) {
+        // Case A: EXISTS Item
+        return {
+          ...prevLookup, // Copy other items
+        };
+      } else {
+        // Case B: Item NEW
+        return {
+          ...prevLookup, // Copy all existing items
+          [productId]: {
+            // Add new item
+            ...productData,
+          },
+        };
+      }
+    });
+
+    // Only call API if logged in
+    if (userId) {
+      addProductToCart(userId, {
+        productId: productId,
+        quantity: 1,
+        price: productData.price,
+      });
+      // Call fetch needed for product info (price, image)
+      await initializeCartAndProductsLookup();
+    }
+  };
+
+  // function: Update product quantity
+  // params: productId, quantity
+  const cartUpdateProductQuantity = (productId, quantity) => {
+    setCartItems((prevCart) => {
       return {
-        ...prev,
-        [key]: {
-          productId: key,
-          quantity: 1,
-          price: Number(productData.price ?? 0),
+        ...prevCart,
+        [productId]: {
+          ...prevCart[productId],
+          quantity: quantity,
         },
       };
     });
 
-    setProductsLookup((prev) => {
-      if (prev[key]) return prev;
-      return {
-        ...prev,
-        [key]: { ...productData, _id: String(productData?._id ?? key) },
-      };
-    });
-
-    if (userId) {
-      try {
-        await addProductToCart(userId, {
-          productId: key,
-          quantity: 1,
-          price: Number(productData.price ?? 0),
-        });
-        await initializeCartAndProductsLookup(userId);
-      } catch (e) {
-        console.error("[Cart] addProduct failed:", e);
-      }
-    }
-  };
-
-  const cartUpdateProductQuantity = (productId, quantity) => {
-    const key = String(productId);
-    let priceSafeLocal = 0;
-
-    setCartItems((prev) => {
-      const prevItem = prev[key] ?? {
-        productId: key,
-        quantity: 0,
-        price: Number(productsLookup[key]?.price ?? 0),
-      };
-      priceSafeLocal = Number(productsLookup[key]?.price ?? prevItem.price ?? 0);
-
-      const next = { ...prev };
-      if (Number(quantity) === 0) {
-        const { [key]: _removed, ...rest } = next;
-        return rest;
-      }
-      next[key] = { ...prevItem, quantity: Number(quantity) };
-      return next;
-    });
-
+    // Only call API if logged in
     if (userId) {
       updateProductQuantity(userId, {
-        productId: key,
-        quantity: Number(quantity),
-        price: Number(priceSafeLocal),
-      }).catch((e) => {
-        console.error("[Cart] updateQuantity failed:", e);
-        initializeCartAndProductsLookup(userId);
+        productId: productId,
+        quantity: quantity,
+        price: productsLookup[productId].price,
+      });
+    }
+
+    // For local cart: remove item on quantity 0
+    // Remote cart is handled already
+    if (quantity === 0) {
+      setCartItems((prevCart) => {
+        const { [productId]: removedItem, ...restOfCart } = prevCart;
+        return restOfCart;
+      });
+      setProductsLookup((prevProductsLookup) => {
+        const { [productId]: removedItem, ...restOfProductsLookup } =
+          prevProductsLookup;
+        return restOfProductsLookup;
       });
     }
   };
 
+  // function: Update product quantity
+  // params: productId, quantity
   const cartRemoveProductFromCart = (productId) => {
-    const key = String(productId);
-
-    setCartItems((prev) => {
-      const { [key]: _removed, ...rest } = prev;
-      return rest;
+    // For local cart: remove item
+    setCartItems((prevCart) => {
+      const { [productId]: removedItem, ...restOfCart } = prevCart;
+      return restOfCart;
     });
-    setProductsLookup((prev) => {
-      const { [key]: _removed, ...rest } = prev;
-      return rest;
+    setProductsLookup((prevProductsLookup) => {
+      const { [productId]: removedItem, ...restOfProductsLookup } =
+        prevProductsLookup;
+      return restOfProductsLookup;
     });
 
+    // Only call API if logged in
     if (userId) {
-      removeProductFromCart(userId, key).catch((e) => {
-        console.error("[Cart] removeProduct failed:", e);
-        initializeCartAndProductsLookup(userId);
-      });
+      removeProductFromCart(userId, productId);
     }
   };
 
-  /* =============== Effects =============== */
+  function getCartTotal() {
+    let totalAmount = 0;
+    Object.values(cartItems).map((item, i) => {
+      totalAmount += item.price * item.quantity;
+      return 0;
+    });
+    return totalAmount;
+  }
+
+  // useEffect: init cart
+  // Currently bugged: userId is not changing
+  useEffect(() => {
+    console.log("USER ID CHANGE: ", userId);
+    if (userId) {
+      initializeCartAndProductsLookup();
+    } else {
+      // Local cart for not logged in
+      setIsCartLoading(true);
+      const storedCart = localStorage.getItem("localCart");
+      setCartItems(storedCart ? JSON.parse(storedCart) : {});
+      // Local lookup for not logged in
+      const storedCartLookup = localStorage.getItem("localCartLookup");
+      setProductsLookup(storedCartLookup ? JSON.parse(storedCartLookup) : {});
+      setIsCartLoading(false);
+    }
+  }, [userId]);
 
   useEffect(() => {
-    let cancelled = false;
-
-    const run = async () => {
-      if (userId) {
-        await initializeCartAndProductsLookup(userId);
-        try {
-          const toMerge = [];
-          if (storageUid) toMerge.push(storageUid);
-          toMerge.push(null); // guest
-
-          for (const src of toMerge) {
-            const { cart, lookup } = loadLocal(src);
-            const items = Object.values(cart || {});
-            if (!items.length) continue;
-
-            for (const it of items) {
-              const pid = String(it.productId);
-              const price = Number(lookup?.[pid]?.price ?? it.price ?? 0);
-              const qty = Number(it.quantity ?? 0);
-              if (pid && qty > 0) {
-                await addProductToCart(userId, {
-                  productId: pid,
-                  quantity: qty,
-                  price,
-                });
-              }
-            }
-
-            localStorage.removeItem(getCartKey(src));
-            localStorage.removeItem(getLookupKey(src));
-          }
-          await initializeCartAndProductsLookup(userId);
-        } catch (e) {
-          console.warn("[Cart] merge local→backend failed:", e);
-        }
-      } else {
-        setIsCartLoading(true);
-        try {
-          const { cart, lookup } = loadLocal(storageUid);
-          if (!cancelled) {
-            setCartItems(cart);
-            setProductsLookup(lookup);
-          }
-        } finally {
-          if (!cancelled) setIsCartLoading(false);
-        }
-      }
-    };
-
-    run();
-    return () => {
-      cancelled = true;
-    };
-  }, [userId, storageUid, initializeCartAndProductsLookup]);
+    console.log("Cart: cartItems changed: ", cartItems);
+    setCartTotal(getCartTotal());
+    if (!userId) {
+      localStorage.setItem("localCart", JSON.stringify(cartItems));
+      localStorage.setItem("localCartLookup", JSON.stringify(productsLookup));
+    }
+  }, [cartItems]);
 
   useEffect(() => {
-    const total = Object.values(cartItems).reduce((sum, item) => {
-      const price = Number(item?.price ?? 0);
-      const qty = Number(item?.quantity ?? 0);
-      return sum + price * qty;
-    }, 0);
-    setCartTotal(total);
+    console.log("Cart: productsLookup changed: ", productsLookup);
+  }, [productsLookup]);
 
-    saveLocal(storageUid, cartItems, productsLookup);
-  }, [cartItems, productsLookup, storageUid]);
-
-  /* =============== Context Value =============== */
+  // SEE CONTEXT VALUE
   const contextValue = {
+    // Cart is loading
     isCartLoading,
+
+    // cartTotal: Total cart price in int
     cartTotal,
+    // cartItems: Lookup obj of items in cart with prod id and count (productsInfo of API return)
+    // Use: cartItems[productId]
     cartItems,
+    // productsLookup: Lookup objects of products in cart (full product data)
+    // Use: productsLookup[productId]
     productsLookup,
+
+    // Implemented API callers
+    // cartAddProductToCart(productId)
+    // Cart is fully  re-fetched from API when done
     cartAddProductToCart,
+    // cartUpdateProductQuantity(productId,quantity)
+    // Update local cart and call API
     cartUpdateProductQuantity,
+    // cartRemoveProductFromCart(productId)
+    // Update local cart and call API
     cartRemoveProductFromCart,
   };
 
   return (
-    <CartContext.Provider value={contextValue}>
-      {children}
-    </CartContext.Provider>
+    <CartContext.Provider value={contextValue}>{children}</CartContext.Provider>
   );
 };
 

@@ -1,51 +1,29 @@
-import React, { useContext } from "react";
-import "./ProductDisplay.css";
-import star_icon from "../../assets/star_icon.png";
-import star_dull_icon from "../../assets/star_dull_icon.png";
-import { CartContext } from "../../Context/CartContext";
+import React, { useContext } from 'react'
+import './ProductDisplay.css'
+import star_icon from "../../assets/star_icon.png"
+import star_dull_icon from "../../assets/star_dull_icon.png"
+import { ShopContext } from '../../Context/ShopContext';
 
-const currency = new Intl.NumberFormat("vi-VN");
+const ProductDisplay = (props) => {
 
-const ProductDisplay = ({ product }) => {
-  const { cartAddProductToCart } = useContext(CartContext);
-
-  if (!product) {
-    return (
-      <div className="productdisplay">
-        <div className="productdisplay-right"><h1>Loading…</h1></div>
-      </div>
-    );
-  }
-
-  const pid = product?._id ?? product?.id;
-  const image =
-    product?.imageInfo?.url ||
-    product?.imageUrl ||
-    product?.image ||
-    (Array.isArray(product?.images) ? product.images[0]?.url || product.images[0] : "");
-  const priceNew = product?.price ?? product?.new_price ?? product?.old_price ?? 0;
-  const priceOld = product?.old_price != null ? product.old_price : undefined;
-  const name = product?.name || "Unnamed";
-  const category = product?.category || "-";
-  const description = product?.description || "Không có mô tả.";
+  const {product} = props;
+  const {addToCart} = useContext(ShopContext);
 
   return (
-    <div className="productdisplay">
+    <div className='productdisplay'> 
       <div className="productdisplay-left">
         <div className="productdisplay-img-list">
-          <img src={image} alt={name} />
-          <img src={image} alt={name} />
-          <img src={image} alt={name} />
-          <img src={image} alt={name} />
+            <img src={product.image} alt="" />
+            <img src={product.image} alt="" />
+            <img src={product.image} alt="" />
+            <img src={product.image} alt="" />
         </div>
         <div className="productdisplay-img">
-          <img className="productdisplay-main-img" src={image} alt={name} />
+          <img className = 'productdisplay-main-img' src={product.image} alt="" />
         </div>
       </div>
-
       <div className="productdisplay-right">
-        <h1>{name}</h1>
-
+        <h1>{product.name}</h1>
         <div className="productdisplay-right-star">
           <img src={star_icon} alt="" />
           <img src={star_icon} alt="" />
@@ -54,30 +32,29 @@ const ProductDisplay = ({ product }) => {
           <img src={star_dull_icon} alt="" />
           <p>(122)</p>
         </div>
-
         <div className="productdisplay-right-prices">
-          {priceOld != null && (
-            <div className="productdisplay-right-price-old">
-              {currency.format(priceOld)} đ
-            </div>
-          )}
-          <div className="productdisplay-right-price-new">
-            {currency.format(priceNew)} đ
+          <div className="productdisplay-right-price-old">${product.old_price}</div>
+          <div className="productdisplay-right-price-new">${product.new_price}</div>
+        </div>
+        <div className="productdisplay-right-description">
+          PRODUCT DESCRIPTION {product.id}
+        </div>
+        <div className="productdisplay-right-size">
+          <h1>OPTIONAL</h1>
+          <div className="productdisplay-right-sizes">
+            <div>1</div>
+            <div>2</div>
+            <div>3</div>
+            <div>4</div>
+            <div>5</div>
           </div>
         </div>
-
-        <div className="productdisplay-right-description">{description}</div>
-
-        <button onClick={() => pid && cartAddProductToCart(String(pid))} disabled={!pid}>
-          ADD TO CART
-        </button>
-
-        <p className="productdisplay-right-category">
-          <span>Category: {category}</span>
-        </p>
+        <button onClick={() => {addToCart(product.id)}}> ADD TO CART </button>
+        <p className="productdisplay-right-category"><span>Category:{product.category}</span> </p>
+        <p className="productdisplay-right-category"><span>Tags:</span> </p>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ProductDisplay;
+export default ProductDisplay

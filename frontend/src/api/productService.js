@@ -1,80 +1,56 @@
-// src/api/productService.js
+// SEE API DOC FOR USAGE GUIDE
+
 import { apiFetch } from "./apiClient";
 
-function parseList(res) {
-  const data = res?.data ?? {};
-  const list = Array.isArray(data?.list) ? data.list : [];
-  return {
-    items: list,
-    page: Number(data?.page ?? 1),
-    limit: Number(data?.limit ?? list.length ?? 0),
-    total: Number(data?.total ?? list.length ?? 0),
-    totalPages: Number(data?.totalPages ?? 1),
-  };
-}
-
-export async function getProducts(params = {}) {
-  const res = await apiFetch("/product/products/all", {
-    method: "GET",
-    params,
-  });
-  return parseList(res);
-}
-
 export function getAllProducts(page = 1, limit = 20) {
-  return getProducts({ page, limit });
+  console.log(`[Product Service]Calling getAllProducts(${page},${limit})`);
+  const data = apiFetch(`/product/products/all`, {
+    method: "GET",
+    params: { page: page, limit: limit },
+  });
+  return data;
 }
 
 export async function getProductById(productId) {
-  if (!productId) throw new Error("getProductById: missing productId");
-  const res = await apiFetch(`/product/products/${productId}`, { method: "GET" });
-
-  const d = res?.data ?? res ?? {};
-  const product = d?.product ?? d;
-
-  if (!product || (!product._id && !product.id)) {
-    console.warn("[getProductById] Unexpected response shape:", res);
-  }
-  return product;
+  console.log(`[Product Service]Calling getProductById(${productId})`);
+  const data = await apiFetch(`/product/products/${productId}`, {
+    method: "GET",
+  });
+  return data;
 }
 
+
 export function createProduct(productData) {
-  return apiFetch(`/product/create-product`, {
+  console.log("[Product Service]Calling createProduct");
+  const data = apiFetch(`/product/create-product`, {
     method: "POST",
     body: productData,
   });
+  return data;
 }
 
 export function updateProduct(productId, productData) {
-  return apiFetch(`/product/update-product/${productId}`, {
+  console.log(`[Product Service]Calling updateProduct${productId}`);
+  const data = apiFetch(`/product/update-product/${productId}`, {
     method: "PUT",
     body: productData,
   });
+  return data;
 }
 
 export function deleteProduct(productId) {
-  return apiFetch(`/product/delete-product/${productId}`, {
+  console.log(`[Product Service]Calling deleteProduct(${productId})`);
+  const data = apiFetch(`/product/delete-product/${productId}`, {
     method: "DELETE",
   });
+  return data;
 }
 
 export function updateProductImageInfo(productId, imageInfo) {
-  return apiFetch(`/product/update-product-image/${productId}`, {
+  console.log(`[Product Service]Calling updataProductImageInfo(${productId})`);
+  const data = apiFetch(`/product/update-product-image/${productId}`, {
     method: "PUT",
     body: imageInfo,
   });
-}
-
-export async function getProductsByIds(ids = []) {
-  const uniq = Array.from(new Set(ids.filter(Boolean)));
-  const results = await Promise.allSettled(uniq.map((id) => getProductById(id)));
-  const map = {};
-  results.forEach((r, i) => {
-    if (r.status === "fulfilled") {
-      const p = r.value;
-      const pid = p?._id ?? uniq[i];
-      if (pid) map[pid] = p;
-    }
-  });
-  return map;
+  return data;
 }

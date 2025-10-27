@@ -1,39 +1,29 @@
-import React, { useContext } from "react";
+import React from "react";
 import "./Item.css";
 import { Link } from "react-router-dom";
-import { CartContext } from "../../Context/CartContext";
 
-const currency = new Intl.NumberFormat("vi-VN");
-
-const Item = ({ id, name, image, new_price, old_price }) => {
-  const { cartAddProductToCart, isCartLoading } = useContext(CartContext);
-
-  const onAdd = () => {
-    if (!id) return;
-    cartAddProductToCart(String(id));
-  };
-  const detailHref = `/product/${id}`;
-
+const Item = (props) => {
   return (
     <div className="item">
-      <Link to={detailHref}>
-        <img src={image} alt={name || "product"} />
+      <Link to={`/product/${props.id}`}>
+        <div className="product-img">
+          <img
+            onClick={() => window.scrollTo(0, 0)}
+            src={props.image}
+            alt={props.name}
+          />
+        </div>
+        <div className="product-description">
+          <p>{props.name}</p>
+          <div className="item-prices">
+            <div className="item-price-new">${props.new_price}</div>
+            {props.old_price && props.old_price > props.new_price && (
+              <div className="item-price-old">${props.old_price}</div>
+            )}
+          </div>
+        </div>
+        {/* <button className="product-buybutton">Buy now</button> */}
       </Link>
-
-      <p className="item-name">
-        <Link to={detailHref}>{name || "Unnamed"}</Link>
-      </p>
-
-      <div className="item-prices">
-        {old_price != null && (
-          <div className="item-price-old">{currency.format(old_price)} đ</div>
-        )}
-        <div className="item-price-new">{currency.format(new_price || 0)} đ</div>
-      </div>
-
-      <button className="item-add-btn" onClick={onAdd} disabled={isCartLoading || !id}>
-        Thêm vào giỏ
-      </button>
     </div>
   );
 };

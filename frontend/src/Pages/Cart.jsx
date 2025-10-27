@@ -5,18 +5,30 @@ import promoCodes from "../data/Promo.js";
 import CartItem from "../Components/CartItem/CartItem";
 import { CartContext } from "../Context/CartContext";
 
-const currency = new Intl.NumberFormat("vi-VN");
-
 const Cart = () => {
+  // Import cart from CartContext
   const {
+    // Cart is loading
     isCartLoading,
+
+    // cartTotal: Total cart price
     cartTotal,
+    // cartItems: Items in cart with prod id and count
     cartItems,
+    // productsLookup: Lookup objects of products in cart (full product data)
     productsLookup,
-    // cartAddProductToCart,
+
+    // Implemented API callers
+    // cartAddProductToCart(productId)
+    cartAddProductToCart,
+    // cartUpdateProductQuantity(productId,quantity)
     cartUpdateProductQuantity,
+    // cartRemoveProductFromCart(productId)
     cartRemoveProductFromCart,
   } = useContext(CartContext);
+
+  // ============ BELOW IGNORED =============================
+  // =========== BELOW IGNORED ===========================
 
   const SHIPPING_FEE = 0;
 
@@ -30,14 +42,17 @@ const Cart = () => {
   };
 
   const applyPromoCode = (event) => {
+    // Prevent page refresh on submit
     event.preventDefault();
     if (!promoCode.trim()) {
       setError("Please enter a promo code");
       return;
     }
+
     const foundPromo = promoCodes.find(
       (promo) => promo.code.toUpperCase() === promoCode.trim().toUpperCase()
     );
+
     if (foundPromo) {
       setAppliedPromo(foundPromo);
       setError("");
@@ -58,43 +73,42 @@ const Cart = () => {
   };
 
   const getShippingFee = () => {
-    if (appliedPromo && appliedPromo.type === "freeshipping") return 0;
+    if (appliedPromo && appliedPromo.type === "freeshipping") {
+      return 0;
+    }
     return SHIPPING_FEE;
   };
 
   const getFinalTotal = () => {
     const subtotal = cartTotal;
     const discount = calculateDiscount();
-    const shippingFee = getShippingFee();
-    return subtotal - discount + shippingFee;
+    // const shippingFee = getShippingFee();
+    return subtotal - discount + SHIPPING_FEE;
   };
 
-  const cartArray = Object.values(cartItems);
+  // ================ ABOVE IGNORED =======================
+  // ================ ABOVE IGNORED =======================
 
   return (
     <div className="Cart-container">
-      {/* Nút test tạm thời */}
-      {/* <div style={{ marginBottom: 12 }}>
+      {/* TEMPORARY CART CONTROL BUTTONS FOR TESTING */}
+      <div>
         <button
-          onClick={() => cartAddProductToCart("68f9cf79c3d1a3fe39a50e90")}
-          disabled={isCartLoading}
+          onClick={() => {
+            cartAddProductToCart("68f9cf79c3d1a3fe39a50e90");
+          }}
         >
           Add Meat 1
         </button>
-      </div> */}
+      </div>
 
-      <h1 className="Cart-header">Your Cart</h1>
+      <h1 className="Cart-header"> Your Cart </h1>
 
+      {/* LIST CART ITEM */}
+      {/* LIST CART ITEM */}
       <div className="Cart-cart">
         {isCartLoading ? (
-          <div>Loading cart ...</div>
-        ) : cartArray.length === 0 ? (
-          <div className="Cart-empty">
-            <p>Giỏ hàng của bạn đang trống.</p>
-            <Link to="/" className="Cart-empty-link">
-              Tiếp tục mua sắm
-            </Link>
-          </div>
+          <div>Loading cart ... </div>
         ) : (
           <table id="table">
             <thead>
@@ -109,89 +123,82 @@ const Cart = () => {
               </tr>
             </thead>
             <tbody>
-              {Object.values(cartItems)
-                .filter(Boolean)                           // 👈 lọc null/undefined
-                .map((raw, i) => {
-                  const item = raw || {};
-                  const pid = String(item.productId || ""); // 👈 phòng thủ
-                  if (!pid) return null;                    // 👈 bỏ qua item lỗi
-
-                  const current = productsLookup[pid] || {};
-                  const safePrice = Number(current.price ?? item.price ?? 0);
-                  const qty = Number(item.quantity ?? 0);
-
-                  return (
-                    <tr key={pid || i}>
-                      <td className="index-bar-cell">
-                        <div className="index-bar">{i + 1}</div>
-                      </td>
-
-                      <CartItem
-                        productId={pid}
-                        imageInfo={current.imageInfo || item.imageInfo}          // fallback local
-                        name={current.name || item.name || "Unnamed"}            // lookup > local > fallback
-                        price={safePrice}
-                        quantity={qty}
-                        onIncrease={() => cartUpdateProductQuantity(pid, qty + 1)}
-                        onDecrease={() =>
-                          cartUpdateProductQuantity(pid, Math.max(0, qty - 1))
-                        }
-                        onRemove={() => cartRemoveProductFromCart(pid)}
-                      />
-                    </tr>
-                  );
-                })}
+              {/* Map values cartItems as item */}
+              {Object.values(cartItems).map((item, i) => {
+                // Get product data for current cart item
+                const currentItemData = productsLookup[item.productId];
+                return (
+                  // Cart item card
+                  <tr key={i}>
+                    <td className="index-bar-cell">
+                      <div className="index-bar">{i + 1}</div>
+                    </td>
+                    <CartItem
+                      {...item}
+                      {...currentItemData}
+                      onIncrease={() =>
+                        cartUpdateProductQuantity(
+                          item.productId,
+                          item.quantity + 1
+                        )
+                      }
+                      onDecrease={() =>
+                        cartUpdateProductQuantity(
+                          item.productId,
+                          item.quantity - 1
+                        )
+                      }
+                      onRemove={() => cartRemoveProductFromCart(item.productId)}
+                    />
+                  </tr>
+                );
+              })}
             </tbody>
-
           </table>
         )}
       </div>
 
+      {/* CHECKOUT */}
+      {/* CHECKOUT */}
       <div className="Cart-checkout">
         <div className="Cart-total">
           <h1>Total</h1>
           <div>
             <div className="Cart-total-item">
               <p>Subtotal</p>
-              <p>{currency.format(cartTotal)} đ</p>
+              <p>${cartTotal}</p>
             </div>
-
             <hr />
-
             {appliedPromo && (
               <>
                 <div className="Cart-total-item">
                   <p>Discount ({appliedPromo.discount}%)</p>
-                  <p>-{currency.format(calculateDiscount())} đ</p>
+                  <p>-${calculateDiscount().toFixed(2)}</p>
                 </div>
                 <hr />
               </>
             )}
-
             <div className="Cart-total-item">
               <p>Shipping Fee</p>
-              <p>{currency.format(getShippingFee())} đ</p>
+              <p>${getShippingFee().toFixed(2)}</p>
               {appliedPromo && appliedPromo.type === "freeshipping" && (
-                <span className="free-shipping-badge">Free Shipping Applied</span>
+                <span className="free-shipping-badge">
+                  Free Shipping Applied
+                </span>
               )}
             </div>
-
             <hr />
-
             <div className="Cart-total-item">
               <h3>Total</h3>
-              <h3>{currency.format(getFinalTotal())} đ</h3>
+              <h3>${getFinalTotal().toFixed(2)}</h3>
             </div>
           </div>
-
           <Link to="/checkout">
             <button>PROCEED TO CHECKOUT</button>
           </Link>
         </div>
-
         <div className="Cart-promocode">
           <p>PROMO CODE HERE</p>
-
           {appliedPromo && (
             <div className="applied-promo">
               <p>
@@ -200,7 +207,6 @@ const Cart = () => {
               <button onClick={() => setAppliedPromo(null)}>Remove</button>
             </div>
           )}
-
           <form className="Cart-promobox" onSubmit={applyPromoCode}>
             <input
               type="text"
@@ -208,11 +214,11 @@ const Cart = () => {
               value={promoCode}
               onChange={handlePromoCodeChange}
             />
-            <button type="submit">APPLY</button>
+            <button onClick={applyPromoCode}>APPLY</button>
           </form>
-
           {error && <p className="promo-error">{error}</p>}
 
+          {/* testing */}
           <div className="available-promos">
             <p>
               <strong>Available promo codes:</strong>
