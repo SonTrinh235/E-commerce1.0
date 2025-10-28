@@ -1,78 +1,111 @@
-.checkout-page {
-    padding: 20px;
-  }
+.Checkout-page {
+  padding: 50px 20%;
+  min-height: calc(100vh - 400px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.Checkout-content {
+  display: flex;
+  justify-content: space-evenly;
+  margin-top: 20px;
+  width: 100%;
+}
+
+.Checkout-items,
+.Checkout-right > div {
+  border: 1px solid #ddd;
+  padding: 15px;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.Checkout-items h3,
+.Checkout-right > div h3{
+  margin-bottom: 10px;
+}
+
+
+
+
+
+.Checkout-items {
+  width: 50%;
+}
+
+.Checkout-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.Checkout-item img {
+  width: 80px;
+  margin-right: 15px;
+  border-radius: 5px;
+}
+
+
+
+
+
+.Checkout-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 35%;
+}
+
+
+
+
+.Checkout-shipinfo form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.Checkout-shipinfo input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+
+
+
+
+.Checkout-payments {
+  display: flex;
+  flex-direction: column;
+}
+
+.Checkout-payments label {
+  display: flex;
+  align-items: center;
+  /* justify-content: center; */
   
-  .checkout-content {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 20px;
-    margin-top: 20px;
-  }
-  
-  .checkout-items {
-    border: 1px solid #ddd;
-    padding: 15px;
-    border-radius: 8px;
-    background: #fafafa;
-  }
-  
-  .checkout-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px;
-  }
-  
-  .checkout-item img {
-    width: 80px;
-    margin-right: 15px;
-    border-radius: 5px;
-  }
-  
-  .checkout-right {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .checkout-summary,
-  .checkout-form {
-    border: 1px solid #ddd;
-    padding: 15px;
-    border-radius: 8px;
-    background: #fff;
-  }
-  
-  .checkout-summary h3 {
-    margin-bottom: 10px;
-  }
-  
-  .checkout-form h3 {
-    margin-bottom: 10px;
-  }
-  
-  .checkout-form form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .checkout-form input {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  }
-  
-  .checkout-form button {
-    padding: 10px;
-    background: rgb(255, 213, 0);
-    color: black;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .checkout-form button:hover {
-    background: #45a049;
-    color: white;
-  }
-  
+}
+
+.Checkout-payments label input {
+  margin: 10px;
+}
+
+.Checkout-payments label img {
+  margin: 10px;
+  width: 60px;
+}
+
+
+
+
+
+.Checkout-placeorder {
+  padding: 10px;
+  height: 3rem;
+  background: rgb(255, 213, 0);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
