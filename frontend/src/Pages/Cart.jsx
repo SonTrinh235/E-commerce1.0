@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import promoCodes from "../data/Promo.js";
 import CartItem from "../Components/CartItem/CartItem";
 import { CartContext } from "../Context/CartContext";
+import { vnd } from "../utils/currencyUtils.js";
 
 const Cart = () => {
   // Import cart from CartContext
@@ -91,18 +92,7 @@ const Cart = () => {
 
   return (
     <div className="Cart-container">
-      {/* TEMPORARY CART CONTROL BUTTONS FOR TESTING */}
-      <div>
-        <button
-          onClick={() => {
-            cartAddProductToCart("68f9cf79c3d1a3fe39a50e90");
-          }}
-        >
-          Add Meat 1
-        </button>
-      </div>
-
-      <h1 className="Cart-header"> Your Cart </h1>
+      <h1 className="Cart-header"> Giỏ Hàng Của Tôi </h1>
 
       {/* LIST CART ITEM */}
       {/* LIST CART ITEM */}
@@ -114,12 +104,12 @@ const Cart = () => {
             <thead>
               <tr>
                 <th id="index-col">#</th>
-                <th id="image-col">Product</th>
-                <th id="name-col">Name</th>
-                <th id="price-col">Price</th>
-                <th id="quantity-col">Quantity</th>
-                <th id="total-col">Total</th>
-                <th id="remove-col">Remove</th>
+                <th id="image-col">Sản Phẩm</th>
+                <th id="name-col">Tên Sản Phẩm</th>
+                <th id="price-col">Giá Thành/1</th>
+                <th id="quantity-col">Số Lượng</th>
+                <th id="total-col">Tổng Cộng</th>
+                <th id="remove-col">Xóa</th>
               </tr>
             </thead>
             <tbody>
@@ -162,25 +152,25 @@ const Cart = () => {
       {/* CHECKOUT */}
       <div className="Cart-checkout">
         <div className="Cart-total">
-          <h1>Total</h1>
+          <h1>Tổng cộng</h1>
           <div>
             <div className="Cart-total-item">
-              <p>Subtotal</p>
-              <p>${cartTotal}</p>
+              <p>Tổng tiền sản phẩm</p>
+              <p>{vnd(cartTotal)}</p>
             </div>
             <hr />
             {appliedPromo && (
               <>
                 <div className="Cart-total-item">
-                  <p>Discount ({appliedPromo.discount}%)</p>
-                  <p>-${calculateDiscount().toFixed(2)}</p>
+                  <p>Giảm giá ({appliedPromo.discount}%)</p>
+                  <p>{vnd(calculateDiscount())}</p>
                 </div>
                 <hr />
               </>
             )}
             <div className="Cart-total-item">
-              <p>Shipping Fee</p>
-              <p>${getShippingFee().toFixed(2)}</p>
+              <p>Phí vận chuyển</p>
+              <p>{vnd(getShippingFee())}</p>
               {appliedPromo && appliedPromo.type === "freeshipping" && (
                 <span className="free-shipping-badge">
                   Free Shipping Applied
@@ -189,16 +179,16 @@ const Cart = () => {
             </div>
             <hr />
             <div className="Cart-total-item">
-              <h3>Total</h3>
-              <h3>${getFinalTotal().toFixed(2)}</h3>
+              <h3>Tổng Thanh Toán</h3>
+              <h3>{vnd(getFinalTotal())}</h3>
             </div>
           </div>
           <Link to="/checkout">
-            <button>PROCEED TO CHECKOUT</button>
+            <button>Mua Hàng</button>
           </Link>
         </div>
         <div className="Cart-promocode">
-          <p>PROMO CODE HERE</p>
+          <h2>Mã Khuyến Mãi</h2>
           {appliedPromo && (
             <div className="applied-promo">
               <p>
@@ -210,18 +200,18 @@ const Cart = () => {
           <form className="Cart-promobox" onSubmit={applyPromoCode}>
             <input
               type="text"
-              placeholder="Enter your code"
+              placeholder="Nhập mã khuyến mãi"
               value={promoCode}
               onChange={handlePromoCodeChange}
             />
-            <button onClick={applyPromoCode}>APPLY</button>
+            <button onClick={applyPromoCode}>Thêm</button>
           </form>
           {error && <p className="promo-error">{error}</p>}
 
           {/* testing */}
           <div className="available-promos">
             <p>
-              <strong>Available promo codes:</strong>
+              <strong>Mã khuyến mãi có sẵn:</strong>
             </p>
             <ul>
               {promoCodes.map((promo, index) => (
@@ -232,6 +222,44 @@ const Cart = () => {
             </ul>
           </div>
         </div>
+      </div>
+      {/* TEMPORARY CART CONTROL BUTTONS FOR TESTING */}
+      <div>
+        <button
+          onClick={() => {
+            cartAddProductToCart("68f9cf79c3d1a3fe39a50e90");
+          }}
+        >
+          Add Meat 1
+        </button>
+        <button
+          onClick={() => {
+            cartAddProductToCart("68f9d130c3d1a3fe39a50f28");
+          }}
+        >
+          Add Fish 1
+        </button>
+        <button
+          onClick={() => {
+            cartAddProductToCart("68f9d0d4c3d1a3fe39a50f00");
+          }}
+        >
+          Add Cheese 1
+        </button>
+        <button
+          onClick={() => {
+            cartAddProductToCart("68f9d018c3d1a3fe39a50eb3");
+          }}
+        >
+          Add Vegs 1
+        </button>
+        <button
+          onClick={() => {
+            cartAddProductToCart("68f9d2d1c3d1a3fe39a50f8d");
+          }}
+        >
+          Add Fruit 1
+        </button>
       </div>
     </div>
   );
