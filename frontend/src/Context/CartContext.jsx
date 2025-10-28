@@ -78,62 +78,66 @@ export const CartContextProvider = ({ children }) => {
     const productResponse = await getProductById(productId);
     const productData = productResponse.data;
 
-    // Set local cart
-    setCartItems((prevCart) => {
-      const existingItem = prevCart[productId];
-
-      if (existingItem) {
-        // Case A: EXISTS Item
-        return {
-          ...prevCart, // Copy other items
-          [productId]: {
-            ...existingItem, // Copy existing item details
-            quantity: existingItem.quantity + 1, // +1 quantity
-          },
-        };
-      } else {
-        // Case B: Item NEW
-        return {
-          ...prevCart, // Copy all existing items
-          [productId]: {
-            // Add new item
-            productId: productId,
-            quantity: 1,
-            price: productData.price,
-          },
-        };
-      }
-    });
-
-    setProductsLookup((prevLookup) => {
-      const existingItem = prevLookup[productId];
-
-      if (existingItem) {
-        // Case A: EXISTS Item
-        return {
-          ...prevLookup, // Copy other items
-        };
-      } else {
-        // Case B: Item NEW
-        return {
-          ...prevLookup, // Copy all existing items
-          [productId]: {
-            // Add new item
-            ...productData,
-          },
-        };
-      }
-    });
-
     // Only call API if logged in
     if (userId) {
-      addProductToCart(userId, {
+      await addProductToCart(userId, {
         productId: productId,
         quantity: 1,
         price: productData.price,
       });
       // Call fetch needed for product info (price, image)
       await initializeCartAndProductsLookup();
+    }
+    
+
+    // Else not logged in: manually touch local cart
+    else {
+      // Set local cart
+      setCartItems((prevCart) => {
+        const existingItem = prevCart[productId];
+
+        if (existingItem) {
+          // Case A: EXISTS Item
+          return {
+            ...prevCart, // Copy other items
+            [productId]: {
+              ...existingItem, // Copy existing item details
+              quantity: existingItem.quantity + 1, // +1 quantity
+            },
+          };
+        } else {
+          // Case B: Item NEW
+          return {
+            ...prevCart, // Copy all existing items
+            [productId]: {
+              // Add new item
+              productId: productId,
+              quantity: 1,
+              price: productData.price,
+            },
+          };
+        }
+      });
+
+      setProductsLookup((prevLookup) => {
+        const existingItem = prevLookup[productId];
+
+        if (existingItem) {
+          // Case A: EXISTS Item
+          return {
+            ...prevLookup, // Copy other items
+          };
+        } else {
+          // Case B: Item NEW
+          return {
+            ...prevLookup, // Copy all existing items
+            [productId]: {
+              // Add new item
+              ...productData,
+            },
+          };
+        }
+      });
     }
   };
 
