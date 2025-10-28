@@ -2,6 +2,7 @@ import "./CartItem.css";
 import { Link } from "react-router-dom";
 import DefaultImage from "../../assets/placeholder-image.png";
 import { FaTrashAlt } from "react-icons/fa";
+import { vnd } from "../../utils/currencyUtils.js";
 
 function CartItem(props) {
   const { onIncrease, onDecrease, onRemove } = props;
@@ -14,7 +15,7 @@ function CartItem(props) {
       </td>
 
       <td className="CartItem-name">{props.name}</td>
-      <td className="CartItem-price">${props.price}</td>
+      <td className="CartItem-price">{vnd(props.price)}</td>
 
       <td className="CartItem-quantity">
         <button onClick={onDecrease}>-</button>
@@ -22,7 +23,7 @@ function CartItem(props) {
         <button onClick={onIncrease}>+</button>
       </td>
 
-      <td className="CartItem-total">${props.price * props.quantity}</td>
+      <td className="CartItem-total">{vnd(props.price * props.quantity)}</td>
 
       <td className="CartItem-remove">
         <button onClick={onRemove} >
