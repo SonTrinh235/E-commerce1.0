@@ -10,7 +10,7 @@ const AdminItem = (props) => {
   return (
     <>
       <td className="admin-item-img">
-        <Link to={`/product/${props.id}`}>
+        <Link to={`#`}>
           <img
             onClick={() => window.scrollTo(0, 0)}
             src={props.imageInfo?.url || DefaultImage}
@@ -24,8 +24,8 @@ const AdminItem = (props) => {
       <td className="admin-item-description">{props.description}</td>
       <td className="admin-item-stock">{props.stock}</td>
       <td className="admin-item-actions">
-        <button id="edit" onClick={onEdit}><FaEdit/>Edit</button>
-        <button id="delete" onClick={onDelete}><FaTrash/>Delete</button>
+        <button id="edit" onClick={onEdit}><FaEdit/>Chỉnh sửa</button>
+        <button id="delete" onClick={onDelete}><FaTrash/>Xóa SP</button>
       </td>
     </>
   );
