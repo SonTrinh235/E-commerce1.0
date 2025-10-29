@@ -1,5 +1,5 @@
 .Cart-container {
-  margin: 100px 170px;
+  margin: 100px 270px;
 }
 
 
@@ -8,6 +8,7 @@
   width: 100%;
   font-size: 1.1rem;
   overflow: hidden;
+  margin-top: 10px;
 }
 
 .Cart-cart #table td:last-child {
