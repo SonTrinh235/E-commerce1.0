@@ -40,14 +40,14 @@ function AdminNavbar() {
     <div className="AdminNavbar-container">
       <Link to="/" className="AdminNavbar-store">
         <FiArrowLeft />
-        Back to Store
+        Trở lại cửa hàng
       </Link>
 
       <div className="AdminNavbar-right">
-        {isAuthed && <span className="AdminNavbar-name">Hello, {adminName}</span>}
+        {isAuthed && <span className="AdminNavbar-name">Xin chào, {adminName}</span>}
         <button className="AdminNavbar-logout" onClick={handleLogout}>
-          <FiLogOut />
-          Log Out
+          <FiLogOut stroke="white" />
+          <b style= {{color: 'white'}}>Đăng xuất</b>
         </button>
       </div>
     </div>

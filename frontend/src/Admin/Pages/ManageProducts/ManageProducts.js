@@ -64,12 +64,12 @@ function ManageProducts() {
       <div className="admin-products-list">
         <div id="filter">
           <div className="category">
-            <h3>Category:</h3>
+            <h3>Phân loại:</h3>
             <select>
               <option value="" disabled>
-                Filter by Category
+                Lọc theo phân loại
               </option>
-              <option value="All">All</option>
+              <option value="All">Tất cả</option>
               <option value="Meats">Meats</option>
               <option value="Vegetables">Vegetables</option>
               <option value="Others">Others</option>
@@ -77,38 +77,52 @@ function ManageProducts() {
           </div>
 
           <div className="search">
-            <h3>Search by product name:</h3>
-            <input type="text" placeholder="Enter product name"></input>
-          </div>
-          <div className="search">
-            <h3>Search by product ID:</h3>
-            <input type="text" placeholder="Enter product ID"></input>
+            <h3>Tìm theo tên sản phẩm:</h3>
+            <input type="text" placeholder="Nhập tên sản phẩm"></input>
           </div>
 
           <div className="sort">
-            <h3>Sort by price:</h3>
+            <h3>Sẵn trong kho:</h3>
             <select>
               <option value="" disabled>
-                Sort by price
+                Sắp xếp theo sẵn trong kho
               </option>
-              <option value="Default">Default</option>
-              <option value="Ascending">Ascending</option>
-              <option value="Descending">Descending</option>
+              <option value="Default">Mặc định</option>
+              <option value="Ascending">Tăng dần</option>
+              <option value="Descending">Giảm dần</option>
+            </select>
+          </div>
+
+          <div className="sort">
+            <h3>Giá thành:</h3>
+            <select>
+              <option value="" disabled>
+                Sắp xếp theo giá
+              </option>
+              <option value="Default">Mặc định</option>
+              <option value="Ascending">Tăng dần</option>
+              <option value="Descending">Giảm dần</option>
             </select>
           </div>
         </div>
 
+
+        <header>Danh sách các sản phẩm</header>
+
+
+        <div>Tổng cộng {totalProducts} sản phẩm</div>
+
         {/* Paging for products */}
-        <div>
+        <div className="ManageProducts-paging">
           <button
             onClick={() => setCurrentPage(currentPage - 1)}
             disabled={currentPage <= 1}
           >
-            Previous
+            Trước
           </button>
 
           <span>
-            Page {currentPage} of{" "}
+            Trang {currentPage} trên {" "}
             {totalPages}
           </span>
 
@@ -116,23 +130,22 @@ function ManageProducts() {
             onClick={() => setCurrentPage(currentPage + 1)}
             disabled={currentPage >= totalPages}
           >
-            Next
+            Sau
           </button>
         </div>
 
-        <header>Danh sách các sản phẩm</header>
-        <div>Hiển thị {totalProducts} sản phẩm</div>
+
         <table id="table">
           <thead>
             <tr>
               <th className="index">#</th>
-              <th>Image</th>
-              <th>Name</th>
-              <th>Category</th>
-              <th>Price</th>
-              <th>Description</th>
-              <th>Stock</th>
-              <th>Actions</th>
+              <th>Hình ảnh</th>
+              <th>Tên sản phẩm</th>
+              <th>Phân loại</th>
+              <th>Giá thành/1</th>
+              <th>Mô tả sản phẩm</th>
+              <th>Sẵn trong kho</th>
+              <th>Chỉnh sửa</th>
             </tr>
           </thead>
           <tbody>
@@ -140,7 +153,7 @@ function ManageProducts() {
               <tr key={i}>
                 {/* The Index Bar Cell */}
                 <td className="index-bar-cell">
-                  <div className="index-bar">{i+1+(currentPage-1)*limit}</div>
+                  <div>{i+1+(currentPage-1)*limit}</div>
                 </td>
 
                 {/* The rest of the product data will now be rendered by the AdminItem component */}
@@ -154,11 +167,34 @@ function ManageProducts() {
             ))}
           </tbody>
         </table>
+
+
+                {/* Paging for products */}
+        <div className="ManageProducts-paging">
+          <button
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage <= 1}
+          >
+            Trước
+          </button>
+
+          <span>
+            Trang {currentPage} trên {" "}
+            {totalPages}
+          </span>
+
+          <button
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage >= totalPages}
+          >
+            Sau
+          </button>
+        </div>
       </div>
 
       <button id="add-product" onClick={() => openForm("add")}>
         <FaPlusCircle />
-        Add product
+        Thêm sản phẩm
       </button>
 
       {/* Conditional Rendering of ProductForm */}

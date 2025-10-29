@@ -7,16 +7,16 @@ function AdminSidebar() {
     <div className="AdminSidebar-container">
       <div className="AdminSidebar-content">
         <Link to="./">
-          <div id="title">Logged in as Admin</div>
+          <div id="title">Bảng điều khiển Admin</div>
         </Link>
         <Link to="./dashboard">
-          <div className="tab"><FaHome className="icons"/>Dashboard</div>
+          <div className="tab"><FaHome className="icons"/>Thống kê</div>
         </Link>
         <Link to="./products">
-          <div className="tab"><FaBox className="icons"/>Manage Products</div>
+          <div className="tab"><FaBox className="icons"/>Quản lí sản phẩm</div>
         </Link>
         <Link to="./orders">
-          <div className="tab"><FaReceipt className="icons"/>Manage Orders</div>
+          <div className="tab"><FaReceipt className="icons"/>Quản lí đơn hàng</div>
         </Link>
       </div>
     </div>

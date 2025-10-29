@@ -4,7 +4,7 @@
     justify-content: space-between;
     align-items: center;
     height: 3rem;
-    padding: 0 8px;
+    padding-right: 8px;
   }
   
   /* Link "Back to Store" */
@@ -40,6 +40,12 @@
     padding: 0 8px;
     font-weight: 600;
     color: #1a1a1a;
+    background: #D3D3D3;
+    border-radius: 8px;
+    height: 2.2rem;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
     white-space: nowrap;
   }
   
