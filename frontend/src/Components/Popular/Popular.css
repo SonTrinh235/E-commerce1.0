@@ -19,11 +19,35 @@
     background: #252525;
 
 }
-.popular-item{
+.popular-item {
     margin-top: 50px;
     display: flex;
     gap: 30px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding-bottom: 10px;
+    width: calc((250px * 5) + (30px * 4));
+    box-sizing: border-box;
 }
+
+.popular-item > * {
+    flex: 0 0 250px;
+    box-sizing: border-box;
+}
+
+.popular-item::-webkit-scrollbar {
+    height: 8px;
+}
+
+.popular-item::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 4px;
+}
+
+.popular-item::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
 
 @media(max-width : 1280px){
     .popular{
