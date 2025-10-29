@@ -29,8 +29,10 @@
 .AdminSidebar-content .tab {
     display: flex;
     align-items: center;
-    min-height: 3rem;
+    min-height: 4rem;
 }
+
 .AdminSidebar-content .tab .icons {
+    font-size: 2rem;
     margin-right: 1rem;
 }
