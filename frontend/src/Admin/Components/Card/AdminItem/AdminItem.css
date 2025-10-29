@@ -12,15 +12,13 @@
 
 .admin-item-actions #edit,
 .admin-item-actions #delete {
-  /* display: flex; */
-  width: 5rem;
-  height: 2.5rem;
+  width: 7rem;
+  height: 2.2rem;
   border-radius: 10px;
   border: none;
   cursor: pointer;
   margin-left: 10px;
-  /* justify-content: center;
-  align-items: center; */
+  margin-top: 2px;
 }
 .admin-item-actions #edit {
   background: rgb(0, 91, 196);
