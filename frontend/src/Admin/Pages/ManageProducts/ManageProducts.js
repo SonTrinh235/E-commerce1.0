@@ -42,7 +42,9 @@ function ManageProducts() {
 
   return (
     <div className="ManageProducts-container">
-      <h1 id="ManageProducts-header">Quản lí sản phẩm</h1>
+      <div id="ManageProducts-header">
+        <h2 style={{color: 'white'}}>📦Quản lí sản phẩm</h2>
+      </div>
 
       {/* List of Products  */}
       {/* <div className="admin-products-list">
@@ -61,8 +63,8 @@ function ManageProducts() {
           </div>
           </div> */}
 
-      <div className="admin-products-list">
-        <div id="filter">
+      
+        <div className="ManageProducts-filter">
           <div className="category">
             <h3>Phân loại:</h3>
             <select>
@@ -106,6 +108,7 @@ function ManageProducts() {
           </div>
         </div>
 
+        <div className="admin-products-list">
 
         <header>Danh sách các sản phẩm</header>
 

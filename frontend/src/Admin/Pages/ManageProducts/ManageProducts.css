@@ -5,50 +5,81 @@
   align-items: center;
 }
 
+
+
+
+
 #ManageProducts-header {
   margin: 50px;
-  font-size: 3rem;
-}
-
-.admin-products-list {
-  display: flex;
-  flex-direction: column;
-  width: 90%;
-  padding: 30px;
+  background: hsl(34, 50%, 60%);
+  text-align: center;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  padding: 20px 50px;
+  font-size: 1.5rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   box-sizing: border-box;
 }
 
 
-.admin-products-list #filter {
+
+
+
+.ManageProducts-filter {
   margin-bottom: 3rem;
-  width: 100%;
+  width: 95%;
   display: flex;
   justify-content: space-between;
   align-items: end;
+  background: white;
+  border-radius: 20px;
+  padding: 20px 40px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
 }
 
-
-.admin-products-list #filter .search {
+.ManageProducts-filter .search {
   width: 50%;
 }
 
-.admin-products-list #filter div input,
-.admin-products-list #filter div select {
+.ManageProducts-filter div input,
+.ManageProducts-filter div select {
   height: 2.5rem;
   width: 100%;
-  border-radius: 7px;
-  border: 1px solid black;
+  border-radius: 10px;
+  border: 2px solid hsl(0, 0%, 80%);
   padding-left: 10px;
+  transition: all 0.4s ease;
 }
+
+.ManageProducts-filter div input:focus,
+.ManageProducts-filter div select:focus {
+  border: 2px solid hsl(0, 0%, 60%);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+
+
+
+
+
+.admin-products-list {
+  display: flex;
+  flex-direction: column;
+  width: 95%;
+  padding: 20px 40px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
 
 .admin-products-list header {
   font-size: 2.5rem;
   font-weight: bold;
 }
-
-
-
-
 
 
 .admin-products-list .ManageProducts-paging  {
@@ -65,18 +96,21 @@
   height: 2rem;
   border-radius: 8px;
   background: hsl(0, 0%, 100%);
-  border: 1px solid rgb(59, 59, 59);
+  border: 2px solid hsl(0, 0%, 70%);
+  transition: all 0.4s ease;
 }
 
-.admin-products-list .ManageProducts-paging  button:hover {
-  background: hsl(0, 0%, 97%);
+.admin-products-list .ManageProducts-paging  button:hover:not(:disabled) {
+  background: hsl(0, 0%, 95%);
+  border: 2px solid hsl(0, 0%, 50%);
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.3);
 }
 
 .admin-products-list .ManageProducts-paging  button:active {
-  background: hsl(0, 0%, 92%);
+  background: hsl(0, 0%, 90%);
 }
 
-.admin-products-list .ManageProducts-paging  button:disabled{
+.admin-products-list .ManageProducts-paging button:disabled{
   background: hsl(0, 0%, 87%);
   border: none;
 }
@@ -87,9 +121,12 @@
 
 
 .admin-products-list #table {
-  background: rgb(218, 218, 218);
+  background: rgb(199, 199, 199);
   border-collapse: collapse;
   overflow: hidden;
+  border-radius: 12px;
+  border: 6px solid grey;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
 }
 
 .admin-products-list #table th:last-child,
