@@ -1,17 +1,10 @@
 .manage-order-container {
   padding: 30px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
   min-height: 100vh;
-  font-family: "Poppins", "Segoe UI", sans-serif;
 }
 
-@keyframes gradientShift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
 
 /* Header Section */
 .manage-order-header {
@@ -30,9 +23,6 @@
 .manage-order-title {
   font-size: 2.2rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   background-clip: text;
   margin: 0;
   display: flex;
@@ -59,7 +49,6 @@
 }
 
 .stat-item:hover {
-  transform: translateY(-2px);
   box-shadow: 0 12px 35px rgba(255, 107, 53, 0.6);
 }
 
@@ -77,14 +66,13 @@
 }
 
 .search-box {
-  position: relative;
   flex: 1;
-  max-width: 400px;
+  max-width: 600px;
 }
 
 .search-input {
-  width: 100%;
-  padding: 16px 55px 16px 25px;
+  width: 90%;
+  padding: 16px 0px 16px 45px;
   border: 2px solid rgba(102, 126, 234, 0.3);
   border-radius: 15px;
   font-size: 1rem;
@@ -100,16 +88,15 @@
   border-color: #667eea;
   background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
-  transform: translateY(-2px);
 }
 
 .search-icon {
   position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
+  left: 45px;
+  top: 40px;
   font-size: 1.2rem;
   color: #64748b;
+  z-index: 10;
 }
 
 .filter-box {
@@ -135,7 +122,6 @@
   border-color: #667eea;
   background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
-  transform: translateY(-2px);
 }
 
 /* Loading States */
@@ -205,7 +191,6 @@
 }
 
 .retry-btn:hover {
-  transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
 }
 
@@ -231,6 +216,16 @@
   table-layout: auto;
 }
 
+.admin-order-table th:last-child,
+.admin-order-table td:last-child {
+  border-right: none;
+}
+
+.admin-order-table #table tr:last-child td {
+  border-bottom: none;
+}
+
+
 .admin-order-table th {
   background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ffd23f 100%);
   color: white;
@@ -239,7 +234,7 @@
   font-size: 0.95rem;
   font-weight: 700;
   padding: 20px 25px;
-  text-align: left;
+  text-align: center;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -249,11 +244,12 @@
 
 .admin-order-table td {
   padding: 14px 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid hsl(0, 0%, 90%);
   font-size: 0.9rem;
   vertical-align: middle;
   word-break: break-word;
   overflow-wrap: anywhere;
+  border-right: 1px solid hsl(0, 0%, 90%);
 }
 
 /* Break long IDs and user fields to prevent overflow */
@@ -311,7 +307,6 @@
   border-color: #667eea;
   background: rgba(102, 126, 234, 0.1);
   color: #667eea;
-  transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
 }
 
@@ -343,7 +338,6 @@
   border-color: #667eea;
   background: rgba(102, 126, 234, 0.1);
   color: #667eea;
-  transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
 }
 
@@ -352,7 +346,6 @@
   border-color: #ff6b35;
   color: white;
   box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
-  transform: translateY(-2px);
 }
 
 /* Responsive Design */

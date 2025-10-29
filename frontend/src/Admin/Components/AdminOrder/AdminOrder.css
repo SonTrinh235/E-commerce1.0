@@ -23,7 +23,6 @@
 }
 
 .status:hover {
-  transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -88,12 +87,10 @@
 }
 
 .action-btn:hover {
-  transform: translateY(-3px) scale(1.05);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
 
 .action-btn:active {
-  transform: translateY(-1px) scale(1.02);
   transition: all 0.1s ease;
 }
 
@@ -132,7 +129,7 @@
 }
 
 /* ========== Bảng hiển thị đơn hàng ========== */
-td {
+.AdminOrder-row td {
   padding: 14px 16px;
   border-bottom: 1px solid #f1f5f9;
   text-align: center;
@@ -143,33 +140,31 @@ td {
   overflow-wrap: anywhere;
 }
 
-tr:hover td {
+.AdminOrder-row tr:hover td {
   background-color: #f8fafc;
   transition: background-color 0.2s ease;
 }
 
 /* Styling cho các cột cụ thể */
-td:first-child {
+.AdminOrder-row td:first-child {
   font-weight: 600;
   color: #1e293b;
-  font-family: 'Courier New', monospace;
 }
 
-td:nth-child(2) {
+.AdminOrder-row td:nth-child(2) {
   font-weight: 500;
   color: #374151;
 }
 
-td:nth-child(3) {
+.AdminOrder-row td:nth-child(3) {
   font-weight: 700;
   color: #059669;
   font-size: 1rem;
 }
 
-td:nth-child(5) {
+.AdminOrder-row td:nth-child(5) {
   font-size: 0.9rem;
   color: #64748b;
-  font-family: 'Courier New', monospace;
 }
 
 /* ========== PAYMENT BADGES ========== */
