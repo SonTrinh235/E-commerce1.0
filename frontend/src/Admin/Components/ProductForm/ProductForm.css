@@ -26,24 +26,29 @@
   font-size: clamp(0rem, min(2vh, 2vw), 1.5rem);
 }
 
+
+
+
+
 .product-form {
   display: flex;
   font-size: clamp(0.5rem, min(3vh, 1.7vw), 1.5rem);
-  justify-content: center;
+  justify-content: space-evenly;
   align-items: center;
-  width: clamp(0px, 80%, 900px);
-  height: 60%;
+  width: clamp(0px, 80%, 1000px);
+  height: 65%;
   border-radius: 30px;
-  background: rgb(209, 209, 209);
+  background: hsl(0, 0%, 85%);
 }
+
+
+
 
 .product-form #section-image {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin-right: 5%;
-  /* height: 80%; */
   width: clamp(100px,30%, 300px);
   height: clamp(100px,80%, 30vw);
   padding: 2%;
@@ -79,6 +84,10 @@
   background: hsl(110, 71%, 30%);
 }
 
+
+
+
+
 .product-form #section-data {
   display: flex;
   flex-direction: column;
@@ -86,8 +95,8 @@
 }
 
 .product-form #section-data input {
-  height: clamp(0.5rem, min(4vh,4vw), 3rem);
-  width: clamp(0.5rem, 100%, 25rem);
+  height: clamp(0.5rem, min(3.5vh,3.5vw), 3rem);
+  width: clamp(0.5rem, 100%, 30rem);
   font-size: clamp(0.5rem, min(3vh, 1.7vw), 1.2rem);
   border-radius: 5px;
   border: none;
@@ -96,6 +105,23 @@
   vertical-align: center;
   background: rgb(243, 243, 243);
 }
+
+.product-form #section-data textarea {
+  font-family: calibri;
+  height: clamp(1rem, min(10vh, 10vw), 10rem);
+  width: clamp(0.5rem, 100%, 30rem);
+  font-size: clamp(0.5rem, min(3vh, 1.7vw), 1.2rem);
+  border-radius: 5px;
+  border: none;
+  margin-bottom: 1%;
+  padding-left: 3%;
+  vertical-align: center;
+  background: rgb(243, 243, 243);
+  resize: none;
+}
+
+
+
 
 #ProductForm-cancel {
   position: absolute;
