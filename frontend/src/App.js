@@ -23,7 +23,7 @@ import NotFound from "./Pages/NotFound";
 // assets
 import meat_banner from "./assets/banner_meats.png";
 import veg_banner from "./assets/banner_vegs.png";
-import others_banner from "./assets/banner_others.png";
+// import others_banner from "./assets/banner_others.png";
 import all_banner from "./assets/banner_all.png";
 
 import PublicLayout from "./PublicLayout";
@@ -36,7 +36,6 @@ const RequireUser = ({ children }) => {
 };
 
 const RequireAdmin = ({ children }) => {
-  // Cho qua nếu key tồn tại (tránh case token = "")
   const token = localStorage.getItem("adminToken");
   return token !== null ? children : <Navigate to="/login" replace />;
 };
@@ -57,22 +56,21 @@ function App() {
             <Route path="/" element={<Shop />} />
             <Route
               path="/meats"
-              element={<ShopCategory banner={meat_banner} category="Meats" />}
+              element={<ShopCategory banner={meat_banner} category="Meat" />}
             />
             <Route
               path="/vegs"
-              element={<ShopCategory banner={veg_banner} category="Vegetables" />}
+              element={<ShopCategory banner={veg_banner} category="Vegetable" />}
             />
-            <Route
+            {/* <Route
               path="/others"
               element={<ShopCategory banner={others_banner} category="Others" />}
-            />
+            /> */}
             <Route
               path="/all-products"
-              element={<ShopCategory banner={all_banner} category="Products" />}
+              element={<ShopCategory banner={all_banner} category="" />}
             />
 
-            {/* YÊU CẦU USER ĐÃ LOGIN */}
             <Route
               path="/checkout"
               element={
@@ -85,7 +83,6 @@ function App() {
             <Route path="/product/:productId" element={<Product />} />
             <Route path="/cart" element={<Cart />} />
 
-            {/* ĐÃ LOGIN thì chặn vào /login */}
             <Route
               path="/login"
               element={
@@ -99,7 +96,7 @@ function App() {
             <Route path="/search" element={<SearchResults />} />
           </Route>
 
-          {/* === ADMIN ROUTES (bảo vệ bằng adminToken) === */}
+          {/* === ADMIN ROUTES === */}
           <Route
             path="/admin"
             element={

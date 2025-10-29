@@ -42,3 +42,9 @@
     font-size: 18px;
     font-weight: 500;
 }
+.shopcategory-loadmore button{
+    font-size: 18px;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
