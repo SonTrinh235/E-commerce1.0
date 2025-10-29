@@ -16,6 +16,8 @@ export default function AdminOrder({ id, customerName, amount, paymentMethod, pa
 
   return (
     <>
+    <tr className="AdminOrder-row">
+
       <td>#{id}</td>
       <td>
         {customerName}
@@ -43,6 +45,7 @@ export default function AdminOrder({ id, customerName, amount, paymentMethod, pa
           Hủy
         </button>
       </td>
+    </tr>
     </>
   );
 }

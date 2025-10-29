@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { getAllOrders, updateOrderStatus } from "../../../api/orderService";
 import AdminOrder from '../../Components/AdminOrder/AdminOrder'
 import "./ManageOrders.css";
-// import all_product from '../../../data/all_product';
 
+import { FiSearch } from "react-icons/fi"
 
 export default function ManageOrder() {
   const [orders, setOrders] = useState([]);
@@ -137,10 +137,10 @@ export default function ManageOrder() {
   return (
     <div className="manage-order-container">
       <div className="manage-order-header">
-        <h2 className="manage-order-title">📦 Quản lý đơn hàng</h2>
+        <h2 className="manage-order-title"><span>📦</span> Quản lý đơn hàng</h2>
         <div className="order-stats">
           <span className="stat-item">
-            <strong>{orders.length}</strong> đơn hàng
+            {orders.length} đơn hàng
           </span>
         </div>
       </div>
@@ -150,6 +150,7 @@ export default function ManageOrder() {
       {/* Bộ lọc và tìm kiếm */}
       <div className="order-filters">
         <div className="search-box">
+          <span className="search-icon"><FiSearch/></span>
           <input
             type="text"
             placeholder="Tìm kiếm theo ID hoặc tên khách hàng..."
@@ -157,7 +158,6 @@ export default function ManageOrder() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
           />
-          <span className="search-icon">🔍</span>
         </div>
 
         <div className="filter-box">
@@ -216,7 +216,6 @@ export default function ManageOrder() {
             <tbody>
               {filteredOrders.length > 0 ? (
                 filteredOrders.map((order) => (
-                  <tr key={order._id}>
                     <AdminOrder
                       id={order._id}
                       customerName={order.userId || order.shipping?.name || 'Guest'}
@@ -231,7 +230,6 @@ export default function ManageOrder() {
                       }
                       onDelete={() => handleDeleteOrder(order._id)}
                     />
-                  </tr>
                 ))
               ) : (
                 <tr>
