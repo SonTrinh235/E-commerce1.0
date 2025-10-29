@@ -1,0 +1,252 @@
+/* Tổng thể cell */
+.admin-order-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+/* ========== TRẠNG THÁI ========== */
+.status {
+  padding: 8px 16px;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: capitalize;
+  display: inline-block;
+  min-width: 80px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.status:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.status.pending {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #d97706;
+  border: 1px solid #f59e0b;
+}
+
+.status.processing {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #2563eb;
+  border: 1px solid #3b82f6;
+}
+
+.status.delivered {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #059669;
+  border: 1px solid #10b981;
+}
+
+.status.canceled {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #dc2626;
+  border: 1px solid #ef4444;
+}
+
+/* ========== NÚT HÀNH ĐỘNG ========== */
+.action-btn {
+  border: none;
+  outline: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: white;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  min-width: 75px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+}
+
+.action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.action-btn:hover::before {
+  left: 100%;
+}
+
+.action-btn:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.action-btn:active {
+  transition: all 0.1s ease;
+}
+
+/* Màu riêng từng nút với hiệu ứng đẹp hơn */
+.action-btn.process {
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #ffd23f 100%);
+  border: 2px solid #ff6b35;
+}
+
+.action-btn.process:hover {
+  background: linear-gradient(135deg, #ff8c42 0%, #ffa726 50%, #ffeb3b 100%);
+  box-shadow: 0 8px 25px rgba(255, 107, 53, 0.5);
+  border-color: #ff8c42;
+}
+
+.action-btn.ship {
+  background: linear-gradient(135deg, #00c9ff 0%, #92fe9d 100%);
+  border: 2px solid #00c9ff;
+}
+
+.action-btn.ship:hover {
+  background: linear-gradient(135deg, #00d4ff 0%, #a8ffb4 100%);
+  box-shadow: 0 8px 25px rgba(0, 201, 255, 0.5);
+  border-color: #00d4ff;
+}
+
+.action-btn.cancel {
+  background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+  border: 2px solid #ff416c;
+}
+
+.action-btn.cancel:hover {
+  background: linear-gradient(135deg, #ff6b8a 0%, #ff6b4b 100%);
+  box-shadow: 0 8px 25px rgba(255, 65, 108, 0.5);
+  border-color: #ff6b8a;
+}
+
+/* ========== Bảng hiển thị đơn hàng ========== */
+.AdminOrder-row td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.AdminOrder-row tr:hover td {
+  background-color: #f8fafc;
+  transition: background-color 0.2s ease;
+}
+
+/* Styling cho các cột cụ thể */
+.AdminOrder-row td:first-child {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.AdminOrder-row td:nth-child(2) {
+  font-weight: 500;
+  color: #374151;
+}
+
+.AdminOrder-row td:nth-child(3) {
+  font-weight: 700;
+  color: #059669;
+  font-size: 1rem;
+}
+
+.AdminOrder-row td:nth-child(5) {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+/* ========== PAYMENT BADGES ========== */
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge.method.cash { background: #ecfeff; color: #0e7490; border-color: #67e8f9; }
+.badge.method.vnpay { background: #eef2ff; color: #3730a3; border-color: #a5b4fc; }
+
+.badge.payment.unpaid { background: #fff7ed; color: #9a3412; border-color: #fdba74; }
+.badge.payment.paid { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
+.badge.payment.failed { background: #fef2f2; color: #991b1b; border-color: #fca5a5; }
+
+/* Responsive cho mobile */
+@media (max-width: 768px) {
+  .admin-order-actions {
+    flex-direction: row;
+    gap: 3px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .action-btn {
+    width: auto;
+    min-width: 55px;
+    padding: 6px 10px;
+    font-size: 0.7rem;
+  }
+
+  .status {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+    min-width: 60px;
+  }
+
+  .badge {
+    padding: 3px 6px;
+    font-size: 0.65rem;
+  }
+
+  td {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-order-actions {
+    gap: 2px;
+  }
+
+  .action-btn {
+    padding: 5px 8px;
+    font-size: 0.65rem;
+    min-width: 45px;
+  }
+
+  .status {
+    padding: 3px 6px;
+    font-size: 0.7rem;
+    min-width: 50px;
+  }
+
+  .badge {
+    padding: 2px 5px;
+    font-size: 0.6rem;
+  }
+
+  td {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+}
