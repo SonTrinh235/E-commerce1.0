@@ -193,17 +193,17 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
   let submitText = "Submit";
 
   if (mode === "add") {
-    title = "Add New Product";
-    subTitle = "Enter data for new product:";
-    submitText = "Create";
+    title = "Thêm Sản Phẩm";
+    subTitle = "Nhập thông tin cho sản phẩm mới:";
+    submitText = "Thêm sản phẩm";
   } else if (mode === "edit") {
-    title = "Editing Product";
-    subTitle = "Product data will be updated to new data";
-    submitText = "Confirm Edit";
+    title = "Chỉnh Sửa Sản Phẩm";
+    subTitle = "Thông tin sản phẩm sẽ được thay bằng thông tin mới";
+    submitText = "Xác nhận chỉnh sửa";
   } else if (mode === "delete") {
-    title = "Confirm: Deleting Item";
-    subTitle = "Selected Item will be deleted, please confirm";
-    submitText = "Delete Item";
+    title = "Xác nhận: Xóa sản phẩm";
+    subTitle = "Sản phẩm này sẽ bị xóa, hãy xác nhận:";
+    submitText = "Xóa sản phẩm";
   }
 
   const buttonClass =
@@ -220,7 +220,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
       <form className="product-form" onSubmit={handleSubmit}>
         {/* Image */}
         <div id="section-image">
-          <div>Product Image</div>
+          <div>Hình ảnh</div>
           {imagePreviewUrl ? (
             <img src={imagePreviewUrl} alt = ""/>
           ) : (
@@ -237,43 +237,43 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
         </div>
         {/* Data  */}
         <div id="section-data">
-          <div>Product Name:</div>
+          <div>Tên sản phẩm:</div>
           <input
             name="productName"
             type="text"
-            placeholder="Enter productName"
+            placeholder="Nhập tên sản phẩm"
             value={formData.productName}
             onChange={handleChange}
           />
-          <div>Product Category:</div>
+          <div>Phân loại:</div>
           <input
             name="productCategory"
             type="text"
-            placeholder="Enter productCategory"
+            placeholder="Nhập phân loại sản phẩm"
             value={formData.productCategory}
             onChange={handleChange}
           />
-          <div>Product Price:</div>
+          <div>Giá thành/1:</div>
           <input
             name="productPrice"
             type="number"
-            placeholder="Enter productPrice"
+            placeholder="Nhập giá thành sản phẩm"
             value={formData.productPrice}
             onChange={handleChange}
           />
-          <div>Product Description:</div>
-          <input
+          <div>Mô tả:</div>
+          <textarea
             name="productDescription"
             type="text"
-            placeholder="Enter productDescription"
+            placeholder="Nhập mô tả sản phẩm"
             value={formData.productDescription}
             onChange={handleChange}
           />
-          <div>Product Stock:</div>
+          <div>Sẵn trong kho:</div>
           <input
             name="productStock"
             type="number"
-            placeholder="Enter productStock"
+            placeholder="Nhập số lượng SP sẵn trong kho"
             value={formData.productStock}
             onChange={handleChange}
           />
@@ -284,7 +284,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
       </form>
       <button id="ProductForm-cancel" onClick={onCancel}>
         <FiX />
-        Cancel
+        Hủy
       </button>
     </div>
   );
