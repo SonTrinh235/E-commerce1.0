@@ -29,7 +29,7 @@
 
 
 .admin-products-list #filter .search {
-  width: 30%;
+  width: 50%;
 }
 
 .admin-products-list #filter div input,
@@ -48,32 +48,100 @@
 
 
 
+
+
+
+.admin-products-list .ManageProducts-paging  {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.admin-products-list .ManageProducts-paging  span {
+  margin: 10px;
+}
+
+.admin-products-list .ManageProducts-paging  button {
+  width: 5rem;
+  height: 2rem;
+  border-radius: 8px;
+  background: hsl(0, 0%, 100%);
+  border: 1px solid rgb(59, 59, 59);
+}
+
+.admin-products-list .ManageProducts-paging  button:hover {
+  background: hsl(0, 0%, 97%);
+}
+
+.admin-products-list .ManageProducts-paging  button:active {
+  background: hsl(0, 0%, 92%);
+}
+
+.admin-products-list .ManageProducts-paging  button:disabled{
+  background: hsl(0, 0%, 87%);
+  border: none;
+}
+
+
+
+
+
+
 .admin-products-list #table {
   background: rgb(218, 218, 218);
+  border-collapse: collapse;
+  overflow: hidden;
 }
+
+.admin-products-list #table th:last-child,
+.admin-products-list #table td:last-child {
+  border-right: none;
+}
+
+.admin-products-list #table tr:last-child td {
+  border-bottom: none;
+}
+
 
 .admin-products-list #table th,
 .admin-products-list #table td {
   border-bottom: 1px solid grey;
+  border-right: 1px solid lightgrey ;
   text-align: center;
 }
 
+
 .admin-products-list #table th {
   height: 3rem;
-  background: rgb(189, 189, 189);
+  background: hsl(0, 0%, 80%);
 }
 
 .admin-products-list #table td {
   height: 5rem;
 }
 
+.admin-products-list #table .index {
+  background: hsl(0, 0%, 70%);
+  width: 30px;
+}
+
+.admin-products-list #table .index-bar-cell {
+  background: hsl(0, 0%, 90%);
+}
+
+
+
 /* Alternate light and dark shade between each row */
 .admin-products-list #table tbody tr {
-    background-color: #f9f9f9; 
+    background-color: hsl(0, 0%, 100%); 
 }
 .admin-products-list #table tbody tr:nth-child(even) {
-    background-color: #e9e9e9; 
+    background-color: hsl(0, 0%, 95%); 
 }
+
+
+
+
+
 
 /* Overlay on top of app for when ProducForm is active */
 #ProductForm-overlay {
@@ -90,12 +158,16 @@
   z-index: 999;
 }
 
+
+
+
+
 /* Add product button */
 #add-product {
   position: fixed;
   bottom: 30px;
   right: 50px;
-  width: 9rem;
+  width: 11rem;
   height: 4rem;
   z-index: 100;
   border-radius: 15px;
