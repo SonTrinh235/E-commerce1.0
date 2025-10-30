@@ -9,6 +9,7 @@
   align-items: center;
   border-radius: 40px;
   padding: 0;
+  transition: all 0.4s ease;
 }
 
 .ProductForm-container header {
@@ -60,7 +61,7 @@
   width: 90%;
   height: 70%;
   object-fit: contain;
-  background-color: black;
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
 .product-form #section-image #upload-image {
@@ -104,6 +105,12 @@
   padding-left: 3%;
   vertical-align: center;
   background: rgb(243, 243, 243);
+  transition: all 0.4s ease;
+}
+
+.product-form #section-data input:focus {
+  outline: none;
+  box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.3);
 }
 
 .product-form #section-data textarea {
@@ -118,9 +125,13 @@
   vertical-align: center;
   background: rgb(243, 243, 243);
   resize: none;
+  transition: all 0.4s ease;
 }
 
-
+.product-form #section-data textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.3);
+}
 
 
 #ProductForm-cancel {
@@ -135,7 +146,7 @@
   color: white;
   font-size: 1rem;
   font-weight: bold;
-  
+  transition: all 0.4s ease;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -146,6 +157,7 @@
 }
 #ProductForm-cancel:hover {
   background: rgb(154, 0, 0);
+  box-shadow: 0 0 30px 5px rgba(255, 0, 0, 0.3);
 }
 #ProductForm-cancel:active {
   background: rgb(134, 0, 0);
@@ -158,11 +170,12 @@
   bottom: 5%;
   width: 20%;
   height: 8%;
-  font-size: 1rem;
+  font-size: 70%;
   font-weight: bold;
   border-radius: 10px;
   border: none;
   cursor: pointer;
+  transition: all 0.4s ease;
 }
 .btn-add {
   background: hsl(110, 69%, 40%);
@@ -170,6 +183,7 @@
 }
 .btn-add:hover {
   background: hsl(110, 69%, 35%);
+  box-shadow: 0 0 30px 5px hsla(110, 100%, 50%, 0.3);
 }
 .btn-add:active {
   background: hsl(110, 69%, 30%);
@@ -180,6 +194,7 @@
 }
 .btn-edit:hover {
   background: hsl(219, 100%, 35%);
+  box-shadow: 0 0 30px 5px hsla(219, 100%, 50%, 0.3);
 }
 .btn-edit:active {
   background: hsl(219, 100%, 30%);
@@ -190,6 +205,7 @@
 }
 .btn-delete:hover {
   background: hsl(0, 100%, 35%);
+  box-shadow: 0 0 30px 5px hsla(0, 100%, 50%, 0.3);
 }
 .btn-delete:active {
   background: hsl(0, 100%, 30%);
