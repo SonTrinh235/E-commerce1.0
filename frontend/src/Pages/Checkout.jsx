@@ -1,12 +1,13 @@
 import React, { useContext, useState } from "react";
 import { ShopContext } from "../Context/ShopContext";
 import { CartContext } from "../Context/CartContext";
+import CheckoutOrderPreview from "../Components/CheckoutOrderPreview/CheckoutOrderPreview.jsx";
 import "./CSS/Checkout.css";
 import COD_light from "../assets/COD_light.png";
 import VNPAYLogo from "../assets/Logo-VNPAY-QR.png";
 import DefaultImage from "../assets/placeholder-image.png";
 
-import { vnd } from "../utils/currencyUtils.js"
+import { vnd } from "../utils/currencyUtils.js";
 
 // import APIs
 import { createOrder } from "../api/orderService.js";
@@ -14,8 +15,14 @@ import { createOrder } from "../api/orderService.js";
 const Checkout = () => {
   const { userId } = useContext(ShopContext);
 
-  const { isCartLoading, cartTotal, cartItems, productsLookup } =
-    useContext(CartContext);
+  const {
+    isCartLoading,
+    cartTotal,
+    cartItems,
+    cartTotalItems,
+    productsLookup,
+    resetCart,
+  } = useContext(CartContext);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -26,11 +33,21 @@ const Checkout = () => {
 
   const orderContent = Object.values(cartItems);
 
-  const checkoutTotalItems = Object.values(cartItems).reduce((total, item) => {
-    return total + item.quantity;
-  }, 0);
+  const [orderSnapshot, setOrderSnapshot] = useState(null);
+  const [orderLookupSnapshot, setOrderLookupSnapshot] = useState(null);
+  const [orderTotalItemSnapshot, setOrderTotalItemSnapshot] = useState(null);
+  const [orderTotalSnapshot, setOrderTotalSnapshot] = useState(null);
+
+  const captureOrderSnapshot = () => {
+    setOrderSnapshot(orderContent);
+    setOrderLookupSnapshot(productsLookup);
+    setOrderTotalItemSnapshot(cartTotalItems);
+    setOrderTotalSnapshot(cartTotal);
+  };
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("cash");
+
+  const [showOrderPreview, setShowOrderPreview] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -46,22 +63,31 @@ const Checkout = () => {
     alert(
       `Order placed successfully!\n\nName: ${formData.name}\nAddress: ${
         formData.address
-      }\nPhone: ${formData.phone}\nEmail: ${
-        formData.email
-      }\n\nTotal: ${vnd(cartTotal)}`
+      }\nPhone: ${formData.phone}\nEmail: ${formData.email}\n\nTotal: ${vnd(
+        cartTotal
+      )}`
     );
   };
 
-  const placeOrder = async() => {
-    if (!orderContent || !userId || !selectedPaymentMethod) {
-      alert('Order detail missing content');
-      return;
+  const ConfirmPlaceOrder = () => {
+    if (cartTotalItems === 0) {
+      alert("Giỏ hàng của bạn đang trống!");
+    } else {
+      if (!userId || !selectedPaymentMethod) {
+        alert("Đơn hàng của bạn thiếu thông tin!");
+      } else {
+        if (window.confirm("Đơn hàng sẽ được đặt, hãy xác nhận:")) {
+          placeOrder();
+        }
+      }
     }
+  };
+
+  const placeOrder = async () => {
     console.log("Checkout: New order");
     console.log("Checkout: User ID: ", userId);
     console.log("Checkout: Order content: ", orderContent);
     console.log("Checkout: Payment method: ", selectedPaymentMethod);
-    alert(`Order plaed: Info logged into console`);
 
     // Call API
     try {
@@ -69,55 +95,59 @@ const Checkout = () => {
         userId: userId,
         paymentMethod: selectedPaymentMethod,
         productsInfo: orderContent,
-      })
+      });
+
+      // Capture snapshot for order preview
+      captureOrderSnapshot();
+      // Display order preview
+      setShowOrderPreview(true);
+      // Update cart
+      resetCart();
     } catch (error) {
       console.error("createOrder failed:", error);
       throw error;
     }
-
   };
 
   return (
     // Page Container
     <div className="Checkout-page">
-      <h1>Thanh Toán</h1>
-      {true === 0 ? (
-        <p>Your cart is empty</p>
-      ) : (
-        // Page Content
+      <div className="Checkout-container">
+        <h1 className="Checkout-title">Thanh Toán</h1>
         <div className="Checkout-content">
           {isCartLoading ? (
             <div>Loading cart ... </div>
           ) : (
             // Cart content
-
             <div className="Checkout-items">
               <h3>Sản Phẩm Mua:</h3>
-              {Object.values(cartItems).map((item) => {
-                const currentItemData = productsLookup[item.productId];
-                return (
-                  <div key={item.productId} className="Checkout-item">
-                    <img
-                      src={currentItemData.imageInfo?.url || DefaultImage}
-                      alt={currentItemData.name}
-                    />
-                    <div>
-                      <h3>{currentItemData.name}</h3>
-                      <p>
-                        Số lượng {item.quantity} x {vnd(item.price)} = <b>{vnd(item.price * item.quantity)}</b>
-                      </p>
+              {cartTotalItems === 0 ? (
+                <div>Giỏ hàng của bạn đang trống</div>
+              ) : (
+                Object.values(cartItems).map((item) => {
+                  const currentItemData = productsLookup[item.productId];
+                  return (
+                    <div key={item.productId} className="Checkout-item">
+                      <img
+                        src={currentItemData.imageInfo?.url || DefaultImage}
+                        alt={currentItemData.name}
+                      />
+                      <div>
+                        <h3>{currentItemData.name}</h3>
+                        <p>
+                          Số lượng {item.quantity} x {vnd(item.price)} ={" "}
+                          <b>{vnd(item.price * item.quantity)}</b>
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              )}
             </div>
           )}
 
           {/* RIGHT SIDE CHECKOUT */}
           <div className="Checkout-right">
-
-
-
             {/* Ship Info */}
             <div className="Checkout-shipinfo">
               <h3>Thông Tin Giao Hàng</h3>
@@ -157,14 +187,12 @@ const Checkout = () => {
               </form>
             </div>
 
-
             {/* Checkout Summary */}
             <div className="Checkout-summary">
               <h3>Tổng Quan Đơn Hàng</h3>
-              <p>Tổng số lượng: {checkoutTotalItems} sản phẩm</p>
+              <p>Tổng số lượng: {cartTotalItems} sản phẩm</p>
               <h3>Tổng thanh toán: {vnd(cartTotal)}</h3>
             </div>
-
 
             {/* Payments */}
             <div className="Checkout-payments">
@@ -178,7 +206,7 @@ const Checkout = () => {
                     checked={selectedPaymentMethod === "cash"}
                     onChange={(e) => setSelectedPaymentMethod(e.target.value)}
                   />
-                  <img src={COD_light} alt=""/>
+                  <img src={COD_light} alt="" />
                   Thanh toán khi nhận hàng (COD)
                 </label>
               </div>
@@ -191,16 +219,27 @@ const Checkout = () => {
                     checked={selectedPaymentMethod === "vnpay"}
                     onChange={(e) => setSelectedPaymentMethod(e.target.value)}
                   ></input>
-                  <img src={VNPAYLogo} alt=""/>
+                  <img src={VNPAYLogo} alt="" />
                   VN Pay
                 </label>
               </div>
             </div>
             {/* Place Order */}
-            <button className="Checkout-placeorder" onClick={placeOrder}>
+            <button className="Checkout-placeorder" onClick={ConfirmPlaceOrder}>
               Đặt Hàng
             </button>
           </div>
+        </div>
+      </div>
+
+      {showOrderPreview && (
+        <div className="Checkout-OrderPreview-overlay">
+          <CheckoutOrderPreview
+            orderContent={orderSnapshot}
+            productsLookup={orderLookupSnapshot}
+            orderTotalItems={orderTotalItemSnapshot}
+            orderTotal={orderTotalSnapshot}
+          />
         </div>
       )}
     </div>

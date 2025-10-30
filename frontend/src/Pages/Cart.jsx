@@ -1,6 +1,6 @@
 import React, { useContext, useState } from "react";
 import "./CSS/Cart.css";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import promoCodes from "../data/Promo.js";
 import CartItem from "../Components/CartItem/CartItem";
 import { CartContext } from "../Context/CartContext";
@@ -16,6 +16,8 @@ const Cart = () => {
     cartTotal,
     // cartItems: Items in cart with prod id and count
     cartItems,
+    cartTotalItems,
+
     // productsLookup: Lookup objects of products in cart (full product data)
     productsLookup,
 
@@ -27,6 +29,17 @@ const Cart = () => {
     // cartRemoveProductFromCart(productId)
     cartRemoveProductFromCart,
   } = useContext(CartContext);
+
+  const navigate = useNavigate();
+
+  const handleCheckoutClick = () => {
+    if (cartTotalItems === 0) {
+      alert("Giỏ hàng của bạn đang trống")
+    } else {
+      navigate("/checkout")
+    }
+  }
+
 
   // ============ BELOW IGNORED =============================
   // =========== BELOW IGNORED ===========================
@@ -92,17 +105,20 @@ const Cart = () => {
 
   return (
     <div className="Cart-container">
-      <h1 className="Cart-header"> Giỏ Hàng Của Tôi </h1>
 
       {/* LIST CART ITEM */}
       {/* LIST CART ITEM */}
       <div className="Cart-cart">
+      <h1> Giỏ Hàng Của Tôi: </h1>
         {isCartLoading ? (
           <div>Loading cart ... </div>
         ) : (
           <table id="table">
             <thead>
-              <tr>
+              {cartTotalItems === 0 ? (
+                <div>Giỏ hàng của bạn đang trống</div>
+              ) : ( 
+                <tr>
                 <th id="index-col">#</th>
                 <th id="image-col">Sản Phẩm</th>
                 <th id="name-col">Tên Sản Phẩm</th>
@@ -111,19 +127,18 @@ const Cart = () => {
                 <th id="total-col">Tổng Cộng</th>
                 <th id="remove-col">Xóa</th>
               </tr>
+              )}
             </thead>
             <tbody>
               {/* Map values cartItems as item */}
               {Object.values(cartItems).map((item, i) => {
                 // Get product data for current cart item
                 const currentItemData = productsLookup[item.productId];
+                const index = i + 1;
                 return (
                   // Cart item card
-                  <tr key={i}>
-                    <td className="index-bar-cell">
-                      <div className="index-bar">{i + 1}</div>
-                    </td>
                     <CartItem
+                      index={index}
                       {...item}
                       {...currentItemData}
                       onIncrease={() =>
@@ -140,11 +155,11 @@ const Cart = () => {
                       }
                       onRemove={() => cartRemoveProductFromCart(item.productId)}
                     />
-                  </tr>
                 );
               })}
             </tbody>
           </table>
+
         )}
       </div>
 
@@ -183,10 +198,16 @@ const Cart = () => {
               <h3>{vnd(getFinalTotal())}</h3>
             </div>
           </div>
-          <Link to="/checkout">
-            <button>Mua Hàng</button>
-          </Link>
+          
+          {/* Checkout button */}
+          <button onClick={handleCheckoutClick}>
+            Mua Hàng
+          </button>
+
         </div>
+        
+        
+         {/* PROMO CODE SECTION */}
         <div className="Cart-promocode">
           <h2>Mã Khuyến Mãi</h2>
           {appliedPromo && (

@@ -28,7 +28,12 @@ export const CartContextProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState({});
   // productsLookup: Lookup objects of products in cart (full product data)
   const [productsLookup, setProductsLookup] = useState({});
-
+  
+  // cartTotalItem: Total item count of cart
+  const cartTotalItems = Object.values(cartItems).reduce((total, item) => {
+    return total + item.quantity;
+  }, 0);
+  
   // function: Fetch cart with product id and count
   const fetchCart = async (userId) => {
     const response = await getCartByUserId(userId);
@@ -71,6 +76,25 @@ export const CartContextProvider = ({ children }) => {
 
     setIsCartLoading(false);
   };
+
+  const resetCart = () => {
+    if (userId) {
+      initializeCartAndProductsLookup();
+    } else {
+      setIsCartLoading(true);
+      // Local cart for not logged in
+      // Clear localStorage then grab
+      localStorage.removeItem("localCart");
+      const storedCart = localStorage.getItem("localCart");
+      setCartItems(storedCart ? JSON.parse(storedCart) : {});
+      // Local lookup for not logged in
+      // Clear localStorage then grab
+      localStorage.removeItem("localCartLookup");
+      const storedCartLookup = localStorage.getItem("localCartLookup");
+      setProductsLookup(storedCartLookup ? JSON.parse(storedCartLookup) : {});
+      setIsCartLoading(false);
+    }
+  }
 
   // function: Add product
   //  params: productId
@@ -245,6 +269,7 @@ export const CartContextProvider = ({ children }) => {
 
     // cartTotal: Total cart price in int
     cartTotal,
+    cartTotalItems,
     // cartItems: Lookup obj of items in cart with prod id and count (productsInfo of API return)
     // Use: cartItems[productId]
     cartItems,
@@ -262,6 +287,9 @@ export const CartContextProvider = ({ children }) => {
     // cartRemoveProductFromCart(productId)
     // Update local cart and call API
     cartRemoveProductFromCart,
+
+    // Clear localStorage cart or match backend cart if logged in
+    resetCart
   };
 
   return (
