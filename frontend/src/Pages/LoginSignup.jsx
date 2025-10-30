@@ -87,6 +87,11 @@ const LoginSignup = () => {
         return;
       }
 
+      if (!/^(\+84|0)\d{8,9}$/.test(phone.trim())) {
+        alert("Vui lòng nhập số điện thoại hợp lệ!");
+        return;
+      }
+      
       try {
         const appVerifier = setupRecaptcha();
         const phoneNumber = phone.startsWith("+")
