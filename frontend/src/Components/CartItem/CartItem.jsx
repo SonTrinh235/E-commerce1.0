@@ -5,32 +5,33 @@ import { FaTrashAlt } from "react-icons/fa";
 import { vnd } from "../../utils/currencyUtils.js";
 
 function CartItem(props) {
-  const { onIncrease, onDecrease, onRemove } = props;
+  const { onIncrease, onDecrease, onRemove, index } = props;
   return (
-    <>
-      <td className="CartItem-img">
+    <tr className="CartItem-row">
+      <td id="index">{index}</td>
+      <td id="image">
         <Link to={"#"}>
           <img src={props.imageInfo?.url || DefaultImage} alt={""} />
         </Link>
       </td>
 
-      <td className="CartItem-name">{props.name}</td>
-      <td className="CartItem-price">{vnd(props.price)}</td>
+      <td id="name"><b>{props.name}</b></td>
+      <td id="price">{vnd(props.price)}</td>
 
-      <td className="CartItem-quantity">
+      <td id="quantity">
         <button onClick={onDecrease}>-</button>
         <span>{props.quantity}</span>
         <button onClick={onIncrease}>+</button>
       </td>
 
-      <td className="CartItem-total">{vnd(props.price * props.quantity)}</td>
+      <td id="total"><b>{vnd(props.price * props.quantity)}</b></td>
 
-      <td className="CartItem-remove">
+      <td id="remove">
         <button onClick={onRemove} >
-          <FaTrashAlt />
+          <FaTrashAlt fill="white"/>
         </button>
       </td>
-    </>
+    </tr>
   );
 }
 
