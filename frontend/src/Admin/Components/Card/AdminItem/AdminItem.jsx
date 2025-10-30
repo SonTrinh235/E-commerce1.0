@@ -3,13 +3,15 @@ import "./AdminItem.css";
 import { Link } from "react-router-dom";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import DefaultImage from "../../../../assets/placeholder-image.png";
+import { vnd } from "../../../../utils/currencyUtils"
 
 const AdminItem = (props) => {
-  const { onEdit, onDelete } = props;
+  const { onEdit, onDelete, index } = props;
 
   return (
-    <>
-      <td className="admin-item-img">
+    <tr className="AdminItem-row">
+      <td id="index">{index}</td>
+      <td id="image">
         <Link to={`#`}>
           <img
             onClick={() => window.scrollTo(0, 0)}
@@ -18,16 +20,20 @@ const AdminItem = (props) => {
           />
         </Link>
       </td>
-      <td>{props.name}</td>
-      <td>{props.category}</td>
-      <td className="admin-item-price">${props.price}</td>
-      <td className="admin-item-description">{props.description}</td>
-      <td className="admin-item-stock">{props.stock}</td>
-      <td className="admin-item-actions">
+      <td id="name">{props.name}</td>
+      <td id="category">
+        <span>
+          {props.category}
+        </span>
+      </td>
+      <td id="price">{vnd(props.price)}</td>
+      <td id="description">{props.description}</td>
+      <td id="stock">{props.stock}</td>
+      <td id="actions">
         <button id="edit" onClick={onEdit}><FaEdit/>Chỉnh sửa</button>
         <button id="delete" onClick={onDelete}><FaTrash/>Xóa SP</button>
       </td>
-    </>
+    </tr>
   );
 };
 
