@@ -4,7 +4,7 @@ import Breadcrums from "../Components/Breadcrums/Breadcrums";
 import ProductDisplay from "../Components/ProductDisplay/ProductDisplay";
 import DescriptionBox from "../Components/DescriptionBox/DescriptionBox";
 import RelatedProducts from "../Components/RelatedProducts/RelatedProducts";
-import { getProductById } from "../api/productService"; // chỉnh path nếu khác
+import { getProductById } from "../api/productService"; 
 
 const Product = () => {
   const { productId } = useParams();
