@@ -49,7 +49,7 @@ const Navbar = () => {
     if (path === "/" || path.startsWith("/product")) setMenu("shop");
     else if (path.startsWith("/meats")) setMenu("meats");
     else if (path.startsWith("/vegs")) setMenu("vegs");
-    else if (path.startsWith("/others")) setMenu("others");
+    // else if (path.startsWith("/others")) setMenu("others");
     else if (path.startsWith("/all-products")) setMenu("products");
   }, [location.pathname]);
 
