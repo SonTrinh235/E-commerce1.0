@@ -1,0 +1,155 @@
+.Orders-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: calc(100vh - 350px);
+  margin-top: 50px;
+}
+
+.Orders-table-container {
+  width: 70%;
+  padding: 50px 50px;
+
+  background: white;
+  border-radius: 10px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.Orders-table-container .title {
+  width: 100%;
+  text-align: start;
+}
+
+.Orders-table {
+  width: 100%;
+  padding: 5px 20px;
+  margin-top: 10px;
+
+  background: hsl(0, 0%, 96%);
+  border: 2px solid lightgrey;
+  border-radius: 15px;
+  border-spacing: 0 10px;
+box-shadow: 0 15px 30px 30px rgba(0, 0, 0, 0.1);
+  
+  font-size: 1.1rem;
+  overflow: hidden;
+}
+
+.Orders-table th {
+  height: 3rem;
+  border-right: 1px solid rgb(255, 255, 255);
+  border-bottom: 2px solid lightgrey;
+  border-top: 2px solid lightgrey;
+  background: linear-gradient(
+    to bottom,
+    hsl(0, 0%, 100%) 0%,
+    hsl(0, 0%, 88%) 15%,
+    hsl(0, 0%, 99%) 40%,
+    hsl(0, 0%, 87%) 85%
+  );
+  color: rgb(37, 37, 37);
+}
+
+.Orders-table th:first-child {
+  border-radius: 10px 0px 0px 10px;
+  border-left: none;
+}
+.Orders-table th:last-child {
+  border-radius: 0px 10px 10px 0px;
+  border-right: none;
+}
+
+.Order-row td:first-child {
+  border-radius: 20px 0px 0px 20px;
+  border-left: none;
+}
+
+.Order-row td:last-child {
+  border-radius: 0px 20px 20px 0px;
+  border-right: none;
+}
+
+.Orders-table #index-col {
+  padding: 0;
+  background: linear-gradient(
+    to bottom,
+    hsl(0, 0%, 100%) 0%,
+    hsl(0, 0%, 78%) 15%,
+    hsl(0, 0%, 89%) 40%,
+    hsl(0, 0%, 77%) 85%
+  );
+}
+
+.Orders-table td {
+  padding: 0px 10px;
+  margin-top: 20px;
+  height: 8rem;
+
+  border-top: 2px solid hsl(83, 71%, 45%);
+  border-bottom: 2px solid hsl(83, 71%, 45%);
+  border-right: 2px solid rgb(236, 236, 236);
+
+  text-align: center;
+  vertical-align: center;
+}
+
+.Orders-table #image {
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0;
+}
+
+.Orders-table #image img {
+  height: 100%;
+}
+
+.paging {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.paging span {
+  margin: 10px;
+}
+
+.paging button {
+  width: 5rem;
+  height: 2rem;
+  border-radius: 8px;
+  background: hsl(0, 0%, 100%);
+  border: 2px solid hsl(0, 0%, 70%);
+  transition: all 0.4s ease;
+}
+
+.paging button:hover:not(:disabled) {
+  background: hsl(0, 0%, 95%);
+  border: 2px solid hsl(0, 0%, 50%);
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.paging button:active {
+  background: hsl(0, 0%, 90%);
+}
+
+.paging button:disabled {
+  background: hsl(0, 0%, 87%);
+  border: none;
+}
+
+.OrderView-overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 101;
+}

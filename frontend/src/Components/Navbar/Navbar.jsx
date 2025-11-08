@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useContext, useMemo } from "react";
 import "./Navbar.css";
 
-import { FiMenu, FiSearch, FiShoppingCart, FiUser, FiLogOut } from "react-icons/fi";
+import { FiMenu, FiSearch, FiShoppingCart, FiPackage, FiUser, FiLogOut } from "react-icons/fi";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 // import { ShopContext } from '../../Context/ShopContext';
@@ -197,14 +197,21 @@ const Navbar = () => {
             <button onClick={() => navigate("/admin/dashboard")}>Admin Panel</button>
           </div>
         ) : (
-          <div className="nav-cart">
-            <Link to="/cart" title={isCartLoading ? "Đang tải giỏ hàng..." : `${cartCount} sản phẩm`}>
-              <FiShoppingCart className="nav-icons" />
-            </Link>
-            <b>
-              <div className="nav-cart-count">{isCartLoading ? "…" : cartCount}</div>
-            </b>
-          </div>
+          <>
+            <div className="nav-order">
+              <Link to="/orders" title={"Xem các đơn hàng"}>
+                <FiPackage className="nav-icons" />
+              </Link>
+            </div>
+            <div className="nav-cart">
+              <Link to="/cart" title={isCartLoading ? "Đang tải giỏ hàng..." : `${cartCount} sản phẩm`}>
+                <FiShoppingCart className="nav-icons" />
+              </Link>
+              <b>
+                <div className="nav-cart-count">{isCartLoading ? "…" : cartCount}</div>
+              </b>
+            </div>
+          </>
         )}
 
         <div className="nav-user">
