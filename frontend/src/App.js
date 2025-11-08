@@ -7,6 +7,7 @@ import Shop from "./Pages/Shop";
 import ShopCategory from "./Pages/ShopCategory";
 import Product from "./Pages/Product";
 import Cart from "./Pages/Cart";
+import Orders from "./Pages/Orders";
 import LoginSignup from "./Pages/LoginSignup";
 import SearchResults from "./Pages/SearchResults";
 import ExclusiveOffers from "./Pages/ExclusiveOffers";
@@ -82,6 +83,7 @@ function App() {
 
             <Route path="/product/:productId" element={<Product />} />
             <Route path="/cart" element={<Cart />} />
+            <Route path="/orders" element={<Orders />} />
 
             <Route
               path="/login"

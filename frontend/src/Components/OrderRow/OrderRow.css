@@ -1,0 +1,31 @@
+.Order-row {
+    background: linear-gradient(to bottom, #fcfcfc, #f4f4f4);
+}
+
+.Order-row #content {
+    max-width: 300px;
+}
+
+.Order-row #index {
+    background: hsl(86, 50%, 52%);
+    color: white;
+    font-weight: bold;
+}
+
+.Order-row #total {
+    color: rgb(70, 136, 27);
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.Order-row #action button {
+    border: none;
+    border-radius: 5px;
+    background: linear-gradient(45deg,hsl(83, 71%, 45%),hsl(88, 71%, 38%));
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    padding: 15px 20px;
+
+    cursor: pointer;
+}
