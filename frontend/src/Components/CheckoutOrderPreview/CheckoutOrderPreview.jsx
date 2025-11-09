@@ -40,10 +40,10 @@ function CheckoutOrderPreview(props) {
         </div>
       </div>
       <div id="navigate">
-        <Link to="/">
+        <Link to="/orders">
           <button id="vieworders">Xem lịch sử mua</button>
         </Link>
-        <Link to="/">
+        <Link to="/all-products">
           <button id="continueshopping">Tiếp tục mua sắm</button>
         </Link>
       </div>

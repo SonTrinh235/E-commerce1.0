@@ -11,6 +11,7 @@ import { vnd } from "../utils/currencyUtils.js";
 
 // import APIs
 import { createOrder } from "../api/orderService.js";
+import { getPublicIp } from "../api/getPublicIp.js";
 
 const Checkout = () => {
   const { userId } = useContext(ShopContext);
@@ -31,7 +32,21 @@ const Checkout = () => {
     email: "",
   });
 
-  const orderContent = Object.values(cartItems);
+  const orderContent = Object.values(cartItems).map(cartItem => {
+    // strip key "order"
+    const { order, ...restOfCartItem } = cartItem;
+
+    const productId = cartItem.productId;
+    const productInfo = productsLookup[productId];
+
+    return {
+      ...restOfCartItem, // Spread all existing cart item properties
+      productName: productInfo.name,  // Add prod name from the lookup
+      productImageUrl: productInfo.name ? productInfo.imageInfo.url : null // Add imageInfo from the lookup
+
+    };
+  });
+
 
   const [orderSnapshot, setOrderSnapshot] = useState(null);
   const [orderLookupSnapshot, setOrderLookupSnapshot] = useState(null);
@@ -45,7 +60,7 @@ const Checkout = () => {
     setOrderTotalSnapshot(cartTotal);
   };
 
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("cash");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("CASH");
 
   const [showOrderPreview, setShowOrderPreview] = useState(false);
 
@@ -91,10 +106,14 @@ const Checkout = () => {
 
     // Call API
     try {
+      const userPublicIp = await getPublicIp();
+
+      alert(userPublicIp);
       await createOrder({
         userId: userId,
         paymentMethod: selectedPaymentMethod,
         productsInfo: orderContent,
+        ipAddr: userPublicIp
       });
 
       // Capture snapshot for order preview
@@ -105,7 +124,7 @@ const Checkout = () => {
       resetCart();
     } catch (error) {
       console.error("createOrder failed:", error);
-      throw error;
+      alert("Create Order failed: check console");
     }
   };
 
@@ -202,8 +221,8 @@ const Checkout = () => {
                   <input
                     type="radio"
                     name="payment-method"
-                    value="cash"
-                    checked={selectedPaymentMethod === "cash"}
+                    value="CASH"
+                    checked={selectedPaymentMethod === "CASH"}
                     onChange={(e) => setSelectedPaymentMethod(e.target.value)}
                   />
                   <img src={COD_light} alt="" />
@@ -215,12 +234,24 @@ const Checkout = () => {
                   <input
                     type="radio"
                     name="payment-method"
-                    value="vnpay"
-                    checked={selectedPaymentMethod === "vnpay"}
+                    value="VNBANK"
+                    checked={selectedPaymentMethod === "VNBANK"}
                     onChange={(e) => setSelectedPaymentMethod(e.target.value)}
                   ></input>
                   <img src={VNPAYLogo} alt="" />
                   VN Pay
+                </label>
+              </div>
+              <div className="option">
+                <label>
+                  <input
+                    type="radio"
+                    name="payment-method"
+                    value="INTCARD"
+                    checked={selectedPaymentMethod === "INTCARD"}
+                    onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                  ></input>
+                  Thẻ quốc tế
                 </label>
               </div>
             </div>
