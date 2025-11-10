@@ -117,7 +117,7 @@ function Orders() {
             <div className="paging">
               <button
                 onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage <= 1}
+                disabled={currentPage <= 1 || loading}
               >
                 Trước
               </button>
@@ -128,7 +128,7 @@ function Orders() {
 
               <button
                 onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage >= totalPages}
+                disabled={currentPage >= totalPages || loading}
               >
                 Sau
               </button>
