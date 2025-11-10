@@ -16,20 +16,20 @@ function OrderView(props) {
       <button
         className="OrderView-cancel"
         onClick={onCancel}>
-          <FaArrowLeft fill="white"/>
+          <FaArrowLeft fill="hsl(0, 0%, 37%)"/>
           
       </button>
       <div id="title">
         <h2 style={{color:"white"}}>Chi tiết đơn hàng</h2>
       </div>
       <div id="order">
-        <div id="content">
         <div id="info">
           <b>Đặt hàng lúc: {formatDate(order.createdAt)}</b>
           <p>Mã đơn hàng: {order._id}</p>
         </div>
-          <h3>Nội dung đơn hàng</h3>
-          <hr />
+        <h3>Nội dung đơn hàng</h3>
+        <hr />
+        <div id="content">
           {order.productsInfo.map((item) => {
             return (
               <div key={item.productId} className="Checkout-item">
@@ -44,19 +44,23 @@ function OrderView(props) {
               </div>
             );
           })}
+        </div>
         <hr />
         <div id="summary">
           <p>Tổng số lượng: {order.productsInfo.length} sản phẩm</p>
           <h3>Tổng thanh toán: {vnd(order.amount)}</h3>
-        </div>
+          <p>Phương thức thanh toán: {order.paymentMethod}</p>
         </div>
         <div id="status">
-          <div id="payment">
-            <p>Phương thức thanh toán: {order.paymentMethod}</p>
-            <b>Trạng thái thanh toán: {order.paymentStatus.toUpperCase()}</b>
+          <div id="payment" style={{ textTransform: "capitalize" }}>
+            Trạng thái thanh toán: {order.paymentStatus}
           </div>
-          <div id="ship">Vận chuyển: {order.status.toUpperCase()}</div>
-          <div id="update"style={{textAlign: "center"}}>Cập nhật lần cuối: {formatDate(order.updatedAt)}</div>
+          <div id="ship" style={{ textTransform: "capitalize" }}>
+            Vận chuyển: {order.status}
+          </div>
+          <div id="update"style={{textAlign: "center"}}>
+            Cập nhật lần cuối: {formatDate(order.updatedAt)}
+          </div>
         </div>
       </div>
     </div>
