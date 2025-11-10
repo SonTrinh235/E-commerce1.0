@@ -87,8 +87,8 @@ function Orders() {
                   <th id="index-col">#</th>
                   <th>Đơn hàng</th>
                   <th>Nội dung</th>
-                  <th>Tổng số lượng</th>
                   <th>Số tiền</th>
+                  <th>Thanh toán</th>
                   <th>Trạng thái</th>
                   <th>Ngày tạo</th>
                   <th>Thao tác</th>
