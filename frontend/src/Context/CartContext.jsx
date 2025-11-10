@@ -104,13 +104,20 @@ export const CartContextProvider = ({ children }) => {
 
     // Only call API if logged in
     if (userId) {
-      await addProductToCart(userId, {
-        productId: productId,
-        quantity: 1,
-        price: productData.price,
-      });
-      // Call fetch needed for product info (price, image)
-      await initializeCartAndProductsLookup();
+      try {
+        await addProductToCart(userId, {
+          productId: productId,
+          productName: productData.name,
+          productImageUrl: productData.imageInfo?.url || null,
+          quantity: 1,
+          price: productData.price,
+        });
+        // Call fetch needed for product info (price, image)
+        await initializeCartAndProductsLookup();
+      }
+      catch (error) {
+        console.log("cartAddProductToCart failed: ",error)
+      }
     }
     
 

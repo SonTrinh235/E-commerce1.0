@@ -41,13 +41,14 @@ const Checkout = () => {
 
     return {
       ...restOfCartItem, // Spread all existing cart item properties
-      productName: productInfo.name,  // Add prod name from the lookup
-      productImageUrl: productInfo.name ? productInfo.imageInfo.url : null // Add imageInfo from the lookup
+      productName: productInfo?.name || null,  // Add prod name from the lookup
+      productImageUrl: productInfo?.imageInfo?.url || null // Add imageInfo from the lookup
 
     };
   });
 
 
+  // Snapshots to display order preview upon order create
   const [orderSnapshot, setOrderSnapshot] = useState(null);
   const [orderLookupSnapshot, setOrderLookupSnapshot] = useState(null);
   const [orderTotalItemSnapshot, setOrderTotalItemSnapshot] = useState(null);
@@ -108,13 +109,21 @@ const Checkout = () => {
     try {
       const userPublicIp = await getPublicIp();
 
-      alert(userPublicIp);
-      await createOrder({
+      const res = await createOrder({
         userId: userId,
         paymentMethod: selectedPaymentMethod,
         productsInfo: orderContent,
         ipAddr: userPublicIp
       });
+      
+      // Open payment page if should
+      if (selectedPaymentMethod === "VNBANK" || selectedPaymentMethod === "INTCARD") {
+        const ImmediatePaymentUrl = res.data.newPayment.paymentUrl;
+        if (ImmediatePaymentUrl) {
+          window.open(ImmediatePaymentUrl, '_blank');
+        }
+      }
+
 
       // Capture snapshot for order preview
       captureOrderSnapshot();
