@@ -19,25 +19,18 @@ function OrderRow(props) {
         />
       </td>
       <td id="content">
-        {order.productsInfo.map((item, index) => (
-              <span key={index}>
-                  {/* Bold the quantity and the 'x' */}
-                  <b style={{color:"hsl(87, 75%, 35%)"}}>{item.quantity}</b>
-                  {'x '}
-                  <b>{item.productName}</b>
-                  {/* Add comma and space unless it's the last item */}
-                  {index < order.productsInfo.length - 1 ? ', ' : ''}
-              </span>
-           )
-          )
-        }
+        {order.productsInfo
+          .map((item) => `${item.quantity} x ${item.productName}`)
+          .join(", ")}
       </td>
-      <td id="total">{vnd(order.amount)}</td>
-      <td id="payment" style={{ textTransform: "capitalize" }}>
+      <td id="totalItems">
         <b>
-          {order.paymentStatus}
+          {order.productsInfo.reduce((total, item) => {
+            return total + item.quantity;
+          }, 0)}
         </b>
       </td>
+      <td id="total">{vnd(order.amount)}</td>
       <td id="status" style={{ textTransform: "capitalize" }}>
         <b>{order.status}</b>
       </td>
