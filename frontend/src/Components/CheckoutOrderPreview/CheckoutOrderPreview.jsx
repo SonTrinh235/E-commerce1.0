@@ -11,9 +11,9 @@ function CheckoutOrderPreview(props) {
         <h2>Đặt Hàng Thành Công</h2>
       </div>
       <div id="order">
+        <h3>Nội dung đơn hàng</h3>
+        <hr/>
         <div id="content">
-          <h3>Nội dung đơn hàng</h3>
-          <hr/>
           {orderContent.map((item) => {
             const currentItemData = productsLookup[item.productId];
             return (
@@ -40,10 +40,10 @@ function CheckoutOrderPreview(props) {
         </div>
       </div>
       <div id="navigate">
-        <Link to="/">
+        <Link to="/orders">
           <button id="vieworders">Xem lịch sử mua</button>
         </Link>
-        <Link to="/">
+        <Link to="/all-products">
           <button id="continueshopping">Tiếp tục mua sắm</button>
         </Link>
       </div>
