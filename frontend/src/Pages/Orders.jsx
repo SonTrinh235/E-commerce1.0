@@ -87,8 +87,8 @@ function Orders() {
                   <th id="index-col">#</th>
                   <th>Đơn hàng</th>
                   <th>Nội dung</th>
-                  <th>Tổng số lượng</th>
                   <th>Số tiền</th>
+                  <th>Thanh toán</th>
                   <th>Trạng thái</th>
                   <th>Ngày tạo</th>
                   <th>Thao tác</th>
@@ -117,7 +117,7 @@ function Orders() {
             <div className="paging">
               <button
                 onClick={() => setCurrentPage(currentPage - 1)}
-                disabled={currentPage <= 1}
+                disabled={currentPage <= 1 || loading}
               >
                 Trước
               </button>
@@ -128,7 +128,7 @@ function Orders() {
 
               <button
                 onClick={() => setCurrentPage(currentPage + 1)}
-                disabled={currentPage >= totalPages}
+                disabled={currentPage >= totalPages || loading}
               >
                 Sau
               </button>
