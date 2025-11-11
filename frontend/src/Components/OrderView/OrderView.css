@@ -1,8 +1,8 @@
 .OrderView-container {
   position: relative;
   width: clamp(500px, 30vw, 1200px);
-  padding: 30px 50px;
-  /* box-sizing: border-box; */
+  padding: 40px 40px 30px 40px;
+  box-sizing: border-box;
   
   
   background: white;
@@ -25,9 +25,9 @@
   width: fit-content;
   padding: 20px 40px;
 
-  background: hsl(83, 71%, 45%);
-  border-radius: 15px;
-  box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(45deg,hsl(81, 71%, 45%),hsl(88, 71%, 38%));
+  border-radius: 10px;
+  /* box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.1); */
   
   text-align: center;
 }
@@ -38,12 +38,7 @@
 
 
 .OrderView-container #order {
-  padding: 30px 30px;
-  margin-top: 20px;
-
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.1);
+  
 
   display: flex;
   flex-direction: column;
@@ -60,8 +55,16 @@
 }
 
 .OrderView-container #order #content{
-  max-height: calc(90vh - 470px);
-  overflow-y: scroll;
+  padding: 30px 30px;
+  margin: 20px 0px;
+
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.1);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .OrderView-container #order #status {
@@ -71,14 +74,9 @@
   box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.1);
   border-radius: 5px;
   padding: 10px 50px; */
+
 }
 
-.OrderView-container #order #status #payment {
-  font-weight: bold;
-  font-size: 1.1rem;
-  color: rgb(56, 56, 56);
-  margin-bottom: 7px;
-}
 
 
 
@@ -86,20 +84,16 @@
   padding: 20px 60px;
   
 
-  background: rgb(221, 221, 221);
-  border-radius: 12px;
-  
-  color: rgb(44, 44, 44);
+  background: linear-gradient(45deg,hsl(88, 71%, 45%),hsl(88, 71%, 38%));
+  border-radius: 5px;
+
+  color: white;
   font-weight: bold;
-  font-size: 1.2rem;
   text-align: center;
 }
 
 
 
-.OrderView-container #order #status #update {
-  color: grey;
-}
 
 
 .OrderView-cancel {
@@ -110,12 +104,7 @@
   height: 4rem;
 
   border: none;
-  background: linear-gradient(
-    hsl(0, 0%, 100%) 0%,
-    hsl(0, 0%, 78%) 15%,
-    hsl(0, 0%, 89%) 40%,
-    hsl(0, 0%, 77%) 85%
-  );
+  background: linear-gradient(45deg,hsl(83, 71%, 45%),hsl(88, 71%, 38%));
   border-radius: 0px 10px 0px 50px;
 
   display: flex;

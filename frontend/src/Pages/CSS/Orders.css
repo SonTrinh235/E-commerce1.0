@@ -40,8 +40,6 @@ box-shadow: 0 15px 30px 30px rgba(0, 0, 0, 0.1);
 
 .Orders-table th {
   height: 3rem;
-  padding: 0px 15px;
-
   border-right: 1px solid rgb(255, 255, 255);
   border-bottom: 2px solid lightgrey;
   border-top: 2px solid lightgrey;
@@ -64,6 +62,15 @@ box-shadow: 0 15px 30px 30px rgba(0, 0, 0, 0.1);
   border-right: none;
 }
 
+.Order-row td:first-child {
+  border-radius: 20px 0px 0px 20px;
+  border-left: none;
+}
+
+.Order-row td:last-child {
+  border-radius: 0px 20px 20px 0px;
+  border-right: none;
+}
 
 .Orders-table #index-col {
   padding: 0;
@@ -76,6 +83,28 @@ box-shadow: 0 15px 30px 30px rgba(0, 0, 0, 0.1);
   );
 }
 
+.Orders-table td {
+  padding: 0px 10px;
+  margin-top: 20px;
+  height: 8rem;
+
+  border-top: 2px solid hsl(83, 71%, 45%);
+  border-bottom: 2px solid hsl(83, 71%, 45%);
+  border-right: 2px solid rgb(236, 236, 236);
+
+  text-align: center;
+  vertical-align: center;
+}
+
+.Orders-table #image {
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 0;
+}
+
+.Orders-table #image img {
+  height: 100%;
+}
 
 .paging {
   margin-top: 10px;
