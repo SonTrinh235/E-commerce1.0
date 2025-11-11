@@ -1,6 +1,6 @@
 import { apiFetch } from "./apiClient";
 
-// 🟢 Lấy tất cả đơn hàng (phân trang)
+// Lấy tất cả đơn hàng (phân trang)
 export function getAllOrders(page = 1, limit = 20) {
   console.log(`Calling getAllOrders(${page}, ${limit})`);
   return apiFetch(`/order/orders?page=${page}&limit=${limit}`, {
@@ -8,7 +8,7 @@ export function getAllOrders(page = 1, limit = 20) {
   });
 }
 
-// 🟢 Lấy chi tiết 1 đơn hàng theo id
+// Lấy chi tiết 1 đơn hàng theo id
 export async function getOrderById(orderId) {
   console.log(`🧾 Calling getOrderById(${orderId})`);
   try {
@@ -23,7 +23,7 @@ export async function getOrderById(orderId) {
   }
 }
 
-// 🟢 Lấy đơn hàng theo userId
+// Lấy đơn hàng theo userId
 export async function getOrdersByUserId(userId, page = 1, limit = 20) {
   console.log(`📦 Calling getOrdersByUserId(${userId}), page=${page}, limit=${limit}`);
   try {
@@ -40,7 +40,7 @@ export async function getOrdersByUserId(userId, page = 1, limit = 20) {
 }
 
 
-// 🟢 Tạo mới đơn hàng (thanh toán bằng cash)
+// Tạo mới đơn hàng (thanh toán bằng cash)
 export function createOrder(orderData) {
   console.log("Calling createOrder", orderData);
   return apiFetch(`/order/create-order`, {
@@ -49,11 +49,12 @@ export function createOrder(orderData) {
       userId: orderData.userId,
       paymentMethod: orderData.paymentMethod,
       productsInfo: orderData.productsInfo,
+      ipAddr: orderData.ipAddr
     },
   });
 }
 
-// 🟢 Cập nhật trạng thái đơn hàng
+// Cập nhật trạng thái đơn hàng
 export function updateOrderStatus(orderId, status) {
   console.log(`Calling updateOrderStatus(${orderId})`);
   return apiFetch(`/order/orders/${orderId}/status`, {
@@ -62,7 +63,7 @@ export function updateOrderStatus(orderId, status) {
   });
 }
 
-// 🟠 (Tùy backend) Xoá đơn hàng — nếu backend chưa có, có thể bỏ
+// (Tùy backend) Xoá đơn hàng — nếu backend chưa có, có thể bỏ
 export function deleteOrder(orderId) {
   console.log(`Calling deleteOrder(${orderId})`);
   return apiFetch(`/order/orders/${orderId}`, {
