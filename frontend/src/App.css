@@ -1,0 +1,17 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #fafafa;
+    font-family: "Inter", sans-serif;
+  }
+  
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+  
+  .App {
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }

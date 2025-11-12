@@ -4,12 +4,11 @@ import Breadcrums from "../Components/Breadcrums/Breadcrums";
 import ProductDisplay from "../Components/ProductDisplay/ProductDisplay";
 import DescriptionBox from "../Components/DescriptionBox/DescriptionBox";
 import RelatedProducts from "../Components/RelatedProducts/RelatedProducts";
-import { getProductById } from "../api/productService"; 
+import { getProductById } from "../api/productService";
 
 const Product = () => {
   const { productId } = useParams();
-  const pid = productId  ;
-
+  const pid = productId; 
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState(null);
   const [error, setError] = useState("");
@@ -18,18 +17,26 @@ const Product = () => {
     let alive = true;
 
     (async () => {
+      if (!pid) {
+        setError("Thiếu productId trong URL.");
+        setLoading(false);
+        return;
+      }
       try {
         setLoading(true);
         setError("");
+
         const res = await getProductById(pid);
-        const p = res?.data;
+        const p = res?.data?.data || res?.data || null;
+
         if (!alive) return;
 
-        if (!p || !p._id) {
+        if (!p || !(p._id || p.id)) {
           setError("Không tìm thấy sản phẩm.");
           setProduct(null);
           return;
         }
+
         setProduct(p);
       } catch (e) {
         if (!alive) return;
@@ -67,7 +74,12 @@ const Product = () => {
     <div>
       <Breadcrums product={breadProduct} />
       <ProductDisplay product={product} />
-      <DescriptionBox />
+      <DescriptionBox
+        productId={product._id || product.id}
+        product={product}
+        descriptionHtml={product.description}
+        defaultTab="desc"
+      />
       <RelatedProducts />
     </div>
   );
