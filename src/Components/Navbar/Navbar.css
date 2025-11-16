@@ -1,0 +1,258 @@
+.navbar {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 8px;
+    border-bottom: 10px solid rgb(121, 178, 52);
+    /* background: rgb(212, 212, 212); */
+    background: linear-gradient(
+        to top,
+        #a2a2a2 0%,
+        #c7c7c7 15%,
+        #e4e4e4 40%,
+        #d0d0d0 85%,
+        #fafafa 100%
+     );
+    box-shadow: 0 10px 8px rgba(0, 0, 0, 0.2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-icons {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.nav_logo{
+    display : flex;
+    align-items: center;
+    background: rgb(165, 165, 165);
+    border-radius: 5px;
+}
+
+.nav_logo b {
+    font-family: 'Cherry Cream Soda';
+    font-size: 1.5rem;
+    color: rgb(174, 222, 0);
+} 
+
+.nav_logo b span{
+    color: white;
+}
+
+.nav-dropdown{
+    display: none;
+}
+
+.nav_menu {
+    display: flex;
+    justify-content: space-around;
+    width: 25%;
+}
+.nav_menu * {
+    color: rgb(22, 22, 22);
+}
+
+.nav_menu li{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    cursor: pointer;
+}
+
+.nav_menu hr{
+    border: none;
+    width: 80%;
+    height: 3px;
+    border-radius: 10px;
+    background: hsl(87, 55%, 55%);
+}
+
+.nav-search {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    max-width: 30%;
+    border-radius: 5px;
+}
+
+.nav-search input {
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+    height: 100%;
+    width: 100%;
+    background: rgb(226, 226, 226);
+}
+
+.nav-search button{
+    padding: 8px;
+    border: none;
+    border-radius: 5px;
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+    height: 100%;
+    width: 80px;
+    background: hsl(87, 55%, 55%);
+    color: rgb(232, 232, 232);
+    cursor: pointer;
+}
+
+.nav-search button:hover {
+    background: hsl(87, 55%, 45%);
+}
+.nav-search button:active {
+    background: hsl(87, 55%, 35%);
+}
+
+.nav-profile-container{
+    display: flex;
+    width: 150px;
+    align-items: center;
+    justify-content: end;
+}
+
+
+.nav-cart {
+    display: flex;
+    flex-grow: 1;
+}
+
+.nav-cart-count{
+    position: relative;
+    top: -6px;
+    right: 2px;
+    width: 1rem;
+    height: 1rem;
+    font-size: 0.8rem;
+    text-align: center;
+    background: white;
+    color: rgb(121, 178, 52);
+    border-radius: 50%;
+}
+
+
+.nav-user button {
+    width: 6rem;
+    padding: 3px;
+    border: none;
+    border-radius: 5px;
+    background: rgb(233, 233, 233);
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    cursor: pointer;
+}
+
+.nav-user button:hover {
+    background: hsl(0, 0%, 70%);
+}
+
+.nav-user button:active {
+    background: hsl(0, 0%, 60%);
+}
+
+@media(max-width: 800px) {
+    .nav-search {
+        display: none;
+    }
+}
+@media(max-width: 1024px) {
+    .nav-dropdown{
+        display:flex;
+    }
+    .nav_menu{
+        display: none;
+        height: 50px;
+        width: 100%;
+        position: absolute;
+        background-color: rgb(255, 255, 255);
+        justify-content: center;
+        gap: 20px;
+        top: 57px;
+    }
+    .nav_menu-visible{
+        display: flex;
+    }
+}
+
+/* === Admin logged===================== */
+
+.nav-profile-container{
+    width: auto; 
+    gap: 8px;
+  }
+  
+  .nav-admin-shortcut button{
+    padding: 6px 12px;
+    border: none;
+    border-radius: 5px;
+    background: hsl(87, 55%, 55%);
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.06);
+    transition: background .15s ease, transform .06s ease-in-out, box-shadow .15s ease;
+  }
+  .nav-admin-shortcut button:hover{
+    background: hsl(87, 55%, 45%);
+  }
+  .nav-admin-shortcut button:active{
+    background: hsl(87, 55%, 40%);
+    transform: translateY(1px);
+  }
+  
+  .nav-admin-actions{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .nav-admin-greeting{
+    font-weight: 600;
+    white-space: nowrap;
+    color: #161616;
+  }
+  
+  .nav-admin-actions button{
+    padding: 6px 10px;
+    border: none;
+    border-radius: 5px;
+    background: #e6e6e6;
+    color: #111;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background .15s ease, transform .06s ease-in-out;
+  }
+  .nav-admin-actions button:hover{
+    background: #d0d0d0;
+  }
+  .nav-admin-actions button:active{
+    background: #c4c4c4;
+    transform: translateY(1px);
+  }
+  
+  .nav-admin-actions .nav-icons{
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+  
+  @media (max-width: 800px){
+    .nav-admin-greeting{
+      display: none;
+    }
+    .nav-admin-shortcut button,
+    .nav-admin-actions button{
+      padding: 6px 10px;
+    }
+  }
+  

@@ -1,0 +1,212 @@
+.ProductForm-container {
+  position: relative;
+  background: rgb(230, 230, 230);
+  width: clamp(0px, 65%, 1500px);
+  height: clamp(0px, 75%, min(70vh,70vw));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  border-radius: 40px;
+  padding: 0;
+  transition: all 0.4s ease;
+}
+
+.ProductForm-container header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: absolute;
+  top: 5%;
+}
+.ProductForm-container header #title {
+  font-size: clamp(0rem, min(3.5vh, 3.5vw), 2rem);
+  font-weight: bold;
+}
+.ProductForm-container header #subTitle {
+  font-size: clamp(0rem, min(2vh, 2vw), 1.5rem);
+}
+
+
+
+
+
+.product-form {
+  display: flex;
+  font-size: clamp(0.5rem, min(3vh, 1.7vw), 1.5rem);
+  justify-content: space-evenly;
+  align-items: center;
+  width: clamp(0px, 80%, 1000px);
+  height: 65%;
+  border-radius: 30px;
+  background: hsl(0, 0%, 85%);
+}
+
+
+
+
+.product-form #section-image {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: clamp(100px,30%, 300px);
+  height: clamp(100px,80%, 30vw);
+  padding: 2%;
+  background: rgb(243, 243, 243);
+  border-radius: 20px;
+  border: none;
+}
+.product-form #section-image img {
+  width: 90%;
+  height: 70%;
+  object-fit: contain;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.product-form #section-image #upload-image {
+  width: 80%;
+  padding: 10px;
+  margin: 10px;
+  border-radius: 5px;
+  border: none;
+  background: hsl(110, 71%, 40%);
+  font-size: clamp(0.5rem, 50%, 1rem);
+  color: white;
+  cursor: pointer;
+}
+.product-form #section-image #upload-image *{
+  color: white;
+}
+.product-form #section-image #upload-image:hover {
+  background: hsl(110, 71%, 35%);
+}
+.product-form #section-image #upload-image:active {
+  background: hsl(110, 71%, 30%);
+}
+
+
+
+
+
+.product-form #section-data {
+  display: flex;
+  flex-direction: column;
+  width: 45%;
+}
+
+.product-form #section-data input {
+  height: clamp(0.5rem, min(3.5vh,3.5vw), 3rem);
+  width: clamp(0.5rem, 100%, 30rem);
+  font-size: clamp(0.5rem, min(3vh, 1.7vw), 1.2rem);
+  border-radius: 5px;
+  border: none;
+  margin-bottom: 1%;
+  padding-left: 3%;
+  vertical-align: center;
+  background: rgb(243, 243, 243);
+  transition: all 0.4s ease;
+}
+
+.product-form #section-data input:focus {
+  outline: none;
+  box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+.product-form #section-data textarea {
+  font-family: calibri;
+  height: clamp(1rem, min(10vh, 10vw), 10rem);
+  width: clamp(0.5rem, 100%, 30rem);
+  font-size: clamp(0.5rem, min(3vh, 1.7vw), 1.2rem);
+  border-radius: 5px;
+  border: none;
+  margin-bottom: 1%;
+  padding-left: 3%;
+  vertical-align: center;
+  background: rgb(243, 243, 243);
+  resize: none;
+  transition: all 0.4s ease;
+}
+
+.product-form #section-data textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+
+#ProductForm-cancel {
+  position: absolute;
+  top: 0px;
+  right: 40px;
+  width: 9rem;
+  height: 3rem;
+  border: none;
+  background: rgb(175, 0, 0);
+  border-radius: 0px 0px 20px 20px;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: all 0.4s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+#ProductForm-cancel * {
+  color: white;
+}
+#ProductForm-cancel:hover {
+  background: rgb(154, 0, 0);
+  box-shadow: 0 0 30px 5px rgba(255, 0, 0, 0.3);
+}
+#ProductForm-cancel:active {
+  background: rgb(134, 0, 0);
+}
+
+#productForm-submit {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%);
+  bottom: 5%;
+  width: 20%;
+  height: 8%;
+  font-size: 70%;
+  font-weight: bold;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.4s ease;
+}
+.btn-add {
+  background: hsl(110, 69%, 40%);
+  color: white;
+}
+.btn-add:hover {
+  background: hsl(110, 69%, 35%);
+  box-shadow: 0 0 30px 5px hsla(110, 100%, 50%, 0.3);
+}
+.btn-add:active {
+  background: hsl(110, 69%, 30%);
+}
+.btn-edit {
+  background: hsl(219, 100%, 40%);
+  color: white;
+}
+.btn-edit:hover {
+  background: hsl(219, 100%, 35%);
+  box-shadow: 0 0 30px 5px hsla(219, 100%, 50%, 0.3);
+}
+.btn-edit:active {
+  background: hsl(219, 100%, 30%);
+}
+.btn-delete {
+  background: hsl(0, 100%, 40%);
+  color: white;
+}
+.btn-delete:hover {
+  background: hsl(0, 100%, 35%);
+  box-shadow: 0 0 30px 5px hsla(0, 100%, 50%, 0.3);
+}
+.btn-delete:active {
+  background: hsl(0, 100%, 30%);
+}

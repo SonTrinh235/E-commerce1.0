@@ -1,0 +1,261 @@
+.loginsignup {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .loginsignup-container {
+    width: 70%;
+    background: white;
+    padding: 40px 60px;
+    box-sizing: border-box;
+    border-radius: 16px;  
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+  
+  .loginsignup-container h1 {
+    margin: 20px 0px;
+  }
+  
+  .loginsignup-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 29px;
+    margin-top: 30px;
+  }
+  
+  .loginsignup-fields input {
+    height: 72px;
+    width: 100%;
+    padding-left: 20px;
+    border: 1px solid #c9c9c9;
+    outline: none;
+    color: #5c5c5c;
+    font-size: 18px;
+    box-sizing: border-box;
+    border-radius: 12px;
+  }
+  
+  .loginsignup-container button {
+    width: 100%;
+    height: 72px;
+    color: black;
+    /* background: #ecaee2ef; */
+    margin-top: 30px;
+    border: none;
+    font-size: 24px;
+    font-weight: 700;
+    cursor: pointer;
+    box-sizing: border-box;
+    border-radius: 12px;
+    transition: background 0.2s ease;
+  }
+  
+  .loginsignup-container button:hover {
+    background: rgb(121, 178, 52);
+  }
+  
+  .loginsignup-login {
+    margin-top: 20px;
+    color: #5c5c5c;
+    font-size: 18px;
+    font-weight: 600;
+  }
+  
+  .loginsignup-login span {
+    color: #fa0000;
+    font-weight: 600;
+  }
+  
+  .loginsignup-agree {
+    display: flex;
+    align-items: center;
+    margin-top: 25px;
+    gap: 20px;
+    color: #5c5c5c;
+    font-size: 18px;
+    font-weight: 500;
+  }
+
+  /* --- Bổ sung cho phiên bản đăng nhập bằng số điện thoại & OTP --- */
+
+.otp-info {
+  margin-top: 20px;
+  font-size: 16px;
+  color: #555;
+  text-align: center;
+}
+
+.back-btn {
+  margin-top: 15px;
+  width: 100%;
+  height: 48px;
+  border: 1px solid #ccc;
+  background: #f8f8f8;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-btn:hover {
+  background: #e8e8e8;
+}
+
+.back-btn.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.choose-role-text {
+  font-size: 18px;
+  color: #555;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.loginsignup-container button {
+  width: 100%;
+  height: 72px;
+  margin-top: 15px;
+  border-radius: 12px;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.loginsignup-container button:first-of-type {
+  margin-top: 30px;
+}
+
+.loginsignup-container button:hover {
+  background: rgb(121, 178, 52);
+}
+
+.otp-info {
+  margin-top: 20px;
+  text-align: center;
+  color: #555;
+}
+
+.back-btn {
+  margin-top: 15px;
+  height: 48px;
+  background: #f8f8f8;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.back-btn:hover {
+  background: #e8e8e8;
+}
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.popup {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  width: 350px;
+  text-align: center;
+}
+
+.popup input {
+  display: block;
+  width: 100%;
+  margin: 8px 0;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.popup button {
+  background: rgb(121, 178, 52);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.popup button:hover {
+  background: rgb(63, 108, 7);
+}
+
+
+@media(max-width: 800px) {
+  .otp-info {
+    font-size: 14px;
+  }
+
+  .back-btn {
+    height: 45px;
+    font-size: 15px;
+  }
+}
+
+  
+@media(max-width: 1280px) {
+    .loginsignup-container {
+      max-width: 70%;
+      padding: 30px 40px;
+      border-radius: 14px;
+    }
+    .loginsignup-fields input {
+      height: 65px;
+      border-radius: 10px;
+    }
+    .loginsignup-container button {
+      height: 65px;
+      font-size: 20px;
+      border-radius: 10px;
+    }
+    .loginsignup-login {
+      font-size: 16px;
+    }
+    .loginsignup-agree {
+      font-size: 14px;
+      gap: 10px;
+    }
+  }
+  
+
+  @media(max-width: 800px) {
+    .loginsignup-container {
+      max-width: 70%;
+      padding: 20px 25px;
+      border-radius: 12px;
+    }
+    .loginsignup-container h1 {
+      font-size: 24px;
+    }
+    .loginsignup-fields input {
+      height: 50px;
+      font-size: 14px;
+      border-radius: 8px;
+    }
+    .loginsignup-container button {
+      height: 50px;
+      font-size: 16px;
+      border-radius: 8px;
+    }
+  }
+  
