@@ -2,7 +2,7 @@
     position: fixed;
     width: clamp(200px,15%,300px);
     height: 100%;
-    background: linear-gradient(hsl(103, 93%, 27%), hsl(49, 52%, 54%));
+    background: linear-gradient(135deg, hsl(88, 73%, 37%), hsl(87, 55%, 45%), hsl(0, 0%, 83%) 70%, hsl(0, 0%, 80%));
     position: fixed;
     /* Do not adjust padding */
     /* Check AdminSidebar-content */
