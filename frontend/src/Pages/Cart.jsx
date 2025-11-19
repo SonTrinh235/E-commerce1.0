@@ -1,9 +1,14 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "./CSS/Cart.css";
 import { useNavigate } from "react-router-dom";
 import promoCodes from "../data/Promo.js";
 import CartItem from "../Components/CartItem/CartItem";
 import { CartContext } from "../Context/CartContext";
+
+// Import APIs
+import { getAllVouchers } from "../api/voucherService.js";
+
+// Import utils
 import { vnd } from "../utils/currencyUtils.js";
 
 const Cart = () => {
@@ -28,7 +33,12 @@ const Cart = () => {
     cartUpdateProductQuantity,
     // cartRemoveProductFromCart(productId)
     cartRemoveProductFromCart,
+
+    //voucher
+    appliedVoucher, setAppliedVoucher
   } = useContext(CartContext);
+
+  const [voucherList, setVoucherList] = useState([]);
 
   const navigate = useNavigate();
 
@@ -41,61 +51,68 @@ const Cart = () => {
   }
 
 
+  const fetchVouchers = async (page = 1, limit = 20) => {
+    const response = await getAllVouchers(page,limit);
+    setVoucherList(response.data.list);
+  }
+
+  useEffect(() => {
+    fetchVouchers();
+  },[])
+
+
   // ============ BELOW IGNORED =============================
   // =========== BELOW IGNORED ===========================
 
   const SHIPPING_FEE = 0;
 
-  const [promoCode, setPromoCode] = useState("");
-  const [appliedPromo, setAppliedPromo] = useState(null);
-  const [error, setError] = useState("");
+  const [voucherError, setVoucherError] = useState("");
+  const [inputVoucherCode, setInputVoucherCode] = useState(''); 
 
-  const handlePromoCodeChange = (e) => {
-    setPromoCode(e.target.value);
-    setError("");
-  };
 
-  const applyPromoCode = (event) => {
+  const applyVoucher = (event) => {
     // Prevent page refresh on submit
     event.preventDefault();
-    if (!promoCode.trim()) {
-      setError("Please enter a promo code");
+    if (!inputVoucherCode.trim()) {
+      setVoucherError("Please enter a promo code");
       return;
     }
 
-    const foundPromo = promoCodes.find(
-      (promo) => promo.code.toUpperCase() === promoCode.trim().toUpperCase()
+    console.log(inputVoucherCode);
+    const foundVoucher = voucherList.find(
+      (voucher) => voucher.code.trim().toUpperCase() === inputVoucherCode.trim().toUpperCase()
     );
 
-    if (foundPromo) {
-      setAppliedPromo(foundPromo);
-      setError("");
-      setPromoCode("");
+    if (foundVoucher) {
+      setAppliedVoucher(foundVoucher);
     } else {
-      setError("Invalid promo code");
-      setAppliedPromo(null);
+      setVoucherError("Voucher không hợp lệ!");
+      setAppliedVoucher(null);
     }
   };
 
-  const calculateDiscount = () => {
-    if (!appliedPromo) return 0;
-    if (appliedPromo.type === "percentage") {
-      const subtotal = cartTotal;
-      return (subtotal * appliedPromo.discount) / 100;
+  const calculateDiscountAmount = () => {
+    if (!appliedVoucher) return 0;
+
+    const voucherType = appliedVoucher.discountType;
+    const voucherValue = appliedVoucher.discountValue;
+    const subtotal = cartTotal;
+
+    if (voucherType === "percentage") {
+      return (subtotal * voucherValue/100);
+    } else if (voucherType === "fixed") {
+      return Math.min(subtotal, voucherValue);
     }
     return 0;
   };
 
   const getShippingFee = () => {
-    if (appliedPromo && appliedPromo.type === "freeshipping") {
-      return 0;
-    }
     return SHIPPING_FEE;
   };
 
   const getFinalTotal = () => {
     const subtotal = cartTotal;
-    const discount = calculateDiscount();
+    const discount = calculateDiscountAmount();
     // const shippingFee = getShippingFee();
     return subtotal - discount + SHIPPING_FEE;
   };
@@ -174,25 +191,40 @@ const Cart = () => {
               <p>{vnd(cartTotal)}</p>
             </div>
             <hr />
-            {appliedPromo && (
+
+
+            {appliedVoucher && (
               <>
                 <div className="Cart-total-item">
-                  <p>Giảm giá ({appliedPromo.discount}%)</p>
-                  <p>{vnd(calculateDiscount())}</p>
+
+                  <p>
+                    Giảm giá (
+
+                      {appliedVoucher.discountType === 'percentage' ? (
+                        <>{appliedVoucher.discountValue}%</>
+                      ) : appliedVoucher.discountType === 'fixed' ? (
+                        <>{vnd(appliedVoucher.discountValue)}</>
+                      ) : (
+                        <>Unexpected discountType</>
+                      )}
+
+                    )
+                  </p>
+
+                  <p>{vnd(calculateDiscountAmount())}</p>
+
                 </div>
                 <hr />
               </>
             )}
+
+
             <div className="Cart-total-item">
               <p>Phí vận chuyển</p>
               <p>{vnd(getShippingFee())}</p>
-              {appliedPromo && appliedPromo.type === "freeshipping" && (
-                <span className="free-shipping-badge">
-                  Free Shipping Applied
-                </span>
-              )}
             </div>
             <hr />
+            
             <div className="Cart-total-item">
               <h3>Tổng Thanh Toán</h3>
               <h3>{vnd(getFinalTotal())}</h3>
@@ -210,24 +242,24 @@ const Cart = () => {
          {/* PROMO CODE SECTION */}
         <div className="Cart-promocode">
           <h2>Mã Khuyến Mãi</h2>
-          {appliedPromo && (
+          {appliedVoucher && (
             <div className="applied-promo">
               <p>
-                Applied: {appliedPromo.code} ({appliedPromo.description})
+                Applied: {appliedVoucher.code} ({appliedVoucher.description})
               </p>
-              <button onClick={() => setAppliedPromo(null)}>Remove</button>
+              <button onClick={() => setAppliedVoucher(null)}>Remove</button>
             </div>
           )}
-          <form className="Cart-promobox" onSubmit={applyPromoCode}>
+          <form className="Cart-promobox" onSubmit={applyVoucher}>
             <input
               type="text"
               placeholder="Nhập mã khuyến mãi"
-              value={promoCode}
-              onChange={handlePromoCodeChange}
+              value={inputVoucherCode}
+              onChange={(e) => setInputVoucherCode(e.target.value)}
             />
-            <button onClick={applyPromoCode}>Thêm</button>
+            <button onClick={applyVoucher}>Thêm</button>
           </form>
-          {error && <p className="promo-error">{error}</p>}
+          {voucherError && <b className="promo-error" style={{color: 'rgba(184, 55, 55, 1)'}}>{voucherError}</b>}
 
           {/* testing */}
           <div className="available-promos">
@@ -235,53 +267,16 @@ const Cart = () => {
               <strong>Mã khuyến mãi có sẵn:</strong>
             </p>
             <ul>
-              {promoCodes.map((promo, index) => (
-                <li key={index}>
-                  {promo.code} - {promo.description}
+              {voucherList.map((voucher, i) => (
+                <li key={i}>
+                  {voucher.code} - {voucher.description}
                 </li>
               ))}
             </ul>
           </div>
         </div>
       </div>
-      {/* TEMPORARY CART CONTROL BUTTONS FOR TESTING */}
-      <div>
-        <button
-          onClick={() => {
-            cartAddProductToCart("68f9cf79c3d1a3fe39a50e90");
-          }}
-        >
-          Add Meat 1
-        </button>
-        <button
-          onClick={() => {
-            cartAddProductToCart("68f9d130c3d1a3fe39a50f28");
-          }}
-        >
-          Add Fish 1
-        </button>
-        <button
-          onClick={() => {
-            cartAddProductToCart("68f9d0d4c3d1a3fe39a50f00");
-          }}
-        >
-          Add Cheese 1
-        </button>
-        <button
-          onClick={() => {
-            cartAddProductToCart("68f9d018c3d1a3fe39a50eb3");
-          }}
-        >
-          Add Vegs 1
-        </button>
-        <button
-          onClick={() => {
-            cartAddProductToCart("68f9d2d1c3d1a3fe39a50f8d");
-          }}
-        >
-          Add Fruit 1
-        </button>
-      </div>
+
     </div>
   );
 };

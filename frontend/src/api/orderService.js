@@ -49,7 +49,8 @@ export function createOrder(orderData) {
       userId: orderData.userId,
       paymentMethod: orderData.paymentMethod,
       productsInfo: orderData.productsInfo,
-      ipAddr: orderData.ipAddr
+      voucherCode: orderData.voucherCode,
+      ipAddr: orderData.ipAddr,
     },
   });
 }

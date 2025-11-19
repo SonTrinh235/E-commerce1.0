@@ -28,6 +28,8 @@ export const CartContextProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState({});
   // productsLookup: Lookup objects of products in cart (full product data)
   const [productsLookup, setProductsLookup] = useState({});
+
+  const [appliedVoucher, setAppliedVoucher] = useState(null);
   
   // cartTotalItem: Total item count of cart
   const cartTotalItems = Object.values(cartItems).reduce((total, item) => {
@@ -94,6 +96,7 @@ export const CartContextProvider = ({ children }) => {
       setProductsLookup(storedCartLookup ? JSON.parse(storedCartLookup) : {});
       setIsCartLoading(false);
     }
+    setAppliedVoucher(null);
   }
 
   // function: Add product
@@ -283,6 +286,9 @@ export const CartContextProvider = ({ children }) => {
     // productsLookup: Lookup objects of products in cart (full product data)
     // Use: productsLookup[productId]
     productsLookup,
+
+    // voucher
+    appliedVoucher, setAppliedVoucher,
 
     // Implemented API callers
     // cartAddProductToCart(productId)
