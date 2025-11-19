@@ -10,7 +10,11 @@ import {
 } from "../../../api/productService";
 import { uploadFile } from "../../../api/fileService";
 
+import LoadingOverlay from "../../../Components/LoadingOverlay/LoadingOverlay";
+
 function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
+  const [loading, setLoading] = useState(false);
+
   // Properties of form
   const [formData, setFormData] = useState({
     productImage: null,
@@ -64,6 +68,8 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
 
   // Handle Submit based on form mode
   const handleSubmit = async (e) => {
+    setLoading(true);
+
     e.preventDefault(); // Prevent default browser form submission
 
     try {
@@ -162,6 +168,8 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
       // console.error("Submission failed:", error);
       // alert("Error saving product. Check the console for details.");
     }
+
+    setLoading(false);
   };
 
   //  useEffect for image preview on upload
@@ -212,6 +220,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
   // Form container
   return (
     <div className="ProductForm-container">
+      {loading && <LoadingOverlay/>}
       <header>
         <div id="title">{title}</div>
         <div id="subTitle">{subTitle}</div>
@@ -224,7 +233,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
           {imagePreviewUrl ? (
             <img src={imagePreviewUrl} alt = ""/>
           ) : (
-            <img src={currentItem?.imageInfo?.url || DefaultImage} alt = ""/>
+            <img src={currentItem?.imageUrl || currentItem?.imageInfo?.url || DefaultImage} alt = ""/>
           )}
           {mode !== "delete" && (
             <input

@@ -2,10 +2,18 @@ import "./ManageProducts.css";
 import React, { useState, useEffect,} from "react";
 // import all_product from "../../../data/all_product";
 import { FaPlusCircle } from "react-icons/fa";
-import { getAllProducts, getProductsByCategoryAPI, searchProductsAPI } from "../../../api/productService";
 
+// import components
 import AdminItem from "../../Components/Card/AdminItem/AdminItem";
 import ProductForm from "../../Components/ProductForm/ProductForm";
+import LoadingOverlay from "../../../Components/LoadingOverlay/LoadingOverlay";
+
+// import APIs
+import { getAllProducts, getProductsByCategoryAPI, searchProductsAPI } from "../../../api/productService";
+
+// import utils
+import { vnd } from "../../../utils/currencyUtils"
+import useDebounce from "../../../utils/useDebounce";
 
 function ManageProducts() {
   const [loading, setLoading] = useState(false);
@@ -15,10 +23,29 @@ function ManageProducts() {
   const [totalProducts, setTotalProducts] = useState(0);
   const [limit, setLimit] = useState(20);
 
-  const [searchInput, setSearchInput] = useState('');
+  const [selectedProductCategory, setSelectedProductCategory] = useState('Tất cả');
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 500); // searchTerm with a 500ms update delay
+
+  const fetchProducts = () => {
+    // if no search term
+    if (debouncedSearchTerm.trim() === '' ) {
+      if (selectedProductCategory === 'Tất cả') {
+        fetchProductsAll(currentPage, limit);
+      } else {
+        fetchProductsByCategory(selectedProductCategory, currentPage, limit)
+      }
+    }
+    // if yes search term
+    else {
+      // clear category upon search
+      setSelectedProductCategory('Tất cả')
+      searchProducts(debouncedSearchTerm, currentPage, limit);
+    }
+  };
 
   // Fetch products method (from all product)
-  const fetchProducts = async (page = 1, limit = 20) => {
+  const fetchProductsAll = async (page = 1, limit = 20) => {
     setLoading(true);
     try {
       const response = await getAllProducts(page, limit);
@@ -33,14 +60,28 @@ function ManageProducts() {
     setLoading(false);
   };
 
+  // Fetch products by category
+  const fetchProductsByCategory = async (category, page = 1, limit = 20) => {
+    setLoading(true);
+    try {
+      const response = await getProductsByCategoryAPI(category, page, limit);
+      setProducts(response.data.list);
+      setTotalProducts(response.data.total);
+      setCurrentPage(response.data.page);
+      setLimit(response.data.limit);
+      setTotalPages(response.data.totalPages)
+    }
+    catch (error) {
+      console.log(error);
+      alert("Fetch products by category failed, see console");
+    }
+    setLoading(false);
+  };
+
   // Fetch new page upon page change
   useEffect(() => {
-    if (searchInput.trim() === '' ) {
-      fetchProducts(currentPage, limit);
-    } else {
-      searchProducts(searchInput, currentPage, limit);
-    }
-  }, [currentPage]);
+    fetchProducts()
+  }, [currentPage, selectedProductCategory, debouncedSearchTerm]);
 
   // Fetch products method (from all product)
   const searchProducts = async (query= '', page = 1, limit = 20) => {
@@ -62,10 +103,10 @@ function ManageProducts() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchInput.trim() === '') {
-      fetchProducts();
+    if (searchTerm.trim() === '') {
+      fetchProductsAll();
     } else {
-      searchProducts(searchInput);
+      searchProducts(searchTerm);
     }
   }
 
@@ -81,44 +122,52 @@ function ManageProducts() {
     setIsFormVisible(true);
   };
 
+  // Function to handle escape to close form
+  const handleEscape = (event) => {
+    if (event.key === 'Escape') {
+      // Only close if the form is actually visible
+      if (isFormVisible) {
+        setIsFormVisible(false);
+      }
+    }
+  };
+
+  // useEffect Hook for event listener
+  useEffect(() => {
+    document.addEventListener('keydown', handleEscape);
+    // cleanup listener
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isFormVisible]);
+
   return (
     <div className="ManageProducts-container">
+
+      {loading && <LoadingOverlay/>}
+      
       <div id="ManageProducts-header">
         <h2 style={{color: 'white'}}>📦Quản lí sản phẩm</h2>
       </div>
-
-      {/* List of Products  */}
-      {/* <div className="admin-products-list">
-        <div className="index">
-        <p>Product ID</p>
-        <p>Image</p>
-        <p>Category</p>
-        <p>New price</p>
-        <p>Old price</p>
-        <p>Actions</p>
-        </div>
-        <div>
-        {all_product.map((item, i) => (
-          <AdminItem key={i} {...item} />
-          ))}
-          </div>
-          </div> */}
-
       
         <div className="ManageProducts-filter">
           <div className="category">
             <h3>Phân loại:</h3>
             <select
-              // onChange={handleProductCategoryChange}
-              // value={selectedProductCategory}
+              onChange={(e) => setSelectedProductCategory(e.target.value)}
+              value={selectedProductCategory}
+              disabled={searchTerm}
             >
               <option value="" disabled>
                 Lọc theo phân loại
               </option>
-              <option value="All">Tất cả</option>
-              <option value="Meats">Meats</option>
-              <option value="Vegetables">Vegetables</option>
-              <option value="Others">Others</option>
+              <option value='Tất cả'>Tất cả</option>
+              <option value='Đồ tươi sống'>Đồ tươi sống</option>
+              <option value='Rau củ quả'>Rau củ quả</option>
+              <option value='Thực phẩm đóng gói'>Thực phẩm đóng gói</option>
+              <option value='Nước chấm - gia vị'>Nước chấm - gia vị</option>
+              <option value='Đồ uống - giải khát'>Đồ uống - giải khát</option>
+              <option value='Bánh kẹo'>Bánh kẹo</option>
             </select>
           </div>
 
@@ -127,8 +176,8 @@ function ManageProducts() {
             <form onSubmit={handleSearch}>
               <input
                 type="text"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Nhập tên sản phẩm">
               </input>
             </form>
@@ -254,7 +303,7 @@ function ManageProducts() {
             mode={formMode}
             currentItem={formCurrentItem}
             onCancel={() => setIsFormVisible(false)} // Pass a function to close the form
-            onSuccess = {() => fetchProducts(currentPage, limit)}
+            onSuccess = {() => fetchProducts()}
           />
         </div>
       )}

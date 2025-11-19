@@ -15,7 +15,7 @@ const AdminItem = (props) => {
         <Link to={`#`}>
           <img
             onClick={() => window.scrollTo(0, 0)}
-            src={props.imageInfo?.url || DefaultImage}
+            src={ props.imageUrl|| props.imageInfo?.url || DefaultImage}
             alt= {'Image for '+props.name}
           />
         </Link>
