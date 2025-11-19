@@ -1,0 +1,175 @@
+.ManageVouchers-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+
+/* Header styles */
+
+#ManageVouchers-header {
+  margin: 50px;
+  padding: 20px 50px;
+  
+  background: hsl(258, 65%, 63%);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  
+  text-align: center;
+  font-size: 1.5rem;
+  box-sizing: border-box;
+}
+
+
+/* Main area styles */
+
+.ManageVouchers-main {
+  padding: 20px 40px;
+  width: 95%;
+  
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+
+.ManageVouchers-main header {
+  font-size: 2.5rem;
+  font-weight: bold;
+}
+
+
+
+
+/* Table styles */
+
+
+.ManageVouchers-table {
+  margin-top: 12px;
+
+  background: rgb(199, 199, 199);
+  border-radius: 12px;
+  border: 6px solid grey;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  
+  border-collapse: collapse;
+  overflow: hidden;
+}
+
+.ManageVouchers-table th:last-child,
+.ManageVouchers-table td:last-child {
+  border-right: none;
+}
+
+.ManageVouchers-table tr:last-child td {
+  border-bottom: none;
+}
+
+
+.ManageVouchers-table th,
+.ManageVouchers-table td {
+  border-bottom: 1px solid grey;
+  border-right: 1px solid lightgrey ;
+  text-align: center;
+}
+
+
+.ManageVouchers-table th {
+  height: 3rem;
+  background: hsl(0, 0%, 80%);
+}
+
+.ManageVouchers-table td {
+  height: fit-content;
+}
+
+.ManageVouchers-table .index {
+  background: hsl(0, 0%, 70%);
+  width: 30px;
+}
+
+/* Alternate light and dark shade between each row */
+.ManageVouchers-table tbody tr {
+    background-color: hsl(0, 0%, 100%); 
+}
+.ManageVouchers-table tbody tr:nth-child(even) {
+    background-color: hsl(0, 0%, 95%); 
+}
+
+
+
+
+
+
+
+/* Paging styles */
+
+.ManageVouchers-paging  {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.ManageVouchers-paging  span {
+  margin: 10px;
+}
+
+.ManageVouchers-paging  button {
+  width: 5rem;
+  height: 2rem;
+  border-radius: 8px;
+  background: hsl(0, 0%, 100%);
+  border: 2px solid hsl(0, 0%, 70%);
+  transition: all 0.4s ease;
+}
+
+.ManageVouchers-paging  button:hover:not(:disabled) {
+  background: hsl(0, 0%, 95%);
+  border: 2px solid hsl(0, 0%, 50%);
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.ManageVouchers-paging  button:active {
+  background: hsl(0, 0%, 90%);
+}
+
+.ManageVouchers-paging button:disabled{
+  background: hsl(0, 0%, 87%);
+  border: none;
+}
+
+
+
+
+/* Add product button */
+.ManageVoucher-add {
+  position: fixed;
+  bottom: 30px;
+  right: 50px;
+  width: 11rem;
+  height: 4rem;
+  z-index: 100;
+  border-radius: 15px;
+  border: none;
+  font-size: 1rem;
+  background: hsl(258, 70%, 55%);
+  color: white;
+  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  cursor: pointer;
+}
+.ManageVoucher-add:hover {
+  background: hsl(258, 70%, 50%);
+}
+.ManageVoucher-add:active {
+  background: hsl(258, 70%, 45%);
+}

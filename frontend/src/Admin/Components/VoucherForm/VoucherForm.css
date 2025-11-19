@@ -1,121 +1,76 @@
-.ProductForm-container {
+.VoucherForm-container {
   position: relative;
   background: rgb(230, 230, 230);
-  width: clamp(0px, 65%, 1500px);
-  height: clamp(0px, 75%, min(70vh,70vw));
+  width: clamp(600px, 45%, 1200px);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   border-radius: 40px;
-  padding: 0;
+  padding: 15vh 0px;
 }
 
-.ProductForm-container header {
+.VoucherForm-container header {
   display: flex;
   flex-direction: column;
   align-items: center;
   position: absolute;
   top: 5%;
 }
-.ProductForm-container header #title {
+.VoucherForm-container header #title {
   font-size: clamp(0rem, min(3.5vh, 3.5vw), 2rem);
   font-weight: bold;
 }
-.ProductForm-container header #subTitle {
+.VoucherForm-container header #subTitle {
   font-size: clamp(0rem, min(2vh, 2vw), 1.5rem);
 }
 
+.voucher-form {
+  padding: 3vh 0px;
 
-
-
-
-.product-form {
   display: flex;
   font-size: clamp(0.5rem, min(3vh, 1.7vw), 1.5rem);
-  justify-content: space-evenly;
-  align-items: center;
-  width: clamp(0px, 80%, 1000px);
-  height: 65%;
-  border-radius: 30px;
-  background: hsl(0, 0%, 85%);
-}
-
-
-
-
-.product-form #section-image {
-  display: flex;
-  flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: clamp(100px,30%, 300px);
-  height: clamp(100px,80%, 30vw);
-  padding: 2%;
-  background: rgb(243, 243, 243);
-  border-radius: 20px;
-  border: none;
-}
-.product-form #section-image img {
-  width: 90%;
-  height: 70%;
-  object-fit: contain;
-  background-color: rgba(0, 0, 0, 0.3);
-}
 
-.product-form #section-image #upload-image {
+  border-radius: 30px;
+  background: hsl(0, 0%, 85%);
   width: 80%;
-  padding: 10px;
-  margin: 10px;
-  border-radius: 5px;
-  border: none;
-  background: hsl(110, 71%, 40%);
-  font-size: clamp(0.5rem, 50%, 1rem);
-  color: white;
-  cursor: pointer;
-}
-.product-form #section-image #upload-image *{
-  color: white;
-}
-.product-form #section-image #upload-image:hover {
-  background: hsl(110, 71%, 35%);
-}
-.product-form #section-image #upload-image:active {
-  background: hsl(110, 71%, 30%);
 }
 
 
-
-
-
-.product-form #section-data {
+.voucher-form #section-data {
   display: flex;
   flex-direction: column;
-  width: 45%;
+  width: 90%;
 }
 
-.product-form #section-data input {
-  height: clamp(0.5rem, min(3.5vh,3.5vw), 3rem);
-  width: clamp(0.5rem, 100%, 30rem);
-  font-size: clamp(0.5rem, min(3vh, 1.7vw), 1.2rem);
+.voucher-form #section-data input {
+  height: clamp(0.5rem, min(3.5vh, 3.5vw), 3rem);
+  width: 100%;
+  padding-left: 3%;
+  margin-bottom: 1%;
+
+  background: rgb(243, 243, 243);
   border-radius: 5px;
   border: none;
-  margin-bottom: 1%;
-  padding-left: 3%;
+  
   vertical-align: center;
-  background: rgb(243, 243, 243);
+  font-size: clamp(0.5rem, min(3vh, 1.7vw), 1.2rem);
+  
+  box-sizing: border-box;
   transition: all 0.4s ease;
 }
 
-.product-form #section-data input:focus {
+.voucher-form #section-data input:focus {
   outline: none;
   box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.3);
 }
 
-.product-form #section-data textarea {
+.voucher-form #section-data textarea {
   font-family: calibri;
   height: clamp(1rem, min(10vh, 10vw), 10rem);
-  width: clamp(0.5rem, 100%, 30rem);
+  width: 100%;
   font-size: clamp(0.5rem, min(3vh, 1.7vw), 1.2rem);
   border-radius: 5px;
   border: none;
@@ -124,16 +79,29 @@
   vertical-align: center;
   background: rgb(243, 243, 243);
   resize: none;
+  box-sizing: border-box;
   transition: all 0.4s ease;
 }
 
-.product-form #section-data textarea:focus {
+.voucher-form #section-data textarea:focus {
   outline: none;
   box-shadow: 0 0 0 5px rgba(0, 0, 0, 0.3);
 }
 
+.voucher-form #section-data select {
+  height: clamp(0.5rem, min(3.5vh, 3.5vw), 3rem);
+  width: 100%;
+  font-size: clamp(0.5rem, min(3vh, 1.7vw), 1.2rem);
+  border-radius: 5px;
+  border: none;
+  margin-bottom: 1%;
+  padding-left: 2%;
+  vertical-align: center;
+  background: rgb(243, 243, 243);
+  transition: all 0.4s ease;
+}
 
-#ProductForm-cancel {
+#VoucherForm-cancel {
   position: absolute;
   top: 0px;
   right: 40px;
@@ -150,38 +118,38 @@
   align-items: center;
   cursor: pointer;
 }
-#ProductForm-cancel * {
+#VoucherForm-cancel * {
   color: white;
 }
-#ProductForm-cancel:hover {
+#VoucherForm-cancel:hover {
   background: rgb(154, 0, 0);
 }
-#ProductForm-cancel:active {
+#VoucherForm-cancel:active {
   background: rgb(134, 0, 0);
 }
 
-#productForm-submit {
+#VoucherForm-submit {
+    padding: 20px 30px;
+
   position: absolute;
-  left: 50%;
-  transform: translate(-50%);
   bottom: 5%;
-  width: 20%;
-  height: 8%;
-  font-size: 70%;
-  font-weight: bold;
+
   border-radius: 10px;
   border: none;
+
+  font-size: 1rem;
+  font-weight: bold;
   cursor: pointer;
 }
 .btn-add {
-  background: hsl(110, 69%, 40%);
+  background: hsl(258, 70%, 55%);
   color: white;
 }
 .btn-add:hover {
-  background: hsl(110, 69%, 35%);
+  background: hsl(258, 70%, 50%);
 }
 .btn-add:active {
-  background: hsl(110, 69%, 30%);
+  background: hsl(258, 70%, 45%);
 }
 .btn-edit {
   background: hsl(219, 100%, 40%);
