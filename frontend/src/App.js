@@ -17,6 +17,7 @@ import Checkout from "./Pages/Checkout";
 import AdminDashboard from "./Admin/Pages/AdminDashboard/AdminDashboard";
 import ManageProducts from "./Admin/Pages/ManageProducts/ManageProducts";
 import ManageOrders from "./Admin/Pages/ManageOrders/ManageOrders";
+import ManageVouchers from "./Admin/Pages/ManageVouchers/ManageVouchers";
 
 // Page not found
 import NotFound from "./Pages/NotFound";
@@ -111,6 +112,7 @@ function App() {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="products" element={<ManageProducts />} />
             <Route path="orders" element={<ManageOrders />} />
+            <Route path="vouchers" element={<ManageVouchers />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

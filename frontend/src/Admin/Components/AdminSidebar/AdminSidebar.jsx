@@ -1,6 +1,6 @@
 import "./AdminSidebar.css";
 import {Link} from "react-router-dom"
-import {FaHome, FaBox,FaReceipt } from "react-icons/fa"
+import {FaHome, FaBox,FaReceipt, FaGift } from "react-icons/fa"
 
 function AdminSidebar() {
   return (
@@ -17,6 +17,9 @@ function AdminSidebar() {
         </Link>
         <Link to="./orders">
           <div className="tab"><FaReceipt className="icons"/>Quản lí đơn hàng</div>
+        </Link>
+        <Link to="./vouchers">
+          <div className="tab"><FaGift className="icons"/>Quản lí voucher</div>
         </Link>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./ProductForm.css";
 import DefaultImage from "../../../assets/placeholder-image.png";
-import { FiX} from "react-icons/fi";
+import { FaArrowLeft} from "react-icons/fa";
 import {
   createProduct,
   updateProduct,
@@ -165,8 +165,8 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
 
       // Optional: Redirect user, close modal, or clear form here
     } catch (error) {
-      // console.error("Submission failed:", error);
-      // alert("Error saving product. Check the console for details.");
+      console.error("Submission failed:", error);
+      alert("Error saving product. Check the console for details.");
     }
 
     setLoading(false);
@@ -292,7 +292,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
         </button>
       </form>
       <button id="ProductForm-cancel" onClick={onCancel}>
-        <FiX />
+        <FaArrowLeft style={{marginRight: '5px'}} />
         Hủy
       </button>
     </div>
