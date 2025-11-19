@@ -17,10 +17,10 @@ function VoucherForm({ mode, currentItem = null, onCancel, onSuccess }) {
     voucherName: "",
     voucherCode: "",
     voucherDiscountType: "",
-    voucherDiscountValue: "",
+    voucherDiscountValue: 0,
     voucherDescription: "",
-    voucherDays: "",
-    voucherUsageLimit: "",
+    voucherDays: 0,
+    voucherUsageLimit: 0,
   });
 
   // UseEffect for initial data of form (currentItem or blank)
@@ -36,20 +36,20 @@ function VoucherForm({ mode, currentItem = null, onCancel, onSuccess }) {
         voucherName: currentItem.name || "",
         voucherCode: currentItem.code || "",
         voucherDiscountType: currentItem.discountType || "",
-        voucherDiscountValue: currentItem.discountValue || "",
+        voucherDiscountValue: currentItem.discountValue || 0,
         voucherDescription: currentItem.description || "",
-        voucherDays: Math.ceil(durationInDay) || "",
-        voucherUsageLimit: currentItem.usageLimit || "",
+        voucherDays: Math.ceil(durationInDay) || 0,
+        voucherUsageLimit: currentItem.usageLimit || 0,
       });
     } else {
       setFormData({
         voucherName: "",
         voucherCode: "",
         voucherDiscountType: "",
-        voucherDiscountValue: "",
+        voucherDiscountValue: 0,
         voucherDescription: "",
-        voucherDays: "",
-        voucherUsageLimit: "",
+        voucherDays: 0,
+        voucherUsageLimit: 0,
       });
     }
     console.log("currentItem: ", currentItem);
@@ -62,6 +62,16 @@ function VoucherForm({ mode, currentItem = null, onCancel, onSuccess }) {
     }
     const { name, value } = e.target;
     let newValue = value;
+
+    if (
+      name === "voucherDiscountValue" ||
+      name === "voucherDays" ||
+      name === "voucherUsageLimit"
+    ) {
+      // Convert to integer for number fields
+      newValue = !!value ? Number(value) : 0;
+    }
+
     setFormData((prevData) => ({ ...prevData, [name]: newValue }));
   };
 
