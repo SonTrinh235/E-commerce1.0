@@ -12,8 +12,10 @@ import { vnd } from "../utils/currencyUtils.js";
 // import APIs
 import { createOrder } from "../api/orderService.js";
 import { getPublicIp } from "../api/getPublicIp.js";
+import LoadingOverlay from "../Components/LoadingOverlay/LoadingOverlay.jsx";
 
 const Checkout = () => {
+  const [loading, setLoading] = useState(false);
   const { userId } = useContext(ShopContext);
 
   const {
@@ -129,6 +131,8 @@ const Checkout = () => {
   };
 
   const placeOrder = async () => {
+    setLoading(true);
+
     console.log("Checkout: New order");
     console.log("Checkout: User ID: ", userId);
     console.log("Checkout: Order content: ", orderContent);
@@ -142,7 +146,6 @@ const Checkout = () => {
       userPublicIp = await getPublicIp();
     } catch(error) {
       console.log("IP fetch failed", error);
-      return
     }
 
     // create order
@@ -174,11 +177,16 @@ const Checkout = () => {
       console.error("createOrder failed:", error);
       alert("Create Order failed: check console");
     }
+
+    setLoading(false);
   };
 
   return (
     // Page Container
     <div className="Checkout-page">
+
+      {loading && <LoadingOverlay/>}
+
       <div className="Checkout-container">
         <h1 className="Checkout-title">Thanh Toán</h1>
         <div className="Checkout-content">
