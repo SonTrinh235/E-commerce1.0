@@ -2,31 +2,72 @@ import "./ManageProducts.css";
 import React, { useState, useEffect,} from "react";
 // import all_product from "../../../data/all_product";
 import { FaPlusCircle } from "react-icons/fa";
-import { getAllProducts } from "../../../api/productService";
+import { getAllProducts, getProductsByCategoryAPI, searchProductsAPI } from "../../../api/productService";
 
 import AdminItem from "../../Components/Card/AdminItem/AdminItem";
 import ProductForm from "../../Components/ProductForm/ProductForm";
 
 function ManageProducts() {
+  const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [products, setProducts] = useState([]);
   const [totalProducts, setTotalProducts] = useState(0);
-  const limit = 20;
+  const [limit, setLimit] = useState(20);
+
+  const [searchInput, setSearchInput] = useState('');
 
   // Fetch products method (from all product)
   const fetchProducts = async (page = 1, limit = 20) => {
-    const response = await getAllProducts(page, limit);
-    setProducts(response.data.list);
-    setTotalProducts(response.data.total);
-    setTotalPages(response.data.totalPages)
+    setLoading(true);
+    try {
+      const response = await getAllProducts(page, limit);
+      setProducts(response.data.list);
+      setTotalProducts(response.data.total);
+      setTotalPages(response.data.totalPages)
+    }
+    catch (error) {
+      console.log(error);
+      alert("Fetch products failed, see console");
+    }
+    setLoading(false);
   };
 
   // Fetch new page upon page change
   useEffect(() => {
-    fetchProducts(currentPage, limit);
+    if (searchInput.trim() === '' ) {
+      fetchProducts(currentPage, limit);
+    } else {
+      searchProducts(searchInput, currentPage, limit);
+    }
   }, [currentPage]);
 
+  // Fetch products method (from all product)
+  const searchProducts = async (query= '', page = 1, limit = 20) => {
+    setLoading(true);
+    try {
+      const response = await searchProductsAPI(query, page, limit);
+      setProducts(response.data.list);
+      setTotalProducts(response.data.total);
+      setCurrentPage(response.data.page);
+      setLimit(response.data.limit);
+      setTotalPages(response.data.totalPages)
+    }
+    catch (error) {
+      console.log(error);
+      alert("Search products failed, see console");
+    }
+    setLoading(false);
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchInput.trim() === '') {
+      fetchProducts();
+    } else {
+      searchProducts(searchInput);
+    }
+  }
 
   // State of  ProductForm
   const [isFormVisible, setIsFormVisible] = useState(false);
@@ -67,7 +108,10 @@ function ManageProducts() {
         <div className="ManageProducts-filter">
           <div className="category">
             <h3>Phân loại:</h3>
-            <select>
+            <select
+              // onChange={handleProductCategoryChange}
+              // value={selectedProductCategory}
+            >
               <option value="" disabled>
                 Lọc theo phân loại
               </option>
@@ -80,7 +124,14 @@ function ManageProducts() {
 
           <div className="search">
             <h3>Tìm theo tên sản phẩm:</h3>
-            <input type="text" placeholder="Nhập tên sản phẩm"></input>
+            <form onSubmit={handleSearch}>
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Nhập tên sản phẩm">
+              </input>
+            </form>
           </div>
 
           <div className="sort">
@@ -119,7 +170,7 @@ function ManageProducts() {
         <div className="ManageProducts-paging">
           <button
             onClick={() => setCurrentPage(currentPage - 1)}
-            disabled={currentPage <= 1}
+            disabled={currentPage <= 1 || loading}
           >
             Trước
           </button>
@@ -131,7 +182,7 @@ function ManageProducts() {
 
           <button
             onClick={() => setCurrentPage(currentPage + 1)}
-            disabled={currentPage >= totalPages}
+            disabled={currentPage >= totalPages || loading}
           >
             Sau
           </button>
