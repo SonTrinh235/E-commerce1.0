@@ -17,9 +17,8 @@
   width: fit-content;
   padding: 20px 30px;
   text-align: center;
-  background: hsl(87, 75%, 45%);
+  background: hsl(85, 68%, 45%);
   border-radius: 20px;
-  box-shadow: 0 0 10px 10px rgba(0, 0, 0, 0.1);
 }
 
 .CheckoutOrderPreview-container #title h2 {
@@ -65,12 +64,15 @@
 }
 
 .CheckoutOrderPreview-container #navigate button:hover {
-  box-shadow: 0 0 0px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 0px 8px rgba(0, 0, 0, 0.1);
 }
 
 .CheckoutOrderPreview-container #navigate #continueshopping {
-    background: hsl(87, 75%, 45%);
-    color: white;
+  background: hsl(85, 68%, 45%);
+  color: white;
+}
+.CheckoutOrderPreview-container #navigate #continueshopping:hover {
+  box-shadow: 0 0 0px 8px hsla(85, 98%, 45%, 0.3);
 }
 
 .CheckoutOrderPreview-container #navigate #vieworders {

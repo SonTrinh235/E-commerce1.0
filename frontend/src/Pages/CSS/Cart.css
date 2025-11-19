@@ -97,7 +97,7 @@
   height: 58px;
   outline: none;
   border: none;
-  background: hsl(0, 100%, 60%);
+  background: hsl(85, 68%, 45%);
   color: white;
   font-size: 16px;
   font-weight: 600;
@@ -106,13 +106,11 @@
   border-radius: 15px;
 }
 .Cart-total button:hover {
-  background: hsl(0, 100%, 65%);
-  box-shadow: 0 0 0px 10px rgba(255, 0, 0, 0.3);
+  background: hsl(85, 68%, 55%);
+  box-shadow: 0 0 0px 10px hsla(85, 100%, 45%, 0.3);
 }
 .Cart-total button:active {
-  transform: translateY(4px);
-  background: hsl(0, 100%, 40%);
-  box-shadow: 0 0 30px 15px rgba(255, 0, 0, 0.3);
+  background: hsl(85, 68%, 45%);
 }
 
 .Cart-promocode {
@@ -146,13 +144,14 @@
   width: 170px;
   height: 58px;
   font-size: 16px;
-  background: black;
+  background: rgb(68, 68, 68);
+  border: none;
   color: white;
   cursor: pointer;
 }
 
 .Cart-promobox button:hover {
-  background: #333;
+  background: rgb(49, 49, 49);
 }
 
 .Cart-quantity-control {

@@ -22,6 +22,7 @@ const Checkout = () => {
     cartItems,
     cartTotalItems,
     productsLookup,
+    appliedVoucher,
     resetCart,
   } = useContext(CartContext);
 
@@ -47,6 +48,34 @@ const Checkout = () => {
     };
   });
 
+  const SHIPPING_FEE = 0;
+
+    const calculateDiscountAmount = () => {
+    if (!appliedVoucher) return 0;
+
+    const voucherType = appliedVoucher.discountType;
+    const voucherValue = appliedVoucher.discountValue;
+    const subtotal = cartTotal;
+
+    if (voucherType === "percentage") {
+      return (subtotal * voucherValue/100);
+    } else if (voucherType === "fixed") {
+      return Math.min(subtotal, voucherValue);
+    }
+    return 0;
+  };
+
+  const getShippingFee = () => {
+    return SHIPPING_FEE;
+  };
+
+  const getFinalTotal = () => {
+    const subtotal = cartTotal;
+    const discount = calculateDiscountAmount();
+    // const shippingFee = getShippingFee();
+    return subtotal - discount + SHIPPING_FEE;
+  };
+
 
   // Snapshots to display order preview upon order create
   const [orderSnapshot, setOrderSnapshot] = useState(null);
@@ -58,7 +87,7 @@ const Checkout = () => {
     setOrderSnapshot(orderContent);
     setOrderLookupSnapshot(productsLookup);
     setOrderTotalItemSnapshot(cartTotalItems);
-    setOrderTotalSnapshot(cartTotal);
+    setOrderTotalSnapshot(getFinalTotal());
   };
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("CASH");
@@ -105,15 +134,25 @@ const Checkout = () => {
     console.log("Checkout: Order content: ", orderContent);
     console.log("Checkout: Payment method: ", selectedPaymentMethod);
 
+    let userPublicIp = null;
     // Call API
-    try {
-      const userPublicIp = await getPublicIp();
 
+    // fetch IP
+    try {
+      userPublicIp = await getPublicIp();
+    } catch(error) {
+      console.log("IP fetch failed", error);
+      return
+    }
+
+    // create order
+    try {
       const res = await createOrder({
         userId: userId,
         paymentMethod: selectedPaymentMethod,
         productsInfo: orderContent,
-        ipAddr: userPublicIp
+        voucherCode: appliedVoucher?.code || null,
+        ipAddr: userPublicIp,
       });
       
       // Open payment page if should
@@ -219,7 +258,10 @@ const Checkout = () => {
             <div className="Checkout-summary">
               <h3>Tổng Quan Đơn Hàng</h3>
               <p>Tổng số lượng: {cartTotalItems} sản phẩm</p>
-              <h3>Tổng thanh toán: {vnd(cartTotal)}</h3>
+              <b> Giá trị hàng: {vnd(cartTotal)}</b>
+              <p> Giảm giá: {vnd(calculateDiscountAmount())}</p>
+              <p> Phí vận chuyển: {vnd(getShippingFee())}</p>
+              <h3>Tổng thanh toán: {vnd(getFinalTotal())}</h3>
             </div>
 
             {/* Payments */}

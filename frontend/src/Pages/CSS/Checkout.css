@@ -121,7 +121,8 @@
 .Checkout-placeorder {
   padding: 10px;
   height: 3rem;
-  background: hsl(50, 100%, 50%);
+  background: hsl(0, 100%, 42%);
+  color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -131,13 +132,10 @@
 }
 
 .Checkout-placeorder:hover {
-  background: hsl(50, 100%, 60%);
-  box-shadow: 0 0 0px 10px rgba(255, 213, 0, 0.3);
+  box-shadow: 0 0 0px 10px hsla(0, 100%, 42%,0.3);
 }
 .Checkout-placeorder:active {
-  background: hsl(50, 100%, 40%);
-  box-shadow: 0 3px 10px 10px rgba(0, 0, 0, 0.1);
-  transform: translateY(4px);
+  background: hsl(0, 100%, 38%);
 }
 
 
