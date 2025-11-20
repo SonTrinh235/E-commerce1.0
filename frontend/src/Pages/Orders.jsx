@@ -70,6 +70,28 @@ function Orders() {
     toggleViewOrder();
   };
 
+
+  // Function to handle escape to close form
+  const handleEscape = (event) => {
+    if (event.key === 'Escape') {
+      // Only close if the form is actually visible
+      if (viewOrderVisible) {
+        setViewOrderVisible(false);
+      }
+    }
+  };
+
+  // useEffect Hook for event listener
+  useEffect(() => {
+    document.addEventListener('keydown', handleEscape);
+    // cleanup listener
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [viewOrderVisible]);
+
+
+
   return (
     <div className="Orders-container">
       <div className="Orders-table-container">
