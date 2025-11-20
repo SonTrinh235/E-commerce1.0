@@ -1,8 +1,10 @@
 import "./OrderRow.css";
+import DefaultImage from "../../assets/placeholder-image.png";
+
 // Import utils
 import { vnd } from "../../utils/currencyUtils.js";
 import { formatDate } from "../../utils/dateUtils.js";
-import DefaultImage from "../../assets/placeholder-image.png";
+import { shipStatusMap, paymentStatusMap } from "../../utils/constantsMap.js"
 
 function OrderRow(props) {
   const { order, index, onView } = props;
@@ -33,13 +35,13 @@ function OrderRow(props) {
         }
       </td>
       <td id="total">{vnd(order.amount)}</td>
-      <td id="payment" style={{ textTransform: "capitalize" }}>
-        <b>
-          {order.paymentStatus}
-        </b>
+      <td className={`payment ${order.paymentStatus}`}>
+        <span>
+          {paymentStatusMap[order.paymentStatus]}
+        </span>
       </td>
-      <td id="status" style={{ textTransform: "capitalize" }}>
-        <b>{order.status}</b>
+      <td classname={`status ${order.status}`}>
+        <b>{shipStatusMap[order.status]}</b>
       </td>
       <td id="date">{formatDate(order.createdAt)}</td>
       <td id="action">
