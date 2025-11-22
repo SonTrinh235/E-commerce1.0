@@ -1,0 +1,84 @@
+.OrderForm-container {
+  position: relative;
+  background: rgb(230, 230, 230);
+  width: clamp(300px, 35%, 1000px);
+  display: flex;
+  flex-direction: column;
+  /* justify-content: center; */
+  align-items: center;
+  border-radius: 40px;
+  padding: 40px 80px;
+}
+
+.OrderForm-container header {
+    padding: 30px;
+    margin-bottom: 20px;
+    
+    background: rgb(248, 248, 248);
+    border-radius: 20px;
+    
+    text-align: center;
+}
+
+.OrderForm-container header .status {
+  margin-top: 10px;
+  padding: 20px 60px;
+  
+  
+  border-radius: 12px;
+  
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+
+
+
+.OrderForm-options {
+    margin-top: 10px;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));;
+    gap: 10px;
+}
+
+.OrderForm-options button {
+  width: 9rem;
+  height: 4rem;
+  
+  border-radius: 15px;
+  border: none;
+  
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.OrderForm-options button:not(:disabled):hover {
+  box-shadow: 0 0 0 8px hsla(0, 0%, 0%, 0.2);
+}
+
+.OrderForm-options button:disabled {
+  background: lightgrey;
+  color: grey;
+  cursor: not-allowed;
+}
+
+#OrderForm-cancel {
+  position: absolute;
+  top: 0px;
+  right: 40px;
+  width: 9rem;
+  height: 3rem;
+  border: none;
+  background: rgb(175, 0, 0);
+  border-radius: 0px 0px 20px 20px;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}

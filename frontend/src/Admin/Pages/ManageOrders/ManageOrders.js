@@ -1,38 +1,70 @@
-import React, { useEffect, useState } from "react";
-import { getAllOrders, updateOrderStatus } from "../../../api/orderService";
+import React, { useEffect, useState, useRef } from "react";
+import { getAllOrders, searchOrders, updateOrderStatus } from "../../../api/orderService";
 import AdminOrder from '../../Components/AdminOrder/AdminOrder'
+import OrderForm from "../../Components/OrderForm/OrderForm";
+import LoadingOverlay from "../../../Components/LoadingOverlay/LoadingOverlay";
 import "./ManageOrders.css";
 
 import { FiSearch } from "react-icons/fi"
+
+// Import APIs
+import { getPaymentByOrderId, refundOrder } from "../../../api/paymentService";
+
+// Import utils
+import { shipStatusMap } from "../../../utils/constantsMap";
+import useDebounce from "../../../utils/useDebounce";
 
 export default function ManageOrder() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500); // searchTerm with a 500ms update delay
   const [statusFilter, setStatusFilter] = useState("all");
+  
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(1);
+  
+  const [limit, setLimit] = useState(20);
+
+  const prevSearchRef = useRef(debouncedSearchTerm);
+  const prevPageRef = useRef(currentPage);
+
+  const fetchOrders = () => {
+    const searchChanged = debouncedSearchTerm !== prevSearchRef.current;
+    const pageChanged = currentPage !== prevPageRef.current;
+    // if search change
+    if (searchChanged) {
+      if (debouncedSearchTerm.trim() === '' ) {
+        fetchOrdersAll(currentPage, limit);
+      } else {
+        fetchSearchOrders(debouncedSearchTerm, 1, limit);
+      }
+    }
+    else if (pageChanged) {
+      if (debouncedSearchTerm.trim() === '' ) {
+        fetchOrdersAll(currentPage, limit);
+      } else {
+        fetchSearchOrders(debouncedSearchTerm, currentPage, limit);
+      }
+    }
+    prevPageRef.current = currentPage;
+    prevSearchRef.current = debouncedSearchTerm;
+  };
+
 
   // Gọi API lấy danh sách đơn hàng
-  const fetchOrders = async (page = 1) => {
+  const fetchOrdersAll = async (page = 1) => {
     try {
       setLoading(true);
-      const res = await getAllOrders(page, 20);
+      const res = await getAllOrders(page, limit);
       if (res?.success) {
-        // setOrders(res.data.list || []);
-        // Merge server orders with any locally saved guest orders
-        const serverOrders = res.data.list || [];
-        let guestOrders = [];
-        try {
-          guestOrders = JSON.parse(localStorage.getItem('guestOrders') || '[]');
-        } catch (e) { guestOrders = []; }
-
-        // Avoid duplicate IDs (server may not have guest IDs)
-        const merged = [...guestOrders, ...serverOrders];
-        setOrders(merged);
-        setTotalPages(Math.ceil((res.data.total || 0) / 20));
+        setOrders(res.data.list || []);
+        setTotalPages(Math.ceil((res.data.total || 0) / limit));
         setCurrentPage(page);
+        setTotalCount(res.data.total);
       } else {
         setError("Không thể tải danh sách đơn hàng.");
       }
@@ -45,34 +77,44 @@ export default function ManageOrder() {
   };
 
   useEffect(() => {
-    fetchOrders();
+    fetchOrdersAll();
   }, []);
 
+  const fetchSearchOrders = async (query, page = 1, limit = 20) => {
+    setLoading(true);
+    try {
+      const res = await searchOrders(query, page, limit);
+      if (res?.success) {
+        setOrders(res.data.list || []);
+        setTotalPages(Math.ceil((res.data.total || 0) / limit));
+        setCurrentPage(page);
+        setTotalCount(res.data.total);
+      } else {
+        setError("Không thể tải danh sách đơn hàng.");
+      };
+    } catch(error) {
+      console.log(error);
+      alert("Search order failed");
+    }
+    setLoading(false);
+  }
+      
+      
   // (Admin create-order removed) Orders are created by users via Checkout; admin manages statuses only.
 
   // Cập nhật trạng thái đơn hàng
   const handleUpdateStatus = async (orderId, newStatus) => {
-    // If this is a guest/local order, update localStorage instead of calling server
-    if (orderId && String(orderId).startsWith("guest_")) {
-      try {
-        const stored = JSON.parse(localStorage.getItem('guestOrders') || '[]');
-        const updated = stored.map(o => o._id === orderId ? { ...o, status: newStatus, updatedAt: new Date().toISOString() } : o);
-        localStorage.setItem('guestOrders', JSON.stringify(updated));
-        // update UI
-        setOrders(prev => prev.map(order => order._id === orderId ? { ...order, status: newStatus } : order));
-        alert('Cập nhật trạng thái (local) thành công!');
-        return;
-      } catch (e) {
-        console.error('Failed to update guest order locally', e);
-        alert('Lỗi khi cập nhật đơn hàng local: ' + (e.message || e));
-        return;
-      }
-    }
+    if (!window.confirm(`Xác nhận trạng thái mới: ${shipStatusMap[newStatus]}`)) return;
+    setLoading(true);
 
     try {
       // call API and capture response
       const res = await updateOrderStatus(orderId, newStatus);
-      console.log("updateOrderStatus response:", res);
+
+      if (['cancelled', 'cancelled_due_to_insufficient_stock', 'returned'].includes(newStatus)) {
+        await handleRefundOrder(orderId);
+      }
+
       if (res?.success) {
         // Cập nhật trạng thái trong state thay vì reload toàn bộ
         setOrders(prevOrders => 
@@ -95,44 +137,107 @@ export default function ManageOrder() {
       if (err.data) extra += ` - ${JSON.stringify(err.data)}`;
       alert("Lỗi khi cập nhật trạng thái: " + (err.message || String(err)) + extra);
     }
+    setIsFormVisible(false);
+    setLoading(false);
   };
 
-  // Hủy đơn hàng (chỉ cập nhật trạng thái)
-  const handleDeleteOrder = async (orderId) => {
-    if (!window.confirm("Bạn có chắc muốn hủy đơn hàng này không?")) return;
-    // If guest/local order, remove from localStorage and state
-    if (orderId && String(orderId).startsWith("guest_")) {
-      try {
-        const stored = JSON.parse(localStorage.getItem('guestOrders') || '[]');
-        const filtered = stored.filter(o => o._id !== orderId);
-        localStorage.setItem('guestOrders', JSON.stringify(filtered));
-        setOrders(prev => prev.filter(o => o._id !== orderId));
-        alert('Đã hủy đơn hàng local.');
-        return;
-      } catch (e) {
-        console.error('Failed to delete guest order locally', e);
-        alert('Lỗi khi xóa đơn hàng local: ' + (e.message || e));
-        return;
-      }
+
+
+  const handleRefundOrder = async (orderId) => {
+    setLoading(true);
+    let paymentResponse = null;
+    try {
+      paymentResponse = await getPaymentByOrderId(orderId);
+    } catch(error) {
+      console.log(error);
+      alert("Get payment info failed during refund"); 
+    }
+    const paymentInfo = paymentResponse.data
+
+    // Let pass if COD order
+    if (paymentInfo.method === 'CASH') {
+      return;
     }
 
-    handleUpdateStatus(orderId, "canceled");
+    try {
+      const res = await refundOrder(orderId, {
+        userId: paymentInfo.userId,
+        transDate: paymentInfo.vnpPayDate,
+        amount: paymentInfo.amount,
+        ipAddr: paymentInfo.ipAddr,
+      });
+      
+      if (res?.success) {
+        setOrders(prevOrders => 
+          prevOrders.map(order => 
+            order._id === orderId ? { ...order, paymentStatus: 'refunding' } : order
+          )
+        );
+        alert("Hoàn tiền thành công!");
+      } else {
+        // Show server-provided message if available for easier debugging
+        const msg =
+        res?.message ||
+        (res && JSON.stringify(res)) ||
+        "Hoàn tiền không thành công.";
+        console.warn("Failed to refund:", res);
+        alert("Hoàn tiền không thành công: " + msg);
+      }
+    } catch (error) {
+      console.log(error);
+      alert("Refund failed");
+    }
+    setIsFormVisible(false);
+    setLoading(false);
   };
+
+
+
+
+  // Form related
+  const [isFormVisible, setIsFormVisible] = useState(false);
+  const [formCurrentItem, setFormCurrentItem] = useState(null);
+
+  const openForm = (currentItem = null) => {
+    console.log(currentItem);
+    setFormCurrentItem(currentItem);
+    setIsFormVisible(true);
+  };
+
+
+
+  // Function to handle escape to close form
+  const handleEscape = (event) => {
+    if (event.key === 'Escape') {
+      // Only close if the form is actually visible
+      if (isFormVisible) {
+        setIsFormVisible(false);
+      }
+    }
+  };
+
+  // useEffect Hook for event listener
+  useEffect(() => {
+    document.addEventListener('keydown', handleEscape);
+    // cleanup listener
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isFormVisible]);
+
+
+
 
   // Lọc đơn hàng theo tìm kiếm và trạng thái
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = order._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.userId?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    return matchesStatus;
   });
 
-  // Xử lý phân trang
-  const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      fetchOrders(newPage);
-    }
-  };
+  // Fetch new page upon page change
+  useEffect(() => {
+    fetchOrders()
+  }, [currentPage, debouncedSearchTerm]);
 
   return (
     <div className="manage-order-container">
@@ -140,7 +245,7 @@ export default function ManageOrder() {
         <h2 className="manage-order-title"><span>📦</span> Quản lý đơn hàng</h2>
         <div className="order-stats">
           <span className="stat-item">
-            {orders.length} đơn hàng
+            {totalCount} đơn hàng
           </span>
         </div>
       </div>
@@ -150,10 +255,10 @@ export default function ManageOrder() {
       {/* Bộ lọc và tìm kiếm */}
       <div className="order-filters">
         <div className="search-box">
-          <span className="search-icon"><FiSearch/></span>
+          <span className="search-icon"><FiSearch stroke="grey"/></span>
           <input
             type="text"
-            placeholder="Tìm kiếm theo ID hoặc tên khách hàng..."
+            placeholder="Tìm kiếm đơn hàng"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="search-input"
@@ -172,7 +277,7 @@ export default function ManageOrder() {
             <option value="in_transit">Đang vận chuyển</option>
             <option value="delivered">Đã giao</option>
             <option value="returned">Đã trả hàng</option>
-            <option value="canceled">Đã hủy</option>
+            <option value="cancelled">Đã hủy</option>
             <option value="cancelled_due_to_insufficient_stock">Hủy do thiếu hàng</option>
             <option value="refunding">Đang hoàn tiền</option>
             <option value="refunded">Đã hoàn tiền</option>
@@ -182,30 +287,32 @@ export default function ManageOrder() {
 
       {/* Loading và Error States */}
       {loading && (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p className="loading-text">Đang tải dữ liệu...</p>
-        </div>
+        // <div className="loading-container">
+        //   <div className="loading-spinner"></div>
+        //   <p className="loading-text">Đang tải dữ liệu...</p>
+        // </div>
+        <LoadingOverlay/>
       )}
 
       {error && (
         <div className="error-container">
           <p className="error-text">{error}</p>
-          <button onClick={() => fetchOrders(currentPage)} className="retry-btn">
+          <button onClick={() => fetchOrdersAll(currentPage)} className="retry-btn">
             Thử lại
           </button>
         </div>
       )}
 
       {/* Bảng đơn hàng */}
-      {!loading && !error && (
+      {!error && (
         <div className="table-container">
           <table className="admin-order-table">
             <thead>
               <tr>
-                <th>ID Đơn hàng</th>
+                <th>Đơn hàng</th>
+                <th>Nội dung</th>
                 <th>Khách hàng</th>
-                <th>Số tiền</th>
+                <th>Thu tiền</th>
                 <th>Phương thức</th>
                 <th>Thanh toán</th>
                 <th>Trạng thái</th>
@@ -215,25 +322,16 @@ export default function ManageOrder() {
             </thead>
             <tbody>
               {filteredOrders.length > 0 ? (
-                filteredOrders.map((order) => (
+                filteredOrders.map((order) => {
+                  return (
                     <AdminOrder
-                      id={order._id}
-                      customerName={order.userId || order.shipping?.name || 'Guest'}
-                      // isGuest={String(order._id).startsWith('guest_')}
-                      amount={order.amount ?? order.productsInfo?.reduce((sum, p) => sum + (p.price * p.quantity), 0)}
-                      paymentMethod={order.paymentMethod}
-                      paymentStatus={order.paymentStatus}
-                      status={order.status}
-                      createdAt={order.createdAt}
-                      onEdit={(newStatus) =>
-                        handleUpdateStatus(order._id, newStatus)
-                      }
-                      onDelete={() => handleDeleteOrder(order._id)}
+                      order={order}
+                      onUpdate={() => openForm(order)}
                     />
-                ))
+                )})
               ) : (
                 <tr>
-                  <td colSpan="6" className="no-data">
+                  <td colSpan="9" className="no-data">
                     {searchTerm || statusFilter !== "all" 
                       ? "Không tìm thấy đơn hàng phù hợp"
                       : "Không có đơn hàng nào"
@@ -250,7 +348,7 @@ export default function ManageOrder() {
       {!loading && !error && totalPages > 1 && (
         <div className="pagination">
           <button 
-            onClick={() => handlePageChange(currentPage - 1)}
+            onClick={() => setCurrentPage(currentPage - 1)}
             disabled={currentPage === 1}
             className="page-btn"
           >
@@ -261,7 +359,7 @@ export default function ManageOrder() {
             {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
               <button
                 key={page}
-                onClick={() => handlePageChange(page)}
+                onClick={() => setCurrentPage(page)}
                 className={`page-number ${currentPage === page ? 'active' : ''}`}
               >
                 {page}
@@ -270,12 +368,24 @@ export default function ManageOrder() {
           </div>
 
           <button 
-            onClick={() => handlePageChange(currentPage + 1)}
+            onClick={() => setCurrentPage(currentPage + 1)}
             disabled={currentPage === totalPages}
             className="page-btn"
           >
             Sau →
           </button>
+        </div>
+      )}
+
+
+      {isFormVisible && (
+        <div id="OrderForm-overlay">
+          <OrderForm
+            order={formCurrentItem}
+            onEdit={(newStatus) => handleUpdateStatus(formCurrentItem._id, newStatus)}
+            onRefund={(orderId) => {if (window.confirm('Xác nhận hoàn tiền cho đơn hàng?')) handleRefundOrder(orderId)}}
+            onCancel={() => setIsFormVisible(false)}
+          />
         </div>
       )}
     </div>
