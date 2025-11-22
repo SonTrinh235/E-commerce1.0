@@ -19,7 +19,7 @@ export const shipStatusMap = {
     'in_transit': 'Đang giao hàng',
     'delivered': 'Giao thành công',
     'returned': 'Trả hàng',
-    'canceled': 'Đã hủy',
+    'cancelled': 'Đã hủy',
     'cancelled_due_to_insufficient_stock': 'Hủy do thiếu hàng',
     'cancelled_due_to_payment_expiry': 'Hủy do trễ thanh toán',
     'refunding': 'Đang hoàn tiền',

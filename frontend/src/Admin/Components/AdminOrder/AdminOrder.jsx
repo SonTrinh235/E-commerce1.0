@@ -1,51 +1,145 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "./AdminOrder.css";
+import DefaultImage from "../../../assets/placeholder-image.png";
 
-export default function AdminOrder({ id, customerName, amount, paymentMethod, paymentStatus, status, createdAt, onEdit, onDelete, isGuest }) {
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit", 
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
+// Import utils
+import {
+  shipStatusMap,
+  paymentStatusMap,
+  paymentMethodMap,
+} from "../../../utils/constantsMap";
+import { vnd } from "../../../utils/currencyUtils";
+import { formatDate } from "../../../utils/dateUtils";
+
+export default function AdminOrder(props) {
+  const { order, onUpdate } = props;
+  const shipInfo = order.shippingAddressInfo;
+
+  // Dtails expanded
+  const [isExpanded, setIsExpanded] = useState(false);
+  const toggleDetails = () => {
+    setIsExpanded(!isExpanded);
   };
+
+  // Reset expanded state on order change
+  useEffect(() => {
+    setIsExpanded(false);
+  },[order])
 
   return (
     <>
-    <tr className="AdminOrder-row">
+      <tr
+        className={`AdminOrderRow ${isExpanded ? "expanded" : ""}`}
+        onClick={toggleDetails}
+      >
+        <td>
+          <img src={order.productsInfo[0]?.productImageUrl} />
+        </td>
+        <td>
+          {order.productsInfo.map((item, index) => (
+            <span key={index}>
+              {/* Bold the quantity and the 'x' */}
+              <b style={{ color: "hsl(87, 75%, 35%)" }}>{item.quantity}</b>
+              {"x "}
+              <b>{item.productName}</b>
+              {/* Add comma and space unless it's the last item */}
+              {index < order.productsInfo.length - 1 ? ", " : ""}
+            </span>
+          ))}
+        </td>
+        <td>{shipInfo?.displayName || order.userId}</td>
+        <td>{vnd(order.grandTotal || order.amount)}</td>
+        <td>
+          <span className={`badge method ${order.paymentMethod}`}>
+            {paymentMethodMap[order.paymentMethod]}
+          </span>
+        </td>
+        <td>
+          <span className={`badge payment ${order.paymentStatus}`}>
+            {paymentStatusMap[order.paymentStatus]}
+          </span>
+        </td>
+        <td>
+          <span className={`status ${order.status}`}>
+            {shipStatusMap[order.status]}
+          </span>
+        </td>
+        <td>{formatDate(order.createdAt)}</td>
+        <td
+          className="admin-order-actions"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <button className="action-btn" onClick={onUpdate}>
+            Cập nhật
+          </button>
+        </td>
+      </tr>
 
-      <td>#{id}</td>
-      <td>
-        {customerName}
-        {isGuest && <span className="local-badge"> Local</span>}
-      </td>
-      <td>{amount?.toLocaleString()} ₫</td>
-      <td>
-        <span className={`badge method ${paymentMethod?.toLowerCase()}`}>{paymentMethod}</span>
-      </td>
-      <td>
-        <span className={`badge payment ${paymentStatus?.toLowerCase()}`}>{paymentStatus}</span>
-      </td>
-      <td>
-        <span className={`status ${status?.toLowerCase()}`}>{status}</span>
-      </td>
-      <td>{formatDate(createdAt)}</td>
-      <td className="admin-order-actions">
-        <button className="action-btn process" onClick={() => onEdit("processing")} disabled={isGuest}>
-          Xử lý
-        </button>
-        <button className="action-btn ship" onClick={() => onEdit("delivered")} disabled={isGuest}>
-          Giao xong
-        </button>
-        <button className="action-btn cancel" onClick={onDelete} disabled={isGuest}>
-          Hủy
-        </button>
-      </td>
-    </tr>
+      {/* Order details extra row */}
+      {isExpanded && (
+        <tr className="AdminOrder-details-row">
+          <td style={{ background: "hsl(34, 60%, 95%)" }}></td>
+          <td colSpan="8">
+            <div className="AdminOrder-details-content">
+
+              <div className="header">
+                <h3>Đơn hàng {order._id}</h3>
+                <p style={{display: 'inline', paddingRight: '20px'}}>Của khách {order.userId}</p>
+                <a style={{color: 'grey'}}>Lúc {formatDate(order.createdAt)}</a>
+              </div>
+
+              <hr></hr>
+
+              <div className="products-list">
+                {order.productsInfo.map((item) => {
+                  return (
+                    <div key={item.productId} className="listitem">
+                      <img
+                        src={item.productImageUrl || DefaultImage}
+                        alt={item.productName}
+                      />
+                      <div>
+                        <h3>{item.productName}</h3>
+                        <p>
+                          Số lượng {item.quantity} x {vnd(item.price)} ={" "}
+                          <b>{vnd(item.price * item.quantity)}</b>
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <hr></hr>
+
+              <div className="amount">
+                <p> Giá trị hàng: {vnd(order.amount)}</p>
+                <p>Voucher: {order.voucherInfo?.code || 'Không'}</p>
+                { order.voucherInfo && (
+                  <p> Giảm giá: {vnd(order.voucherInfo.discountAmount)}</p>
+                )}
+                <p> Phí vận chuyển: {vnd(order.shippingFee || 0)}</p>
+                <div><b>Tổng thu: {vnd(order.grandTotal || order.amount)}</b></div>
+              </div>
+
+
+              {shipInfo && (
+                <div className="shipping-address-block">
+                  <h3>Giao đến:</h3>
+                  <b>Người nhận:</b>
+                  <p>Tên gọi: {shipInfo.displayName}</p>
+                  <p>Số điện thoại: {shipInfo.phoneNumber}</p>
+                  <b>Địa chỉ:</b>
+                  <p>{shipInfo.street}, {shipInfo.wardName}, {shipInfo.districtName}, {shipInfo.provinceName}</p>
+                  <b>Ghi chú:</b>
+                  <p>"{shipInfo.note}"</p>
+                </div>
+              )}
+
+            </div>
+          </td>
+        </tr>
+      )}
     </>
   );
 }

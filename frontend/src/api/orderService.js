@@ -8,6 +8,19 @@ export function getAllOrders(page = 1, limit = 20) {
   });
 }
 
+// Search order
+export function searchOrders(query, page = 1, limit = 20) {
+  console.log(`Calling searchOrders(${query}, ${page}, ${limit})`);
+  return apiFetch(`/order/orders/search`, {
+    params: {
+      query: query,
+      page: page,
+      limit: limit
+    },
+    method: "GET",
+  });
+}
+
 // Lấy chi tiết 1 đơn hàng theo id
 export async function getOrderById(orderId) {
   console.log(`🧾 Calling getOrderById(${orderId})`);
