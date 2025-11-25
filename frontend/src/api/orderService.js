@@ -64,6 +64,16 @@ export function createOrder(orderData) {
       productsInfo: orderData.productsInfo,
       voucherCode: orderData.voucherCode,
       ipAddr: orderData.ipAddr,
+      // include shippingFee and shippingAddressInfo (match Checkout payload)
+      shippingFee: orderData.shippingFee || null,
+      shippingAddressInfo: orderData.shippingAddressInfo || null,
+      // backwards-compatible fields
+      // shipping information (optional) — include both structured object and printable string
+      shippingAddress: orderData.shippingAddress || null,
+      shippingAddressString: orderData.shippingAddressString || null,
+      contactName: orderData.contactName || null,
+      contactPhone: orderData.contactPhone || null,
+      contactEmail: orderData.contactEmail || null,
     },
   });
 }

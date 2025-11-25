@@ -1,0 +1,24 @@
+.profile-page {
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+.profile-card {
+  width: 700px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+.profile-card h2 { margin-bottom: 12px; }
+.row { margin-bottom: 12px; }
+.row label { display:block; font-weight:600; margin-bottom:6px }
+.row-inline { display:flex; gap:8px }
+.row-inline input { flex:1; padding:8px }
+.row-inline button { padding:8px 12px }
+.address-summary { display:flex; justify-content:space-between; align-items:center }
+.address-summary button { padding:6px 10px }
+
+.profile-modal { position: fixed; inset:0; background: rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center }
+.profile-modal-body { width:620px; background:#fff; padding:18px; border-radius:6px }
+.modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px }

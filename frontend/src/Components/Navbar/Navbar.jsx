@@ -203,6 +203,11 @@ const Navbar = () => {
                 <FiPackage className="nav-icons" />
               </Link>
             </div>
+            <div className="nav-profile-link" style={{ marginLeft: 8 }}>
+              <Link to="/profile" title={"Trang cá nhân"}>
+                <FiUser className="nav-icons" />
+              </Link>
+            </div>
             <div className="nav-cart">
               <Link to="/cart" title={isCartLoading ? "Đang tải giỏ hàng..." : `${cartCount} sản phẩm`}>
                 <FiShoppingCart className="nav-icons" />

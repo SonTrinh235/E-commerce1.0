@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import "./CSS/LoginSignup.css";
 import { auth } from "../firebase";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import AddressSelector from "../Components/AddressSelector/AddressSelector";
+import { editAddress } from "../api/userService";
 
 let recaptchaVerifier = null;
 
@@ -19,51 +21,54 @@ const LoginSignup = () => {
 
   const [showProfilePopup, setShowProfilePopup] = useState(false);
   const [fullName, setFullName] = useState("");
-  const [address, setAddress] = useState("");
+  // addressObj shape: { province, district, ward, houseNumber }
+  const [addressObj, setAddressObj] = useState(null);
 
   const handleSaveProfile = async () => {
-    if (!fullName || !address) {
+    if (!fullName || !addressObj) {
       alert("Vui lòng nhập đầy đủ thông tin!");
       return;
     }
 
     const token = localStorage.getItem("userToken");
+    // Build a human readable address string as fallback for older backends
+    const addressString = `${addressObj.houseNumber || ""}, ${addressObj.ward?.name || ""} - ${addressObj.district?.name || ""} - ${addressObj.province?.name || ""}`;
+
+    const payload = {
+      fullName,
+      address: addressObj,
+      addressString,
+    };
+
     try {
-      const res = await fetch("https://www.bachkhoaxanh.xyz/user/updateProfile", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ fullName, address }),
-      });
+      // Call server API to update profile/address
+      await editAddress(payload);
 
-      const json = await res.json();
-      if (json.success) {
-        // Cập nhật ngay localStorage để Navbar hiển thị tên mới
-        try {
-          const old = JSON.parse(localStorage.getItem("userInfo") || "{}");
-          const updated = {
-            ...old,
-            user: {
-              ...(old?.user || {}),
-              displayName: fullName, // map fullName -> displayName để UI dùng đồng nhất
-              address,
-            },
-          };
-          localStorage.setItem("userInfo", JSON.stringify(updated));
-          window.dispatchEvent(new Event("auth-changed"));
-        } catch {}
-
-        alert("Cập nhật thông tin thành công!");
-        setShowProfilePopup(false);
-        window.location.href = "/";
-      } else {
-        alert("Lỗi cập nhật: " + (json.message || "Không rõ lỗi"));
+      // Update localStorage to reflect new info for Navbar and Checkout
+      try {
+        const old = JSON.parse(localStorage.getItem("userInfo") || "{}");
+        const updated = {
+          ...old,
+          user: {
+            ...(old?.user || {}),
+            displayName: fullName,
+            address: payload.address,
+            addressString,
+          },
+        };
+        localStorage.setItem("userInfo", JSON.stringify(updated));
+        localStorage.setItem("userAddress", JSON.stringify(payload.address));
+        window.dispatchEvent(new Event("auth-changed"));
+      } catch (e) {
+        console.warn("Failed to update localStorage after editAddress", e);
       }
+
+      alert("Cập nhật thông tin thành công!");
+      setShowProfilePopup(false);
+      window.location.href = "/";
     } catch (e) {
-      alert("Lỗi mạng khi cập nhật hồ sơ!");
       console.error(e);
+      alert("Lỗi khi cập nhật hồ sơ: " + (e.message || ""));
     }
   };
 
@@ -329,12 +334,9 @@ const LoginSignup = () => {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
             />
-            <input
-              type="text"
-              placeholder="Địa chỉ"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
+            <div style={{ marginTop: 8 }}>
+              <AddressSelector value={addressObj} onChange={(addr) => setAddressObj(addr)} />
+            </div>
             <button onClick={handleSaveProfile}>Lưu thông tin</button>
           </div>
         </div>

@@ -8,7 +8,7 @@ const BASE_URL = "https://www.bachkhoaxanh.xyz";
  */
 export async function apiFetch(endpoint, options = {}) {
   // Set default method to GET
-  const { method, params = {}, body } = options;
+  const { method = "GET", params = {}, body, headers: userHeaders = {} } = options;
 
   // 1. BUILD QUERY STRING
   const queryParams = new URLSearchParams(params).toString();
@@ -17,11 +17,17 @@ export async function apiFetch(endpoint, options = {}) {
   const url = `${BASE_URL}${endpoint}${queryParams ? "?" + queryParams : ""}`;
 
   // 3. BUILD FETCH CONFIG
+  // attach Authorization header automatically when token exists in localStorage
+  const token = typeof window !== "undefined" ? localStorage.getItem("userToken") : null;
+  const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
+
   const config = {
-    method: method,
+    method,
     headers: {
       // Default headers if body not FormData
-      ...(body instanceof FormData ? {} : { 'Content-Type': 'application/json' })
+      ...(body instanceof FormData ? {} : { "Content-Type": "application/json" }),
+      ...authHeader,
+      ...userHeaders,
     },
   };
   // Add body if has
@@ -44,12 +50,27 @@ if (body) {
     const res = await fetch(url, config); // Pass the config object
 
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({})); // Try to parse error message
-      throw new Error(
-        `HTTP error! Status: ${res.status} - ${
-          errorData.message || res.statusText
-        }`
-      );
+      // Try to parse error body as JSON, fallback to text
+      let errorData;
+      try {
+        errorData = await res.json();
+      } catch (err) {
+        try {
+          errorData = await res.text();
+        } catch (err2) {
+          errorData = null;
+        }
+      }
+      console.error("[API Fetch] HTTP error response:", {
+        url,
+        status: res.status,
+        statusText: res.statusText,
+        body: errorData,
+      });
+      const apiError = new Error(`HTTP error! Status: ${res.status} - ${res.statusText}`);
+      apiError.status = res.status;
+      apiError.body = errorData;
+      throw apiError;
     }
 
     // Ignore return data if status No Content
