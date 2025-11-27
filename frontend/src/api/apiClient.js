@@ -44,7 +44,7 @@ if (body) {
   // 4. FETCH
   console.log(`[API Fetch] Starting ${method} request...`);
   console.log(`[API Fetch] URL: ${url}`);
-  console.log(`[API Fetch] config Headers: ${JSON.stringify(config.headers)}`);
+  // console.log(`[API Fetch] config Headers: ${JSON.stringify(config.headers)}`);
   console.log(`[API Fetch] config Body: ${config.body}`);
   try {
     const res = await fetch(url, config); // Pass the config object

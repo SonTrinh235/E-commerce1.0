@@ -1,15 +1,9 @@
 import { apiFetch } from "./apiClient";
 import { geocodeAddress } from "./geocodeService";
 
-/**
- * Edit user's profile/address on server.
- * Payload example:
- * { fullName: '...', address: { province:{code,name}, district:{}, ward:{}, houseNumber: '...' }, addressString: '...'}
- */
+/* ------------------------------- EDIT ADDRESS ------------------------------- */
 export async function editAddress(payload) {
   try {
-    // Some backends expect `address` as a readable string (older API).
-    // Build addressString if an address object is provided.
     let addressString = payload.addressString || "";
     if (!addressString && payload.address && typeof payload.address === "object") {
       const a = payload.address;
@@ -21,8 +15,8 @@ export async function editAddress(payload) {
       address: addressString || payload.address || "",
     };
 
-    // Use the same absolute URL + Authorization header as the original working code
-    const token = typeof window !== "undefined" ? localStorage.getItem("userToken") : null;
+    const token = localStorage.getItem("userToken");
+
     const res = await fetch("https://www.bachkhoaxanh.xyz/user/updateProfile", {
       method: "POST",
       headers: {
@@ -33,9 +27,8 @@ export async function editAddress(payload) {
     });
 
     const json = await res.json();
-    if (!res.ok) {
-      throw new Error(json?.message || `Status ${res.status}`);
-    }
+    if (!res.ok) throw new Error(json?.message || `Status ${res.status}`);
+
     return json;
   } catch (err) {
     console.error("[userService] editAddress failed", err);
@@ -43,9 +36,7 @@ export async function editAddress(payload) {
   }
 }
 
-/**
- * Edit user's name/email (server endpoints might differ — adjust as needed)
- */
+/* --------------------------- EDIT NAME / EMAIL --------------------------- */
 export async function editName(payload) {
   try {
     return await apiFetch("/user/updateProfile", { method: "POST", body: payload });
@@ -64,16 +55,27 @@ export async function editEmail(payload) {
   }
 }
 
-/**
- * Fetch latest user info from server using token (endpoint may need adjustment)
- */
+/* ------------------------------ GET USER BY TOKEN ------------------------------ */
 export async function getUserById() {
   try {
-    // server should infer user from token
-    return await apiFetch("/user/getById", { method: "GET" });
+    const token = localStorage.getItem("userToken");
+
+    if (!token) {
+      console.warn("[getUserById] No userToken in localStorage → skip request.");
+      return null; // tránh crash
+    }
+
+    console.log("[getUserById] Using token:", token.substring(0, 15) + "...");
+
+    return await apiFetch("/user/getById", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
   } catch (err) {
     console.error("[userService] getUserById failed", err);
-    throw err;
+    return null;
   }
 }
 

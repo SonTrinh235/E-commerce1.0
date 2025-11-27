@@ -1,11 +1,12 @@
 import { initializeApp } from "firebase/app";
-import { browserLocalPersistence, getAuth, setPersistence } from "firebase/auth";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAjbR9V1NYMnhh73bpKVj--c-J37ML6Bi0",
   authDomain: "dath-15749.firebaseapp.com",
   projectId: "dath-15749",
-  storageBucket: "dath-15749.firebasestorage.app",
+  storageBucket: "dath-15749.appspot.com",
   messagingSenderId: "1007151644949",
   appId: "1:1007151644949:web:63f463c51505dd8c9fa91c",
   measurementId: "G-E3CXHMKD3H"
@@ -13,8 +14,87 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-setPersistence(auth,  browserLocalPersistence);
+const messaging = getMessaging(app);
+const BASE_URL = "https://www.bachkhoaxanh.xyz";
 
-if (window.location.hostname === "localhost") {
-    auth.settings.appVerificationDisabledForTesting = true;
+/**
+ * @returns {Promise<string|null>}
+ */
+export async function getFcmToken() {
+  try {
+    if (!("serviceWorker" in navigator)) {
+      console.warn("Service Worker not supported.");
+      return null;
+    }
+    if (!("PushManager" in window)) {
+      console.warn("Push notifications not supported.");
+      return null;
+    }
+    if (!("Notification" in window)) {
+      console.warn("Notification API not supported.");
+      return null;
+    }
+
+    const saved = localStorage.getItem("fcmToken");
+    if (saved) return saved;
+
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      console.warn("Notification permission not granted.");
+      return null;
+    }
+
+    let swReg;
+    if (navigator.serviceWorker.controller) {
+      swReg = await navigator.serviceWorker.ready;
+    } else {
+      swReg = await navigator.serviceWorker.register("/firebase-messaging-sw.js", {
+        scope: "/"
+      });
+    }
+
+    console.log("SW ready:", swReg);
+
+    const token = await getToken(messaging, {
+      vapidKey: "BJH4PM3b1A65WWa9PcgmHpCcXAEj5X6KTn6_Qv9ZYYwR1IR92A3CUydOIbPe4u7fvwO0pzddzO32GJI4U-SzU1A",
+      serviceWorkerRegistration: swReg
+    });
+
+    if (!token) {
+      console.warn("FCM returned no token.");
+      return null;
+    }
+
+    localStorage.setItem("fcmToken", token);
+    console.log("FCM token:", token);
+    return token;
+
+  } catch (err) {
+    console.error("Error getting FCM token:", err);
+    return null;
   }
+}
+
+/**
+ * @param {(payload: Object) => void} callback
+ */
+export function onForegroundMessage(callback) {
+  onMessage(messaging, (payload) => {
+    console.log("Foreground message received:", payload);
+    callback(payload);
+  });
+}
+export async function registerFcmToken(userId, fcmToken) {
+  try {
+    const res = await fetch(`${BASE_URL}/user/${userId}/fcmToken`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fcmToken }),
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    console.error("Lỗi API registerFcmToken:", err);
+    return null;
+  }
+}

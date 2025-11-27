@@ -40,7 +40,7 @@ function OrderRow(props) {
           {paymentStatusMap[order.paymentStatus]}
         </span>
       </td>
-      <td classname={`status ${order.status}`}>
+      <td className={`status ${order.status}`}>
         <b>{shipStatusMap[order.status]}</b>
       </td>
       <td id="date">{formatDate(order.createdAt)}</td>

@@ -1,6 +1,6 @@
 import "./App.css";
+import React, { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import React from "react";
 
 // === Public Pages ===
 import Shop from "./Pages/Shop";
@@ -12,7 +12,7 @@ import LoginSignup from "./Pages/LoginSignup";
 import SearchResults from "./Pages/SearchResults";
 import ExclusiveOffers from "./Pages/ExclusiveOffers";
 import Checkout from "./Pages/Checkout";
-import Profile from "./Pages/Profile";
+import Profile from "./Pages/Profile"; // Giữ lại trang Profile từ file gốc của bạn
 
 // === Admin Pages ===
 import AdminDashboard from "./Admin/Pages/AdminDashboard/AdminDashboard";
@@ -31,9 +31,9 @@ import all_banner from "./assets/banner_all.png";
 
 import PublicLayout from "./PublicLayout";
 import AdminLayout from "./Admin/AdminLayout";
-import { useEffect } from "react";
-import { getUserById } from "./api/userService";
-import { geocodeAddress } from "./api/geocodeService";
+
+// Import Firebase services
+import { getFcmToken, registerFcmToken, onForegroundMessage } from "./firebase";
 
 /* ---------- Route Guards ---------- */
 const RequireUser = ({ children }) => {
@@ -53,38 +53,77 @@ const RedirectIfAuthed = ({ children }) => {
 /* ---------------------------------- */
 
 function App() {
+  // Logic FCM Token (Thay thế cho logic getUserById/geocode cũ)
   useEffect(() => {
-    // On app load, if user token exists, try to refresh user info and geocode address
-    (async () => {
-      try {
-        const token = localStorage.getItem("userToken");
-        if (!token) return;
-        const res = await getUserById();
-        // If API returns user data in res.data or res.user, try to normalize
-        const data = res?.data || res?.user || res;
-        if (data) {
-          // Save to localStorage as userInfo (keep original shape if possible)
-          localStorage.setItem("userInfo", JSON.stringify(data));
-          window.dispatchEvent(new Event("auth-changed"));
+    console.log("App mounted. Initializing FCM logic..."); // DEBUG LOG
 
-          // Attempt to geocode address for quicker calculations
-          const addr = data?.user?.address || data?.address || null;
-          let addressString = data?.user?.addressString || data?.addressString || null;
-          if (!addressString && addr) {
-            addressString = `${addr.houseNumber || ""} ${addr.ward?.name || ""} ${addr.district?.name || ""} ${addr.province?.name || ""}`.trim();
-          }
-          if (addressString) {
-            const coords = await geocodeAddress(addressString);
-            if (coords) {
-              localStorage.setItem("userAddressCoords", JSON.stringify(coords));
-            }
-          }
+    const saveToken = async () => {
+      console.log("Starting saveToken function..."); // DEBUG LOG
+      
+      const userInfo = localStorage.getItem("userInfo");
+      console.log("Raw userInfo from localStorage:", userInfo); // DEBUG LOG
+
+      let userId = null;
+      try {
+        if (userInfo) {
+           const parsedUser = JSON.parse(userInfo);
+           // Kiểm tra kỹ cấu trúc object để tránh lỗi undefined
+           userId = parsedUser.user ? parsedUser.user._id : parsedUser._id;
         }
       } catch (e) {
-        console.warn("App: getUserById failed", e);
+        console.error("Error parsing userInfo JSON:", e);
       }
-    })();
+
+      console.log("Resolved userId:", userId); // DEBUG LOG
+
+      if (!userId) {
+        console.warn("No userId found. Skipping FCM token registration.");
+        return;
+      }
+
+      try {
+        console.log("Calling getFcmToken()..."); // DEBUG LOG
+        const token = await getFcmToken();
+        
+        if (token) {
+          console.log("FCM Token received:", token); // DEBUG LOG
+          localStorage.setItem("fcmToken", token);
+          
+          console.log(`Registering FCM token for userId: ${userId}...`); // DEBUG LOG
+          await registerFcmToken(userId, token);
+          console.log("Success: FCM token registered with backend.");
+        } else {
+          console.warn("Warning: No FCM token generated from Firebase.");
+        }
+      } catch (err) {
+        console.error("Error during FCM registration process:", err);
+      }
+    };
+
+    console.log("Checking Notification permission:", Notification.permission); // DEBUG LOG
+
+    if (Notification.permission === "granted") {
+      saveToken();
+    } else if (Notification.permission !== "denied") {
+      console.log("Requesting Notification permission..."); // DEBUG LOG
+      Notification.requestPermission().then((permission) => {
+        console.log("Notification permission result:", permission);
+        if (permission === "granted") {
+          saveToken();
+        } else {
+          console.warn("Notification permission denied by user.");
+        }
+      });
+    } else {
+      console.warn("Notification permission is currently denied.");
+    }
+
+    onForegroundMessage((payload) => {
+      console.log("Foreground message received:", payload); // DEBUG LOG
+      alert(`${payload.notification?.title}\n${payload.notification?.body}`);
+    });
   }, []);
+
   return (
     <div>
       <BrowserRouter>
