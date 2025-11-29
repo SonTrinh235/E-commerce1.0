@@ -1,7 +1,7 @@
 import "./ManageVouchers.css";
 import React, { useState, useEffect } from "react";
 // import all_product from "../../../data/all_product";
-import { FaPlusCircle } from "react-icons/fa";
+import { FaPlusCircle, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 // import components
 import AdminVoucherRow from "../../Components/AdminVoucherRow/AdminVoucherRow";
@@ -76,82 +76,93 @@ function ManageVouchers() {
   // RETURN
   return (
     <div className="ManageVouchers-container">
-      {loading && <LoadingOverlay/>}
-      <div id="ManageVouchers-header">
-        <h2 style={{ color: "white" }}>🎁Quản lí voucher</h2>
-      </div>
-
-      <div className="ManageVouchers-main">
-        <header>Danh sách voucher</header>
-        <div>Tổng cộng {totalVouchers} voucher</div>
-
-        <table className="ManageVouchers-table">
-          <thead>
-            <tr>
-              <th className="index">#</th>
-              <th>Tên voucher</th>
-              <th>Mã voucher</th>
-              <th>Loại giảm giá</th>
-              <th>Giá trị</th>
-              <th>Mô tả voucher</th>
-              <th>Hết hạn ngày</th>
-              <th>Đã sử dụng</th>
-              <th>Chỉnh sửa</th>
-            </tr>
-          </thead>
-          <tbody>
-            {vouchers.map((voucher, i) => {
-              const index = i + 1 + (currentPage - 1) * limit;
-              return (
-                <AdminVoucherRow
-                  key={i}
-                  index={index}
-                  {...voucher}
-                  onEdit={() => openForm("edit", voucher)}
-                  onDelete={() => openForm("delete", voucher)}
-                />
-              );
-            })}
-          </tbody>
-        </table>
-
-        {/* Paging for vouchers */}
-        <div className="ManageVouchers-paging">
-          <button
-            onClick={() => setCurrentPage(currentPage - 1)}
-            disabled={currentPage <= 1 || loading}
-          >
-            Trước
-          </button>
-
-          <span>
-            Trang {currentPage} trên {totalPages}
-          </span>
-
-          <button
-            onClick={() => setCurrentPage(currentPage + 1)}
-            disabled={currentPage >= totalPages || loading}
-          >
-            Sau
-          </button>
+      {loading && <LoadingOverlay />}
+      <div className="ManageVouchers-header">
+        <div className="ManageVouchers-header-content">
+          <div className="ManageVouchers-header-icon">🎁</div>
+          <h1 className="ManageVouchers-header-title">Quản lí voucher</h1>
         </div>
       </div>
 
-      <button className="ManageVoucher-add" onClick={() => openForm("add")}>
-        <FaPlusCircle fill="white"/>
-        Thêm voucher
-      </button>
+      <div className="voucher-table-container">
+        <div className="voucher-table-header">
+          <div className="voucher-table-info">
+            <h2>Danh sách voucher</h2>
+            <p>Tổng cộng {totalVouchers} voucher</p>
+          </div>
+          <button onClick={() => openForm("add")} className="add-voucher-btn">
+            <FaPlusCircle fill="white" />
+            Thêm voucher
+          </button>
+        </div>
+
+        <div className="voucher-table-wrapper">
+          <table className="voucher-table">
+            <thead>
+              <tr>
+                <th>Tên voucher</th>
+                <th>Mã voucher</th>
+                <th>Loại giảm giá</th>
+                <th>Giá trị</th>
+                <th>Mô tả voucher</th>
+                <th>Thời lượng còn</th>
+                <th>Đã sử dụng</th>
+                <th>Chỉnh sửa</th>
+              </tr>
+            </thead>
+            <tbody>
+              {vouchers.map((voucher, i) => {
+                const index = i + 1 + (currentPage - 1) * limit;
+                return (
+                  <AdminVoucherRow
+                    key={i}
+                    index={index}
+                    {...voucher}
+                    onEdit={() => openForm("edit", voucher)}
+                    onDelete={() => openForm("delete", voucher)}
+                  />
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="admin-table-footer">
+          <div className="pagination-info">
+            Trang {currentPage} trên {totalPages}
+          </div>
+          <div className="pagination-buttons">
+            <button
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage <= 1 || loading}
+              className="pagination-btn"
+            >
+              <FaChevronLeft size={18} />
+              Trước
+            </button>
+
+            <button
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage >= totalPages || loading}
+              className="pagination-btn"
+            >
+              Sau
+              <FaChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      </div>
+
 
       {/* Conditional Rendering of Form */}
       {isFormVisible && (
-        <div id="ProductForm-overlay">
+        
           <VoucherForm
             mode={formMode}
             currentItem={formCurrentItem}
             onCancel={() => setIsFormVisible(false)} // Pass a function to close the form
             onSuccess={() => fetchVouchersAll()}
           />
-        </div>
       )}
     </div>
   );

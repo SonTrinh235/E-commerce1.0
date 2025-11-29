@@ -1,175 +1,126 @@
 .ManageVouchers-container {
-  width: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  gap: 1.5rem;
+}
+
+.ManageVouchers-header {
+  background: linear-gradient(to right, #a855f7, #9333ea);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.ManageVouchers-header-content {
+  display: flex;
   align-items: center;
+  gap: 0.75rem;
 }
 
-
-/* Header styles */
-
-#ManageVouchers-header {
-  margin: 50px;
-  padding: 20px 50px;
-  
-  background: hsl(258, 65%, 63%);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-  border-radius: 20px;
-  
-  text-align: center;
-  font-size: 1.5rem;
-  box-sizing: border-box;
+.ManageVouchers-header-icon {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  font-size: 2rem;
 }
+
+.ManageVouchers-header-title {
+  color: white;
+  font-size: 1.875rem;
+  margin: 0;
+}
+
 
 
 /* Main area styles */
+.voucher-table-container {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
 
-.ManageVouchers-main {
-  padding: 20px 40px;
-  width: 95%;
-  
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-  
+.voucher-table-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
   display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
-
-.ManageVouchers-main header {
-  font-size: 2.5rem;
-  font-weight: bold;
+.voucher-table-header-info h2 {
+  font-size: 1.5rem;
+  color: #111827;
+  margin: 0 0 0.25rem 0;
 }
 
+.voucher-table-header-info p {
+  color: #4b5563;
+  margin: 0;
+}
 
 
 
 /* Table styles */
 
 
-.ManageVouchers-table {
-  margin-top: 12px;
+.voucher-table-wrapper {
+  overflow-x: auto;
+}
 
-  background: rgb(199, 199, 199);
-  border-radius: 12px;
-  border: 6px solid grey;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-  
+.voucher-table {
+  width: 100%;
   border-collapse: collapse;
-  overflow: hidden;
 }
 
-.ManageVouchers-table th:last-child,
-.ManageVouchers-table td:last-child {
-  border-right: none;
+.voucher-table thead {
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.ManageVouchers-table tr:last-child td {
-  border-bottom: none;
+.voucher-table th {
+  padding: 1rem 1.5rem;
+  text-align: left;
+  color: #374151;
+  font-weight: 500;
 }
 
-
-.ManageVouchers-table th,
-.ManageVouchers-table td {
-  border-bottom: 1px solid grey;
-  border-right: 1px solid lightgrey ;
-  text-align: center;
+.voucher-table th:first-child {
+  width: 4rem;
 }
 
-
-.ManageVouchers-table th {
-  height: 3rem;
-  background: hsl(0, 0%, 80%);
+.voucher-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s;
 }
 
-.ManageVouchers-table td {
-  height: fit-content;
+.voucher-table tbody tr:hover {
+  background-color: #f9fafb;
 }
 
-.ManageVouchers-table .index {
-  background: hsl(0, 0%, 70%);
-  width: 30px;
+.voucher-table td {
+  padding: 1rem 1.5rem;
 }
-
-/* Alternate light and dark shade between each row */
-.ManageVouchers-table tbody tr {
-    background-color: hsl(0, 0%, 100%); 
-}
-.ManageVouchers-table tbody tr:nth-child(even) {
-    background-color: hsl(0, 0%, 95%); 
-}
-
-
-
-
-
-
-
-/* Paging styles */
-
-.ManageVouchers-paging  {
-  margin-top: 10px;
-  margin-bottom: 10px;
-  text-align: center;
-}
-
-.ManageVouchers-paging  span {
-  margin: 10px;
-}
-
-.ManageVouchers-paging  button {
-  width: 5rem;
-  height: 2rem;
-  border-radius: 8px;
-  background: hsl(0, 0%, 100%);
-  border: 2px solid hsl(0, 0%, 70%);
-  transition: all 0.4s ease;
-}
-
-.ManageVouchers-paging  button:hover:not(:disabled) {
-  background: hsl(0, 0%, 95%);
-  border: 2px solid hsl(0, 0%, 50%);
-  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.3);
-}
-
-.ManageVouchers-paging  button:active {
-  background: hsl(0, 0%, 90%);
-}
-
-.ManageVouchers-paging button:disabled{
-  background: hsl(0, 0%, 87%);
-  border: none;
-}
-
 
 
 
 /* Add product button */
-.ManageVoucher-add {
-  position: fixed;
-  bottom: 30px;
-  right: 50px;
-  width: 11rem;
-  height: 4rem;
-  z-index: 100;
-  border-radius: 15px;
-  border: none;
-  font-size: 1rem;
-  background: hsl(258, 70%, 55%);
-  color: white;
-  
+.add-voucher-btn {
   display: flex;
-  justify-content: center;
   align-items: center;
-
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #9333ea;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
   cursor: pointer;
+  transition: background-color 0.2s;
 }
-.ManageVoucher-add:hover {
-  background: hsl(258, 70%, 50%);
+
+.add-voucher-btn:hover {
+  background-color: #7e22ce;
 }
-.ManageVoucher-add:active {
-  background: hsl(258, 70%, 45%);
-}
+

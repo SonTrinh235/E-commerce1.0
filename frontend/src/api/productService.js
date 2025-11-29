@@ -11,9 +11,9 @@ export function getAllProducts(page = 1, limit = 20) {
   return data;
 }
 
-export function getProductsByCategoryAPI(category= '', page = 1, limit = 20) {
-  console.log(`[Product Service]Calling getProductsByCategoryAPI(${category}${page},${limit})`);
-  const data = apiFetch(`/product/products/category/${category}`, {
+export function getProductsByCategoryAPI(categorySlug= '', page = 1, limit = 20) {
+  console.log(`[Product Service]Calling getProductsByCategoryAPI(${categorySlug},${page},${limit})`);
+  const data = apiFetch(`/product/products/category/${categorySlug}`, {
     method: "GET",
     params: { page: page, limit: limit },
   });
@@ -40,7 +40,7 @@ export async function getProductById(productId) {
 
 export function createProduct(productData) {
   console.log("[Product Service]Calling createProduct");
-  const data = apiFetch(`/product/create-product`, {
+  const data = apiFetch(`/product/`, {
     method: "POST",
     body: productData,
   });
@@ -49,7 +49,7 @@ export function createProduct(productData) {
 
 export function updateProduct(productId, productData) {
   console.log(`[Product Service]Calling updateProduct${productId}`);
-  const data = apiFetch(`/product/update-product/${productId}`, {
+  const data = apiFetch(`/product/${productId}`, {
     method: "PUT",
     body: productData,
   });
@@ -58,7 +58,7 @@ export function updateProduct(productId, productData) {
 
 export function deleteProduct(productId) {
   console.log(`[Product Service]Calling deleteProduct(${productId})`);
-  const data = apiFetch(`/product/delete-product/${productId}`, {
+  const data = apiFetch(`/product/${productId}`, {
     method: "DELETE",
   });
   return data;
@@ -66,7 +66,7 @@ export function deleteProduct(productId) {
 
 export function updateProductImageInfo(productId, imageInfo) {
   console.log(`[Product Service]Calling updataProductImageInfo(${productId})`);
-  const data = apiFetch(`/product/update-product-image/${productId}`, {
+  const data = apiFetch(`/product/${productId}/image`, {
     method: "PUT",
     body: imageInfo,
   });

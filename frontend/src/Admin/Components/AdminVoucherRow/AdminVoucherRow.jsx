@@ -10,45 +10,59 @@ import { vnd } from "../../../utils/currencyUtils";
 const AdminVoucherRow = (props) => {
   const { onEdit, onDelete, index } = props;
 
+  function daysUntil(target) {
+    const dateExpire = new Date(target);
+    const now = new Date();
+    const durationInMs =  dateExpire.getTime() - now.getTime();
+    const msInDay = 1000 * 60 * 60 * 24;
+    const durationInDay = durationInMs/msInDay;
+    return Math.ceil(durationInDay);
+  }
+
   return (
     <tr className="AdminVoucherRow">
-      <td id="index">{index}</td>
-      <td id="name">{props.name}</td>
+      <td>
+        <p className="voucher-name">{props.name}</p>
+      </td>
       <td id="code">
-        <code style={{color: '#333333'}}>{props.code}</code>
+        <span className="voucher-code">
+          <code style={{ color: "#333333" }}>{props.code}</code>
+        </span>
       </td>
-      <td id="type">
-        {props.discountType === "percentage" ? (
-          <span id="percentage">Phần trăm</span>
-        ) : props.discountType === "fixed" ? (
-          <span id="fixed">Cố định</span>
-        ) : (
-          <>Unregconized discount type</>
-        )}
+      <td>
+        <span className={`discount-badge ${props.discountType}`}>
+          {props.discountType === "percentage" ? "Phần trăm" : "Cố định"}
+        </span>
       </td>
-      <td id="value">
-        {props.discountType === "percentage" ? (
-          <p id="percentage">{props.discountValue}%</p>
-        ) : props.discountType === "fixed" ? (
-          <p id="fixed">{vnd(props.discountValue)}</p>
-        ) : (
-          <>Unregconized discount type</>
-        )}
+      <td>
+        <span className={`discount-value ${props.discountType}`}>
+          {props.discountType === "percentage" ? (
+            <>{props.discountValue}%</>
+          ) : (
+            <>{vnd(props.discountValue)}</>
+          )}
+        </span>
       </td>
-      <td id="description">{props.description}</td>
-      <td id="expire">{formatDate(props.expirationDate)}</td>
+      <td>
+        <p className="voucher-description">{props.description}</p>
+      </td>
+      <td>
+        <span className="expiry-date">{daysUntil(props.expirationDate)} ngày</span>
+      </td>
       <td id="usage">
-        {props.usedCount}/{props.usageLimit}
+        <span className="usage-count">
+          {props.usedCount}/{props.usageLimit}
+        </span>
       </td>
-      <td id="actions">
-        <button id="edit" onClick={onEdit}>
-          <FaEdit fill="white" />
-          Chỉnh sửa
-        </button>
-        <button id="delete" onClick={onDelete}>
-          <FaTrash fill="white" />
-          Xóa
-        </button>
+      <td>
+        <div className="voucher-action-buttons">
+          <button className="voucher-edit-btn" onClick={onEdit}>
+            <FaEdit fill="white" />
+          </button>
+          <button className="voucher-delete-btn" onClick={onDelete}>
+            <FaTrash fill="white" />
+          </button>
+        </div>
       </td>
     </tr>
   );

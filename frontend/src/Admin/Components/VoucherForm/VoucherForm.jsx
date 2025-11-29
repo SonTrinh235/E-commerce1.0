@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import "./VoucherForm.css";
+import { FiX } from "react-icons/fi";
 import { FaArrowLeft } from "react-icons/fa";
 import {
   createVoucher,
   updateVoucher,
-  deleteVoucher
+  deleteVoucher,
 } from "../../../api/voucherService";
 
 import LoadingOverlay from "../../../Components/LoadingOverlay/LoadingOverlay";
@@ -26,11 +27,11 @@ function VoucherForm({ mode, currentItem = null, onCancel, onSuccess }) {
   // UseEffect for initial data of form (currentItem or blank)
   useEffect(() => {
     if (currentItem) {
-        const dateExpire = new Date(currentItem.expirationDate);
-        const dateCreated = new Date(currentItem.createdAt);
-        const durationInMs =  dateExpire.getTime() - dateCreated.getTime();
-        const msInDay = 1000 * 60 * 60 * 24;
-        const durationInDay = durationInMs/msInDay;
+      const dateExpire = new Date(currentItem.expirationDate);
+      const dateCreated = new Date(currentItem.createdAt);
+      const durationInMs = dateExpire.getTime() - dateCreated.getTime();
+      const msInDay = 1000 * 60 * 60 * 24;
+      const durationInDay = durationInMs / msInDay;
 
       setFormData({
         voucherName: currentItem.name || "",
@@ -94,9 +95,8 @@ function VoucherForm({ mode, currentItem = null, onCancel, onSuccess }) {
           discountValue: formData.voucherDiscountValue,
           description: formData.voucherDescription,
           days: formData.voucherDays,
-          usageLimit: formData.voucherUsageLimit
+          usageLimit: formData.voucherUsageLimit,
         });
-
 
         alert("Voucher created successfully!");
       } else if (mode === "edit") {
@@ -111,7 +111,7 @@ function VoucherForm({ mode, currentItem = null, onCancel, onSuccess }) {
           discountValue: formData.voucherDiscountValue,
           description: formData.voucherDescription,
           days: formData.voucherDays,
-          usageLimit: formData.voucherUsageLimit
+          usageLimit: formData.voucherUsageLimit,
         });
 
         alert("Voucher updated successfully!");
@@ -160,83 +160,130 @@ function VoucherForm({ mode, currentItem = null, onCancel, onSuccess }) {
 
   // Form container
   return (
-    <div className="VoucherForm-container">
-      {loading && <LoadingOverlay />}
-      <header>
-        <div id="title">{title}</div>
-        <div id="subTitle">{subTitle}</div>
-      </header>
-      {/* Actual form */}
-      <form className="voucher-form" onSubmit={handleSubmit}>
-        {/* Data  */}
-        <div id="section-data">
-          <div>Tên voucher:</div>
-          <input
-            name="voucherName"
-            type="text"
-            placeholder="Nhập tên voucher"
-            value={formData.voucherName}
-            onChange={handleChange}
-          />
-          <div>Mã voucher:</div>
-          <input
-            name="voucherCode"
-            type="text"
-            placeholder="Nhập mã voucher"
-            value={formData.voucherCode}
-            onChange={handleChange}
-          />
-          <div>Loại giảm giá:</div>
-          <select
-            name="voucherDiscountType"
-            value={formData.voucherDiscountType}
-            onChange={handleChange}
-          >
-            <option value='' disabled>Chọn loại giảm giá</option>
-            <option value='percentage'>Phần trăm</option>
-            <option value='fixed'>Cố định</option>
-        </select>
-          <div>Giá trị:</div>
-          <input
-            name="voucherDiscountValue"
-            type="number"
-            placeholder="Nhập giá trị voucher"
-            value={formData.voucherDiscountValue}
-            onChange={handleChange}
-          />
-          <div>Mô tả:</div>
-          <textarea
-            name="voucherDescription"
-            type="text"
-            placeholder="Nhập mô tả voucher"
-            value={formData.voucherDescription}
-            onChange={handleChange}
-          />
-          <div>Thời lượng (ngày):</div>
-          <input
-            name="voucherDays"
-            type="number"
-            placeholder="Nhập thời lượng voucher"
-            value={formData.voucherDays}
-            onChange={handleChange}
-          />
-          <div>Lượt sử dụng:</div>
-          <input
-            name="voucherUsageLimit"
-            type="number"
-            placeholder="Nhập lượt sử dụng tối đa voucher"
-            value={formData.voucherUsageLimit}
-            onChange={handleChange}
-          />
+    <div className="VoucherForm-overlay">
+      <div className="VoucherForm-container">
+        {loading && <LoadingOverlay />}
+        <div className="voucher-modal-header">
+          <h2 className="voucher-modal-title">{title}</h2>
+          <button onClick={onCancel} className="voucher-modal-close-btn">
+            <FiX size={24} />
+          </button>
         </div>
-        <button type="submit" id="VoucherForm-submit" className={buttonClass}>
-          {submitText}
-        </button>
-      </form>
-      <button id="VoucherForm-cancel" onClick={onCancel}>
-        <FaArrowLeft style={{marginRight: '5px'}} />
-        Hủy
-      </button>
+        {/* Actual form */}
+        <form className="voucher-modal-form" onSubmit={handleSubmit}>
+          {/* Data  */}
+          <div className="voucher-form-group">
+            <label className="voucher-form-label">Tên voucher *</label>
+            <input
+              name="voucherName"
+              type="text"
+              placeholder="Nhập tên voucher"
+              value={formData.voucherName}
+              onChange={handleChange}
+              className="voucher-form-input"
+            />
+          </div>
+
+          <div className="voucher-form-group">
+            <label className="voucher-form-label">Mã voucher *</label>
+            <input
+              name="voucherCode"
+              type="text"
+              placeholder="Nhập mã voucher"
+              value={formData.voucherCode}
+              onChange={handleChange}
+              className="voucher-form-input"
+            />
+          </div>
+
+          <div className="voucher-form-row">
+            <div className="voucher-form-group">
+              <label className="voucher-form-label">Loại giảm giá *</label>
+              <select
+                name="voucherDiscountType"
+                value={formData.voucherDiscountType}
+                onChange={handleChange}
+                className="voucher-form-select"
+              >
+                <option value="" disabled>
+                  Chọn loại giảm giá
+                </option>
+                <option value="percentage">Phần trăm</option>
+                <option value="fixed">Cố định</option>
+              </select>
+            </div>
+
+            <div className="voucher-form-group">
+              <label className="voucher-form-label">
+                Giá trị{" "}
+                {formData.voucherDiscountType === "percentage" ? "(%)" : "(đ)"}{" "}
+                *
+              </label>
+              <input
+                name="voucherDiscountValue"
+                type="number"
+                placeholder="Nhập giá trị voucher"
+                value={formData.voucherDiscountValue}
+                onChange={handleChange}
+                className="voucher-form-input"
+              />
+            </div>
+          </div>
+
+          <div className="voucher-form-row">
+            <div className="voucher-form-group">
+              <label className="voucher-form-label">Thời lượng (ngày) *</label>
+              <input
+                name="voucherDays"
+                type="number"
+                placeholder="Nhập thời lượng voucher"
+                value={formData.voucherDays}
+                onChange={handleChange}
+                className="voucher-form-input"
+              />
+            </div>
+
+            <div className="voucher-form-group">
+              <label className="voucher-form-label">
+                Lượt sử dụng tối đa *
+              </label>
+              <input
+                name="voucherUsageLimit"
+                type="number"
+                placeholder="Nhập lượt sử dụng tối đa voucher"
+                value={formData.voucherUsageLimit}
+                onChange={handleChange}
+                className="voucher-form-input"
+              />
+            </div>
+          </div>
+
+          <div className="voucher-form-group">
+            <label className="voucher-form-label">Mô tả voucher</label>
+            <textarea
+              name="voucherDescription"
+              type="text"
+              placeholder="Nhập mô tả voucher"
+              value={formData.voucherDescription}
+              onChange={handleChange}
+              className="voucher-form-textarea"
+            />
+          </div>
+
+          <div className="voucher-form-actions">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="voucher-form-btn voucher-cancel-btn"
+            >
+              Hủy
+            </button>
+            <button type="submit" className={`voucher-form-btn ${buttonClass}`}>
+              {submitText}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

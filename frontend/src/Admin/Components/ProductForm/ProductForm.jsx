@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import "./ProductForm.css";
 import DefaultImage from "../../../assets/placeholder-image.png";
-import { FaArrowLeft} from "react-icons/fa";
+import { FaArrowLeft } from "react-icons/fa";
+import { FiUpload, FiX } from "react-icons/fi";
 import {
   createProduct,
   updateProduct,
@@ -12,7 +13,13 @@ import { uploadFile } from "../../../api/fileService";
 
 import LoadingOverlay from "../../../Components/LoadingOverlay/LoadingOverlay";
 
-function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
+function ProductForm({
+  mode,
+  categoryList,
+  currentItem = null,
+  onCancel,
+  onSuccess,
+}) {
   const [loading, setLoading] = useState(false);
 
   // Properties of form
@@ -31,7 +38,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
       setFormData({
         productImage: null,
         productName: currentItem.name || "",
-        productCategory: currentItem.category || "",
+        productCategory: currentItem.categoryId || "",
         productPrice: currentItem.price || "",
         productDescription: currentItem.description || "",
         productStock: currentItem.stock || "",
@@ -82,7 +89,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
           name: formData.productName,
           price: formData.productPrice,
           description: formData.productDescription,
-          category: formData.productCategory,
+          categoryId: formData.productCategory,
           stock: formData.productStock,
         });
 
@@ -91,7 +98,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
         // Upload image and update image info
         if (formData.productImage) {
           const uploadData = new FormData();
-          
+
           // Append the text/string elements directly as key-value pairs
           uploadData.append("tempid", formData.productImage.name);
           uploadData.append("targetId", createdProductId);
@@ -122,14 +129,14 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
           name: formData.productName,
           price: formData.productPrice,
           description: formData.productDescription,
-          category: formData.productCategory,
+          categoryId: formData.productCategory,
           stock: formData.productStock,
         });
 
         // Upload and update image info if there is
         if (formData.productImage) {
           const uploadData = new FormData();
-          
+
           // Append the text/string elements directly as key-value pairs
           uploadData.append("tempid", formData.productImage.name);
           uploadData.append("targetId", productId);
@@ -220,81 +227,125 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
   // Form container
   return (
     <div className="ProductForm-container">
-      {loading && <LoadingOverlay/>}
-      <header>
-        <div id="title">{title}</div>
-        <div id="subTitle">{subTitle}</div>
-      </header>
+      {loading && <LoadingOverlay />}
+      <div className="modal-header">
+        <div className="modal-title">{title}</div>
+        <button className="modal-close-btn" onClick={onCancel}>
+          <FiX />
+        </button>
+      </div>
       {/* Actual form */}
-      <form className="product-form" onSubmit={handleSubmit}>
+      <form className="modal-form" onSubmit={handleSubmit}>
         {/* Image */}
-        <div id="section-image">
-          <div>Hình ảnh</div>
+        <div className="form-image-area">
+          <label className="form-label">Hình ảnh</label>
           {imagePreviewUrl ? (
-            <img src={imagePreviewUrl} alt = ""/>
+            <img src={imagePreviewUrl} alt=""/>
           ) : (
-            <img src={currentItem?.imageUrl || currentItem?.imageInfo?.url || DefaultImage} alt = ""/>
+            <img
+              src={
+                currentItem?.imageUrl ||
+                currentItem?.imageInfo?.url ||
+                DefaultImage
+              }
+              alt=""
+            />
           )}
           {mode !== "delete" && (
-            <input
-              type="file"
-              id="upload-image"
-              name="productImage"
-              onChange={handleChange}
-            />
+            <div className="upload-area">
+              <label for="product-image-file">
+                <FiUpload className="upload-icon" />
+                <p className="upload-text">Chọn file ảnh</p>
+                <p className="upload-hint">PNG, JPG lên đến 5MB</p>
+              </label>
+              <input
+                type="file"
+                id="product-image-file"
+                name="productImage"
+                onChange={handleChange}
+                hidden
+              />
+            </div>
           )}
         </div>
         {/* Data  */}
-        <div id="section-data">
-          <div>Tên sản phẩm:</div>
+        <div className="form-group">
+          <label className="form-label">Tên sản phẩm</label>
           <input
             name="productName"
             type="text"
             placeholder="Nhập tên sản phẩm"
             value={formData.productName}
             onChange={handleChange}
+            className="form-input"
           />
-          <div>Phân loại:</div>
-          <input
-            name="productCategory"
-            type="text"
-            placeholder="Nhập phân loại sản phẩm"
-            value={formData.productCategory}
-            onChange={handleChange}
-          />
-          <div>Giá thành/1:</div>
+        </div>
+
+        <div className="from-row">
+          <div className="from-group">
+            <label className="form-label">Phân loại</label>
+            <select
+              name="productCategory"
+              value={formData.productCategory}
+              onChange={handleChange}
+              className="form-select"
+            >
+              <option value="" disabled>
+                Chọn phân loại sản phẩm
+              </option>
+              {categoryList.map((category, i) => {
+                return (
+                  <option key={category.slug} value={category._id}>
+                    {category.name}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label className="form-label">Giá thành (₫)</label>
           <input
             name="productPrice"
             type="number"
             placeholder="Nhập giá thành sản phẩm"
             value={formData.productPrice}
             onChange={handleChange}
+            className="form-input"
           />
-          <div>Mô tả:</div>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Mô tả</label>
           <textarea
             name="productDescription"
             type="text"
             placeholder="Nhập mô tả sản phẩm"
             value={formData.productDescription}
             onChange={handleChange}
+            className="form-textarea"
           />
-          <div>Sẵn trong kho:</div>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Sẵn trong kho</label>
           <input
             name="productStock"
             type="number"
             placeholder="Nhập số lượng SP sẵn trong kho"
             value={formData.productStock}
             onChange={handleChange}
+            className="form-input"
           />
         </div>
-        <button type="submit" id="productForm-submit" className={buttonClass}>
-          {submitText}
-        </button>
+        <div className="form-actions">
+          <button onClick={onCancel} className="form-btn cancel-btn">
+            Hủy
+          </button>
+          <button type="submit" className={`form-btn ${buttonClass}`}>
+            {submitText}
+          </button>
+        </div>
       </form>
-      <button id="ProductForm-cancel" onClick={onCancel}>
-        <FaArrowLeft style={{marginRight: '5px'}} />
-        Hủy
-      </button>
     </div>
   );
 }

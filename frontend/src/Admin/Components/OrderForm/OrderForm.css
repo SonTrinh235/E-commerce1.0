@@ -1,62 +1,78 @@
-.OrderForm-container {
-  position: relative;
-  background: rgb(230, 230, 230);
-  width: clamp(300px, 35%, 1000px);
+.OrderForm-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  flex-direction: column;
-  /* justify-content: center; */
   align-items: center;
-  border-radius: 40px;
-  padding: 40px 80px;
+  justify-content: center;
+  z-index: 50;
+  padding: 1rem;
 }
 
-.OrderForm-container header {
-    padding: 30px;
-    margin-bottom: 20px;
-    
-    background: rgb(248, 248, 248);
-    border-radius: 20px;
-    
-    text-align: center;
+.OrderForm-container {
+  background-color: white;
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-width: 32rem;
+  width: 100%;
+  position: relative;
 }
 
-.OrderForm-container header .status {
+.OrderForm-header {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  padding: 1.2rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.OrderForm-body {
+  padding: 30px;
+  margin-bottom: 20px;
+
+  text-align: center;
+}
+
+.OrderForm-body .status {
   margin-top: 10px;
   padding: 20px 60px;
-  
-  
+
   border-radius: 12px;
-  
+
   font-weight: bold;
   font-size: 1.2rem;
   text-align: center;
 }
 
-
-
+.OrderForm-panel p {
+  font-size: 1.2rem;
+  text-align: center;
+}
 
 .OrderForm-options {
-    margin-top: 10px;
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));;
-    gap: 10px;
+  text-align: center;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 10px;
+  padding: 24px;
+  box-sizing: border-box;
 }
 
 .OrderForm-options button {
   width: 9rem;
   height: 4rem;
-  
-  border-radius: 15px;
+
+  border-radius: 12px;
   border: none;
-  
+
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .OrderForm-options button:not(:disabled):hover {
-  box-shadow: 0 0 0 8px hsla(0, 0%, 0%, 0.2);
+  box-shadow: 0 0 0 6px hsla(0, 0%, 0%, 0.2);
 }
 
 .OrderForm-options button:disabled {
@@ -66,19 +82,15 @@
 }
 
 #OrderForm-cancel {
-  position: absolute;
-  top: 0px;
-  right: 40px;
-  width: 9rem;
-  height: 3rem;
-  border: none;
-  background: rgb(175, 0, 0);
-  border-radius: 0px 0px 20px 20px;
-  color: white;
-  font-size: 1rem;
-  font-weight: bold;
   display: flex;
-  justify-content: center;
   align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
   cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
 }

@@ -2,10 +2,13 @@ import "./AdminNavbar.css";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiArrowLeft, FiLogOut } from "react-icons/fi";
+import { FaBars } from "react-icons/fa";
 
-function AdminNavbar() {
+function AdminNavbar({ onMenuClick }) {
   const [adminName, setAdminName] = useState("Admin");
-  const [isAuthed, setIsAuthed] = useState(!!localStorage.getItem("adminToken"));
+  const [isAuthed, setIsAuthed] = useState(
+    !!localStorage.getItem("adminToken")
+  );
   const navigate = useNavigate();
 
   const refresh = () => {
@@ -36,21 +39,35 @@ function AdminNavbar() {
     navigate("/login");
   };
 
+  // RETURN
+  // RETURN
+  // RETURN
   return (
-    <div className="AdminNavbar-container">
-      <Link to="/" className="AdminNavbar-store">
-        <FiArrowLeft />
-        Trở lại cửa hàng
-      </Link>
+    <header className="AdminNavbar-container">
+      <div className="AdminNavbar-content">
+        <div className="AdminNavbar-left">
+          <button onClick={onMenuClick} className="AdminNavbar-menu-btn">
+            <FaBars />
+          </button>
+          <Link to="/" className="AdminNavbar-store">
+            <button className="AdminNavbar-back-btn">
+              <FiArrowLeft size={20} />
+              Trở lại cửa hàng
+            </button>
+          </Link>
+        </div>
 
-      <div className="AdminNavbar-right">
-        {isAuthed && <span className="AdminNavbar-name">Xin chào, {adminName}</span>}
-        <button className="AdminNavbar-logout" onClick={handleLogout}>
-          <FiLogOut stroke="white" />
-          <b style= {{color: 'white'}}>Đăng xuất</b>
-        </button>
+        <div className="AdminNavbar-right">
+          {isAuthed && (
+            <span className="AdminNavbar-greeting">Xin chào, {adminName}</span>
+          )}
+          <button className="AdminNavbar-logout-btn" onClick={handleLogout}>
+            <FiLogOut size={18} stroke="white" />
+            <b style={{ color: "white" }}>Đăng xuất</b>
+          </button>
+        </div>
       </div>
-    </div>
+    </header>
   );
 }
 

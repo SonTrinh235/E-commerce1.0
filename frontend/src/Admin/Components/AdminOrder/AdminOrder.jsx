@@ -37,14 +37,14 @@ export default function AdminOrder(props) {
         </td>
         <td>
           {order.productsInfo.map((item, index) => (
-            <span key={index}>
+            <div key={index} className="order-row-content">
               {/* Bold the quantity and the 'x' */}
-              <b style={{ color: "hsl(87, 75%, 35%)" }}>{item.quantity}</b>
+              <span style={{ color: "#16a34a" }}>{item.quantity}</span>
               {"x "}
-              <b>{item.productName}</b>
+              <span>{item.productName}</span>
               {/* Add comma and space unless it's the last item */}
               {index < order.productsInfo.length - 1 ? ", " : ""}
-            </span>
+            </div>
           ))}
         </td>
         <td>{shipInfo?.displayName || order.userId}</td>

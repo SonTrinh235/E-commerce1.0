@@ -1,7 +1,13 @@
 import "./ManageProducts.css";
-import React, { useState, useEffect,} from "react";
+import React, { useState, useEffect } from "react";
 // import all_product from "../../../data/all_product";
-import { FaPlusCircle } from "react-icons/fa";
+import {
+  FaPlusCircle,
+  FaBox,
+  FaChevronLeft,
+  FaChevronRight,
+} from "react-icons/fa";
+import { FiSearch } from "react-icons/fi";
 
 // import components
 import AdminItem from "../../Components/Card/AdminItem/AdminItem";
@@ -9,10 +15,15 @@ import ProductForm from "../../Components/ProductForm/ProductForm";
 import LoadingOverlay from "../../../Components/LoadingOverlay/LoadingOverlay";
 
 // import APIs
-import { getAllProducts, getProductsByCategoryAPI, searchProductsAPI } from "../../../api/productService";
+import {
+  getAllProducts,
+  getProductsByCategoryAPI,
+  searchProductsAPI,
+} from "../../../api/productService";
+import { getAllCategrories } from "../../../api/categoryService";
 
 // import utils
-import { vnd } from "../../../utils/currencyUtils"
+import { vnd } from "../../../utils/currencyUtils";
 import useDebounce from "../../../utils/useDebounce";
 
 function ManageProducts() {
@@ -23,24 +34,27 @@ function ManageProducts() {
   const [totalProducts, setTotalProducts] = useState(0);
   const [limit, setLimit] = useState(20);
 
-  const [selectedProductCategory, setSelectedProductCategory] = useState('Tất cả');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryList, setCategoryList] = useState([]);
+
+  const [selectedProductCategory, setSelectedProductCategory] =
+    useState("Tất cả");
+  const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 500); // searchTerm with a 500ms update delay
 
-  const fetchProducts = () => {
+  const fetchProducts = (page) => {
     // if no search term
-    if (debouncedSearchTerm.trim() === '' ) {
-      if (selectedProductCategory === 'Tất cả') {
-        fetchProductsAll(currentPage, limit);
+    if (debouncedSearchTerm.trim() === "") {
+      if (selectedProductCategory === "Tất cả") {
+        fetchProductsAll(page, limit);
       } else {
-        fetchProductsByCategory(selectedProductCategory, currentPage, limit)
+        fetchProductsByCategory(selectedProductCategory, page, limit);
       }
     }
     // if yes search term
     else {
       // clear category upon search
-      setSelectedProductCategory('Tất cả')
-      searchProducts(debouncedSearchTerm, currentPage, limit);
+      setSelectedProductCategory("Tất cả");
+      searchProducts(debouncedSearchTerm, page, limit);
     }
   };
 
@@ -51,9 +65,8 @@ function ManageProducts() {
       const response = await getAllProducts(page, limit);
       setProducts(response.data.list);
       setTotalProducts(response.data.total);
-      setTotalPages(response.data.totalPages)
-    }
-    catch (error) {
+      setTotalPages(response.data.totalPages);
+    } catch (error) {
       console.log(error);
       alert("Fetch products failed, see console");
     }
@@ -67,34 +80,35 @@ function ManageProducts() {
       const response = await getProductsByCategoryAPI(category, page, limit);
       setProducts(response.data.list);
       setTotalProducts(response.data.total);
-      setCurrentPage(response.data.page);
       setLimit(response.data.limit);
-      setTotalPages(response.data.totalPages)
-    }
-    catch (error) {
+      setTotalPages(response.data.totalPages);
+    } catch (error) {
       console.log(error);
       alert("Fetch products by category failed, see console");
     }
     setLoading(false);
   };
 
+  useEffect(() => {
+    setCurrentPage(1);
+    fetchProducts(1);
+  }, [selectedProductCategory, debouncedSearchTerm]);
+
   // Fetch new page upon page change
   useEffect(() => {
-    fetchProducts()
-  }, [currentPage, selectedProductCategory, debouncedSearchTerm]);
+    fetchProducts(currentPage);
+  }, [currentPage]);
 
   // Fetch products method (from all product)
-  const searchProducts = async (query= '', page = 1, limit = 20) => {
+  const searchProducts = async (query = "", page = 1, limit = 20) => {
     setLoading(true);
     try {
       const response = await searchProductsAPI(query, page, limit);
       setProducts(response.data.list);
       setTotalProducts(response.data.total);
-      setCurrentPage(response.data.page);
       setLimit(response.data.limit);
-      setTotalPages(response.data.totalPages)
-    }
-    catch (error) {
+      setTotalPages(response.data.totalPages);
+    } catch (error) {
       console.log(error);
       alert("Search products failed, see console");
     }
@@ -103,12 +117,29 @@ function ManageProducts() {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchTerm.trim() === '') {
+    if (searchTerm.trim() === "") {
       fetchProductsAll();
     } else {
       searchProducts(searchTerm);
     }
-  }
+  };
+
+  // Fetch products method (from all product)
+  const fetchCategoryList = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllCategrories();
+      setCategoryList(response.data);
+    } catch (error) {
+      console.log(error);
+      alert("Fetch category list failed, see console");
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchCategoryList();
+  }, []);
 
   // State of  ProductForm
   const [isFormVisible, setIsFormVisible] = useState(false);
@@ -124,7 +155,7 @@ function ManageProducts() {
 
   // Function to handle escape to close form
   const handleEscape = (event) => {
-    if (event.key === 'Escape') {
+    if (event.key === "Escape") {
       // Only close if the form is actually visible
       if (isFormVisible) {
         setIsFormVisible(false);
@@ -134,58 +165,72 @@ function ManageProducts() {
 
   // useEffect Hook for event listener
   useEffect(() => {
-    document.addEventListener('keydown', handleEscape);
+    document.addEventListener("keydown", handleEscape);
     // cleanup listener
     return () => {
-      document.removeEventListener('keydown', handleEscape);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, [isFormVisible]);
 
   return (
     <div className="ManageProducts-container">
+      {loading && <LoadingOverlay />}
 
-      {loading && <LoadingOverlay/>}
-      
-      <div id="ManageProducts-header">
-        <h2 style={{color: 'white'}}>📦Quản lí sản phẩm</h2>
+      <div className="ManageProducts-header">
+        <div className="ManageProducts-header-content">
+          <div className="ManageProducts-header-icon">
+            📦
+          </div>
+          <h2
+            className="ManageProducts-header-title"
+            style={{ color: "white" }}
+          >
+            Quản lí sản phẩm
+          </h2>
+        </div>
       </div>
-      
-        <div className="ManageProducts-filter">
-          <div className="category">
-            <h3>Phân loại:</h3>
+
+      <div className="ManageProducts-filters-container">
+        <div className="ManageProducts-filters-grid">
+          <div className="filter-group">
+            <label className="filter-label">Phân loại:</label>
             <select
               onChange={(e) => setSelectedProductCategory(e.target.value)}
               value={selectedProductCategory}
               disabled={searchTerm}
+              className="filter-select"
             >
               <option value="" disabled>
                 Lọc theo phân loại
               </option>
-              <option value='Tất cả'>Tất cả</option>
-              <option value='Đồ tươi sống'>Đồ tươi sống</option>
-              <option value='Rau củ quả'>Rau củ quả</option>
-              <option value='Thực phẩm đóng gói'>Thực phẩm đóng gói</option>
-              <option value='Nước chấm - gia vị'>Nước chấm - gia vị</option>
-              <option value='Đồ uống - giải khát'>Đồ uống - giải khát</option>
-              <option value='Bánh kẹo'>Bánh kẹo</option>
+              <option value="Tất cả">Tất cả</option>
+              {categoryList.map((category, i) => {
+                return (
+                  <option key={category.slug} value={category.slug}>
+                    {category.name}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
-          <div className="search">
-            <h3>Tìm theo tên sản phẩm:</h3>
-            <form onSubmit={handleSearch}>
+          <div className="filter-group search-group">
+            <label className="filter-label">Tìm theo tên sản phẩm:</label>
+            <div className="search-input-wrapper">
+              <FiSearch stroke="#9ca3af" className="search-icon" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Nhập tên sản phẩm">
-              </input>
-            </form>
+                placeholder="Nhập tên sản phẩm"
+                className="filter-input"
+              />
+            </div>
           </div>
 
-          <div className="sort">
-            <h3>Sẵn trong kho:</h3>
-            <select>
+          <div className="filter-group">
+            <label className="filter-label">Sẵn trong kho:</label>
+            <select className="filter-select">
               <option value="" disabled>
                 Sắp xếp theo sẵn trong kho
               </option>
@@ -195,9 +240,9 @@ function ManageProducts() {
             </select>
           </div>
 
-          <div className="sort">
-            <h3>Giá thành:</h3>
-            <select>
+          <div className="filter-group price-filter">
+            <label className="filter-label">Giá thành:</label>
+            <select className="filter-select">
               <option value="" disabled>
                 Sắp xếp theo giá
               </option>
@@ -207,103 +252,89 @@ function ManageProducts() {
             </select>
           </div>
         </div>
-
-        <div className="admin-products-list">
-
-        <header>Danh sách các sản phẩm</header>
-
-
-        <div>Tổng cộng {totalProducts} sản phẩm</div>
-
-        {/* Paging for products */}
-        <div className="ManageProducts-paging">
-          <button
-            onClick={() => setCurrentPage(currentPage - 1)}
-            disabled={currentPage <= 1 || loading}
-          >
-            Trước
-          </button>
-
-          <span>
-            Trang {currentPage} trên {" "}
-            {totalPages}
-          </span>
-
-          <button
-            onClick={() => setCurrentPage(currentPage + 1)}
-            disabled={currentPage >= totalPages || loading}
-          >
-            Sau
-          </button>
-        </div>
-
-
-        <table id="table">
-          <thead>
-            <tr>
-              <th className="index">#</th>
-              <th>Hình ảnh</th>
-              <th>Tên sản phẩm</th>
-              <th>Phân loại</th>
-              <th>Giá thành/1</th>
-              <th>Mô tả sản phẩm</th>
-              <th>Sẵn trong kho</th>
-              <th>Chỉnh sửa</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((item, i) => {
-              const index = i+1+(currentPage-1)*limit;
-              return (
-                <AdminItem
-                  key={i}
-                  index={index}
-                  {...item}
-                  onEdit={() => openForm("edit", item)}
-                  onDelete={() => openForm("delete", item)}
-                  />
-                )
-            })}
-          </tbody>
-        </table>
-
-
-                {/* Paging for products */}
-        <div className="ManageProducts-paging">
-          <button
-            onClick={() => setCurrentPage(currentPage - 1)}
-            disabled={currentPage <= 1}
-          >
-            Trước
-          </button>
-
-          <span>
-            Trang {currentPage} trên {" "}
-            {totalPages}
-          </span>
-
-          <button
-            onClick={() => setCurrentPage(currentPage + 1)}
-            disabled={currentPage >= totalPages}
-          >
-            Sau
-          </button>
-        </div>
       </div>
 
-      <button id="add-product" onClick={() => openForm("add")}>
-        <FaPlusCircle />
-        Thêm sản phẩm
-      </button>
+      <div className="product-table-container">
+        <div className="table-header">
+          <div className="table-header-info">
+            <h2>Danh sách các sản phẩm</h2>
+            <p>Tổng cộng {totalProducts} sản phẩm</p>
+          </div>
+          <button onClick={() => openForm("add")} className="add-product-btn">
+            <FaPlusCircle fill="white" />
+            Thêm sản phẩm
+          </button>
+        </div>
+
+        <div className="table-wrapper">
+          <table className="product-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Hình ảnh</th>
+                <th>Tên sản phẩm</th>
+                <th>Phân loại</th>
+                <th>Giá thành/1</th>
+                <th>Mô tả sản phẩm</th>
+                <th>Sẵn trong kho</th>
+                <th>Chỉnh sửa</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((item, i) => {
+                const index = i + 1 + (currentPage - 1) * limit;
+                return (
+                  <AdminItem
+                    key={i}
+                    index={index}
+                    {...item}
+                    onEdit={() => openForm("edit", item)}
+                    onDelete={() => openForm("delete", item)}
+                  />
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="admin-table-footer">
+          <div className="pagination-info">
+            Trang {currentPage} trên {totalPages}
+          </div>
+          <div className="pagination-buttons">
+            <button
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage <= 1}
+              className="pagination-btn"
+            >
+              <FaChevronLeft size={18} />
+              Trước
+            </button>
+
+            <button
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage >= totalPages}
+              className="pagination-btn"
+            >
+              Sau
+              <FaChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Conditional Rendering of ProductForm */}
       {isFormVisible && (
         <div id="ProductForm-overlay">
           <ProductForm
             mode={formMode}
+            categoryList={categoryList}
             currentItem={formCurrentItem}
             onCancel={() => setIsFormVisible(false)} // Pass a function to close the form
-            onSuccess = {() => fetchProducts()}
+            onSuccess={() => {
+              fetchProducts();
+              fetchCategoryList();
+            }}
           />
         </div>
       )}
