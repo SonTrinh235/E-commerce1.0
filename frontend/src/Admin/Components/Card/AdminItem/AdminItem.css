@@ -1,104 +1,101 @@
-.AdminItem-row {
-  transition: all 0.4s ease;
-}
-  .AdminItem-row:hover {
-  box-shadow:
-    inset 0 -35px 35px -35px hsl(0, 0%, 34%),
-    inset 0 35px 35px -35px hsl(0, 0%, 34%);
-  z-index: 10;
-}
 
 
-.AdminItem-row td {
-  padding: 10px 20px;
+
+.AdminItem-row .product-image {
+  width: 4rem;
+  height: 4rem;
+  object-fit: cover;
+  border-radius: 0.5rem;
 }
 
-  .AdminItem-row #index {
-  background: hsl(0, 0%, 90%);
-  padding: 0;
+.AdminItem-row .product-name-cell {
+  max-width: 18rem;
 }
 
-.AdminItem-row #image {
-  background: white;
+.AdminItem-row .product-name {
+  color: #111827;
+  margin: 0;
 }
 
-.AdminItem-row #image img {
-  background: white;
-  height: 100%;
-}
-
-
-.AdminItem-row #name {
-  font-weight: bold;
-
-}
-
-
-.AdminItem-row #category span {
+.AdminItem-row .category-badge {
   display: inline-block;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.2px;
-  border: 1px solid transparent;
-  white-space: nowrap;
-  max-width: 100%;
+  padding: 0.25rem 0.75rem;
+  background-color: #dbeafe;
+  color: #1e40af;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+}
+
+.AdminItem-row .product-price {
+  color: #16a34a;
+}
+
+.AdminItem-row .product-description-cell {
+  max-width: 28rem;
+}
+
+.AdminItem-row .product-description {
+  color: #4b5563;
+  font-size: 0.875rem;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  background: #ecfeff; color: #0e902a; border-color: #67f97a;
 }
 
-
-.AdminItem-row #price {
-  font-weight: bold;
-  color: rgb(5, 150, 105);
+.AdminItem-row .stock-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
 }
 
-
-.AdminItem-row #stock {
-  font-weight: bold;
-  color: red;
+.AdminItem-row .stock-badge.high {
+  background-color: #dcfce7;
+  color: #166534;
 }
 
-
-
-.AdminItem-row #actions {
-  width: 15rem;
-  padding: 0;
+.AdminItem-row .stock-badge.medium {
+  background-color: #fef3c7;
+  color: #92400e;
 }
 
-.AdminItem-row #actions #edit,
-.AdminItem-row #actions #delete {
-  width: 7rem;
-  height: 2.2rem;
-  border-radius: 10px;
+.AdminItem-row .stock-badge.low {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.AdminItem-row .action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.AdminItem-row .action-btn {
+  padding: 0.5rem;
   border: none;
+  border-radius: 0.5rem;
   cursor: pointer;
-  margin-left: 10px;
-  margin-top: 2px;
-}
-.AdminItem-row #actions #edit {
-  background: rgb(0, 91, 196);
-}
-.AdminItem-row #actions #edit:hover{
-  background: rgb(0, 80, 172);
-}
-.AdminItem-row #actions #edit:active{
-  background: rgb(0, 67, 145);
-}
-
-.AdminItem-row #actions #delete {
-  background: rgb(210, 0, 0);
-}
-.AdminItem-row #actions #delete:hover{
-  background: rgb(190, 0, 0);
-}
-.AdminItem-row #actions #delete:active{
-  background: rgb(150, 0, 0);
-}
-
-.AdminItem-row #actions * {
   color: white;
+  transition: opacity 0.2s;
+}
+
+.AdminItem-row .action-btn:hover {
+  opacity: 0.8;
+}
+
+.AdminItem-row .edit-btn {
+  background-color: #3b82f6;
+}
+
+.AdminItem-row .edit-btn:hover {
+  background-color: #2563eb;
+}
+
+.AdminItem-row .delete-btn {
+  background-color: #ef4444;
+}
+
+.AdminItem-row .delete-btn:hover {
+  background-color: #dc2626;
 }
