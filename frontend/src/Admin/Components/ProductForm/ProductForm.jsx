@@ -12,7 +12,7 @@ import { uploadFile } from "../../../api/fileService";
 
 import LoadingOverlay from "../../../Components/LoadingOverlay/LoadingOverlay";
 
-function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
+function ProductForm({ mode, categoryList, currentItem = null, onCancel, onSuccess }) {
   const [loading, setLoading] = useState(false);
 
   // Properties of form
@@ -31,7 +31,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
       setFormData({
         productImage: null,
         productName: currentItem.name || "",
-        productCategory: currentItem.category || "",
+        productCategory: currentItem.categoryId || "",
         productPrice: currentItem.price || "",
         productDescription: currentItem.description || "",
         productStock: currentItem.stock || "",
@@ -82,7 +82,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
           name: formData.productName,
           price: formData.productPrice,
           description: formData.productDescription,
-          category: formData.productCategory,
+          categoryId: formData.productCategory,
           stock: formData.productStock,
         });
 
@@ -122,7 +122,7 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
           name: formData.productName,
           price: formData.productPrice,
           description: formData.productDescription,
-          category: formData.productCategory,
+          categoryId: formData.productCategory,
           stock: formData.productStock,
         });
 
@@ -255,13 +255,21 @@ function ProductForm({ mode, currentItem = null, onCancel, onSuccess }) {
             onChange={handleChange}
           />
           <div>Phân loại:</div>
-          <input
+          <select
             name="productCategory"
-            type="text"
-            placeholder="Nhập phân loại sản phẩm"
             value={formData.productCategory}
             onChange={handleChange}
-          />
+          >
+            <option value="" disabled>
+              Chọn phân loại sản phẩm
+            </option>
+            {categoryList.map((category, i) => {
+              return (
+                <option key={category.slug} value={category._id}>{category.name}</option>
+              )
+            })
+            }
+          </select>
           <div>Giá thành/1:</div>
           <input
             name="productPrice"

@@ -10,6 +10,7 @@ import LoadingOverlay from "../../../Components/LoadingOverlay/LoadingOverlay";
 
 // import APIs
 import { getAllProducts, getProductsByCategoryAPI, searchProductsAPI } from "../../../api/productService";
+import { getAllCategrories } from "../../../api/categoryService";
 
 // import utils
 import { vnd } from "../../../utils/currencyUtils"
@@ -21,26 +22,28 @@ function ManageProducts() {
   const [totalPages, setTotalPages] = useState(1);
   const [products, setProducts] = useState([]);
   const [totalProducts, setTotalProducts] = useState(0);
-  const [limit, setLimit] = useState(20);
+  const [limit, setLimit] = useState(2);
+
+  const [categoryList, setCategoryList] = useState([]);
 
   const [selectedProductCategory, setSelectedProductCategory] = useState('Tất cả');
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 500); // searchTerm with a 500ms update delay
 
-  const fetchProducts = () => {
+  const fetchProducts = (page) => {
     // if no search term
     if (debouncedSearchTerm.trim() === '' ) {
       if (selectedProductCategory === 'Tất cả') {
-        fetchProductsAll(currentPage, limit);
+        fetchProductsAll(page, limit);
       } else {
-        fetchProductsByCategory(selectedProductCategory, currentPage, limit)
+        fetchProductsByCategory(selectedProductCategory, page, limit)
       }
     }
     // if yes search term
     else {
       // clear category upon search
       setSelectedProductCategory('Tất cả')
-      searchProducts(debouncedSearchTerm, currentPage, limit);
+      searchProducts(debouncedSearchTerm, page, limit);
     }
   };
 
@@ -67,7 +70,6 @@ function ManageProducts() {
       const response = await getProductsByCategoryAPI(category, page, limit);
       setProducts(response.data.list);
       setTotalProducts(response.data.total);
-      setCurrentPage(response.data.page);
       setLimit(response.data.limit);
       setTotalPages(response.data.totalPages)
     }
@@ -78,10 +80,17 @@ function ManageProducts() {
     setLoading(false);
   };
 
+
+  useEffect(() => {
+    setCurrentPage(1);
+    fetchProducts(1);
+  }, [selectedProductCategory, debouncedSearchTerm])
+
+
   // Fetch new page upon page change
   useEffect(() => {
-    fetchProducts()
-  }, [currentPage, selectedProductCategory, debouncedSearchTerm]);
+    fetchProducts(currentPage)
+  }, [currentPage]);
 
   // Fetch products method (from all product)
   const searchProducts = async (query= '', page = 1, limit = 20) => {
@@ -90,7 +99,6 @@ function ManageProducts() {
       const response = await searchProductsAPI(query, page, limit);
       setProducts(response.data.list);
       setTotalProducts(response.data.total);
-      setCurrentPage(response.data.page);
       setLimit(response.data.limit);
       setTotalPages(response.data.totalPages)
     }
@@ -109,6 +117,25 @@ function ManageProducts() {
       searchProducts(searchTerm);
     }
   }
+
+
+  // Fetch products method (from all product)
+  const fetchCategoryList = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllCategrories();
+      setCategoryList(response.data);
+    }
+    catch (error) {
+      console.log(error);
+      alert("Fetch category list failed, see console");
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchCategoryList();
+  }, []);
 
   // State of  ProductForm
   const [isFormVisible, setIsFormVisible] = useState(false);
@@ -162,12 +189,12 @@ function ManageProducts() {
                 Lọc theo phân loại
               </option>
               <option value='Tất cả'>Tất cả</option>
-              <option value='Đồ tươi sống'>Đồ tươi sống</option>
-              <option value='Rau củ quả'>Rau củ quả</option>
-              <option value='Thực phẩm đóng gói'>Thực phẩm đóng gói</option>
-              <option value='Nước chấm - gia vị'>Nước chấm - gia vị</option>
-              <option value='Đồ uống - giải khát'>Đồ uống - giải khát</option>
-              <option value='Bánh kẹo'>Bánh kẹo</option>
+              {categoryList.map((category, i) => {
+                return (
+                  <option key={category.slug} value={category.slug}>{category.name}</option>
+                )
+              })
+              }
             </select>
           </div>
 
@@ -301,9 +328,10 @@ function ManageProducts() {
         <div id="ProductForm-overlay">
           <ProductForm
             mode={formMode}
+            categoryList={categoryList}
             currentItem={formCurrentItem}
             onCancel={() => setIsFormVisible(false)} // Pass a function to close the form
-            onSuccess = {() => fetchProducts()}
+            onSuccess = {() => {fetchProducts(); fetchCategoryList()}}
           />
         </div>
       )}
