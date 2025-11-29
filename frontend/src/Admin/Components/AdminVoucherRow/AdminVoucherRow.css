@@ -1,96 +1,89 @@
-.AdminVoucherRow {
-  transition: all 0.4s ease;
+
+.voucher-name {
+  color: #111827;
+  margin: 0;
 }
 
-
-.AdminVoucherRow td {
-  padding: 10px 20px;
+.voucher-code {
+  color: #111827;
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
 }
 
-.AdminVoucherRow #index {
-  background: hsl(0, 0%, 90%);
-  padding: 0;
-}
-
-.AdminVoucherRow #name {
-  font-weight: bold;
-}
-
-.AdminVoucherRow #code {
-  font-size: 1.2rem;
-  background: hsla(0, 0%, 80%, 0.3);
-}
-
-.AdminVoucherRow #type span {
+.discount-badge {
   display: inline-block;
-  padding: 4px 8px;
-  
-  background: none;
-  border-radius: 12px;
-  border: 1px solid black;
-  
-  text-transform: uppercase;
-  color: #000000;
-  font-size: 0.8rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.discount-badge.percentage {
+  background-color: #fecaca;
+  color: #991b1b;
+}
+
+.discount-badge.fixed {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.discount-value {
+  color: #d33a3a;
+  font-weight: 600;
+}
+.discount-value.fixed {
+  color: #48c438;
+  font-weight: 600;
+}
+
+.voucher-description {
+  color: #4b5563;
+  font-size: 1rem;
+  margin: 0;
+}
+
+.expiry-date {
+  color: #d63838;
+  font-size: 1rem;
   font-weight: bold;
 }
 
-.AdminVoucherRow #type #percentage {
-  border: 1px solid hsl(0, 100%, 20%);
-  background: hsl(0, 70%, 80%);
-  color: hsl(0, 100%, 20%);
+.usage-count {
+  color: #4494ef;
+  font-weight: 600;
 }
 
-.AdminVoucherRow #type #fixed {
-  border: 1px solid hsl(120, 100%, 25%);
-  background: hsl(120, 50%, 80%);
-  color: hsl(120, 100%, 25%);
+.voucher-action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
-
-
-.AdminVoucherRow #value #percentage {
-  font-weight: bold;
-  color: rgb(236, 3, 3);
-}
-
-.AdminVoucherRow #value #fixed {
-  font-weight: bold;
-  color: rgb(7, 182, 45);
-}
-
-.AdminVoucherRow #usage {
-  font-weight: bold;
-  color: red;
-}
-
-.AdminVoucherRow #actions #edit,
-.AdminVoucherRow #actions #delete {
-  width: 7rem;
-  height: 2.2rem;
-  border-radius: 10px;
+.voucher-edit-btn,
+.voucher-delete-btn {
+  padding: 0.5rem 1rem;
   border: none;
+  border-radius: 0.5rem;
   cursor: pointer;
-  margin-left: 10px;
-  margin-top: 2px;
   color: white;
-}
-.AdminVoucherRow #actions #edit {
-  background: rgb(0, 91, 196);
-}
-.AdminVoucherRow #actions #edit:hover {
-  background: rgb(0, 80, 172);
-}
-.AdminVoucherRow #actions #edit:active {
-  background: rgb(0, 67, 145);
+  font-size: 1rem;
+  transition: opacity 0.2s;
+  width: 100%;
 }
 
-.AdminVoucherRow #actions #delete {
-  background: rgb(210, 0, 0);
+.voucher-edit-btn {
+  background-color: #3b82f6;
 }
-.AdminVoucherRow #actions #delete:hover {
-  background: rgb(190, 0, 0);
+
+.voucher-edit-btn:hover {
+  background-color: #2563eb;
 }
-.AdminVoucherRow #actions #delete:active {
-  background: rgb(150, 0, 0);
+
+.voucher-delete-btn {
+  background-color: #ef4444;
+}
+
+.voucher-delete-btn:hover {
+  background-color: #dc2626;
 }
