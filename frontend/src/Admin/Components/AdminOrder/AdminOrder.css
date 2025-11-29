@@ -1,6 +1,8 @@
 
 .AdminOrderRow {
   cursor: pointer;
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s;
 }
 
 .AdminOrderRow.expanded {
@@ -11,7 +13,7 @@
 }
 
 .AdminOrderRow:not(.expanded):hover {
-  background: hsla(0, 0%, 0%,0.05);
+  background-color: #f9fafb;
   transition: all 0.2s ease;
 }
 
@@ -35,7 +37,6 @@
   display: flex;
   align-items: center;
   font-size: 0.8rem;
-  border-bottom: 1px solid hsl(0, 0%, 92%);
 }
 
 .AdminOrder-details-content .listitem img {
@@ -78,30 +79,27 @@
 
 /* ========== NÚT HÀNH ĐỘNG ========== */
 .action-btn {
-  border: none;
-  padding: 10px 16px;
-  border-radius: 10px;
-  
-  cursor: pointer;
+  padding: 0.5rem 1rem;
+  background-color: #3b82f6;
   color: white;
-  
-  
-  background: hsl(219, 72%, 46%);
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
 }
 
 .action-btn:hover {
-  background: hsl(219, 72%, 40%);
+  background-color: #2563eb;
 }
 
 /* ========== Bảng hiển thị đơn hàng ========== */
 .AdminOrderRow td {
-  padding: 5px 20px;
+  padding: 1rem 1.5rem;
 
   text-align: center;
   vertical-align: middle;
 
-  border-top: 2px solid hsl(34, 44%, 93%);
-  border-right: 1px solid hsl(34, 44%, 93%);
   
   font-size: 0.9rem;
   word-break: break-word;
@@ -110,6 +108,7 @@
 
 
 .AdminOrderRow td img {
+  padding: 0;
   height: 4rem;
   background: white;
 }
@@ -122,19 +121,26 @@
 }
 
 .AdminOrderRow td:nth-child(2) {
-  max-width: 500px;
+  max-width: 600px;
+  text-align: start;
+  padding: 10px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+
 
 .AdminOrderRow td:nth-child(3) {
   font-weight: bold;
-  color: hsl(0, 60%, 45%);  
+  color: #dc2626;  
 }
 
 
 .AdminOrderRow td:nth-child(4) {
   font-weight: bold;
   font-size: 1.1rem;
-  color: #059669;
+  color: #16a34a;
   word-break: keep-all;
 }
 
