@@ -1,5 +1,5 @@
 import "./ManageProducts.css";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 // import all_product from "../../../data/all_product";
 import {
   FaPlusCircle,
@@ -36,10 +36,12 @@ function ManageProducts() {
 
   const [categoryList, setCategoryList] = useState([]);
 
-  const [selectedProductCategory, setSelectedProductCategory] =
-    useState("Tất cả");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedProductCategory, setSelectedProductCategory] = useState("Tất cả");
+  const [searchTerm, setSearchTerm] = useState("");  
   const debouncedSearchTerm = useDebounce(searchTerm, 500); // searchTerm with a 500ms update delay
+  
+  const prevCategoryRef = useRef(selectedProductCategory);
+  const prevSearchRef = useRef(debouncedSearchTerm);
 
   const fetchProducts = (page) => {
     // if no search term
@@ -89,15 +91,34 @@ function ManageProducts() {
     setLoading(false);
   };
 
-  useEffect(() => {
-    setCurrentPage(1);
-    fetchProducts(1);
-  }, [selectedProductCategory, debouncedSearchTerm]);
+useEffect(() => {
+    // Check if filters actually changed by comparing with refs
+    const isFilterChanged = 
+      prevCategoryRef.current !== selectedProductCategory || 
+      prevSearchRef.current !== debouncedSearchTerm;
 
-  // Fetch new page upon page change
-  useEffect(() => {
+    // Update refs for the next run
+    prevCategoryRef.current = selectedProductCategory;
+    prevSearchRef.current = debouncedSearchTerm;
+
+    // SCENARIO A: Filters changed
+    if (isFilterChanged) {
+      // If we are NOT on page 1, we must reset and ABORT fetching.
+      // The setCurrentPage will trigger a re-render, and this effect 
+      // will run again with the correct page number.
+      if (currentPage !== 1) {
+        setCurrentPage(1);
+        return; // <--- CRITICAL: Stop here. Don't fetch with old page.
+      }
+    }
+
+    // SCENARIO B: We are here because:
+    // 1. Pagination changed (Filters didn't change)
+    // 2. Filters changed, but we were ALREADY on Page 1
+    // 3. We just came from Scenario A (Page reset finished)
     fetchProducts(currentPage);
-  }, [currentPage]);
+
+  }, [currentPage, selectedProductCategory, debouncedSearchTerm]);
 
   // Fetch products method (from all product)
   const searchProducts = async (query = "", page = 1, limit = 20) => {
