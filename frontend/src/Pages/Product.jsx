@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import Breadcrums from "../Components/Breadcrums/Breadcrums";
+// import Breadcrums from "../Components/Breadcrums/Breadcrums";
 import ProductDisplay from "../Components/ProductDisplay/ProductDisplay";
-import DescriptionBox from "../Components/DescriptionBox/DescriptionBox";
+// import DescriptionBox from "../Components/DescriptionBox/DescriptionBox";
 import RelatedProducts from "../Components/RelatedProducts/RelatedProducts";
 import { getProductById } from "../api/productService"; 
 
-const Product = () => {
+const Product = ({ onAddToCart }) => {
   const { productId } = useParams();
-  const pid = productId  ;
+  const pid = productId;
 
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState(null);
@@ -56,19 +56,11 @@ const Product = () => {
     );
   }
 
-  const breadProduct = {
-    name: product.name,
-    category: Array.isArray(product.category)
-      ? product.category[0]
-      : product.category,
-  };
-
   return (
     <div>
-      <Breadcrums product={breadProduct} />
-      <ProductDisplay product={product} />
-      <DescriptionBox />
-      <RelatedProducts />
+      <ProductDisplay product={product} onAddToCart={onAddToCart} />      
+      {/* <DescriptionBox /> */}
+      <RelatedProducts onAddToCart={onAddToCart} /> 
     </div>
   );
 };

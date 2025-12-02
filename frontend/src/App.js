@@ -1,41 +1,45 @@
-import "./App.css";
-import React, { useEffect } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
-// === Public Pages ===
+import "./App.css";
+
+import { Header } from "./Components/Header/Header";
+import { FloatingCart } from "./Components/FloatingCart/FloatingCart";
+
 import Shop from "./Pages/Shop";
 import ShopCategory from "./Pages/ShopCategory";
 import Product from "./Pages/Product";
-import Cart from "./Pages/Cart";
+import CartPage from "./Pages/Cart";
 import Orders from "./Pages/Orders";
-import LoginSignup from "./Pages/LoginSignup";
+import Login from "./Pages/Login";
 import SearchResults from "./Pages/SearchResults";
 import ExclusiveOffers from "./Pages/ExclusiveOffers";
 import Checkout from "./Pages/Checkout";
-import Profile from "./Pages/Profile"; // Giữ lại trang Profile từ file gốc của bạn
+import Profile from "./Pages/Profile";
+import NotFound from "./Pages/NotFound";
 
-// === Admin Pages ===
+import AdminLayout from "./Admin/AdminLayout";
 import AdminDashboard from "./Admin/Pages/AdminDashboard/AdminDashboard";
 import ManageProducts from "./Admin/Pages/ManageProducts/ManageProducts";
 import ManageOrders from "./Admin/Pages/ManageOrders/ManageOrders";
 import ManageVouchers from "./Admin/Pages/ManageVouchers/ManageVouchers";
 
-// Page not found
-import NotFound from "./Pages/NotFound";
-
-// assets
 import meat_banner from "./assets/banner_meats.png";
 import veg_banner from "./assets/banner_vegs.png";
-// import others_banner from "./assets/banner_others.png";
 import all_banner from "./assets/banner_all.png";
 
-import PublicLayout from "./PublicLayout";
-import AdminLayout from "./Admin/AdminLayout";
+import {
+  getFcmToken,
+  registerFcmToken,
+  onForegroundMessage,
+} from "./firebase";
+import { getCartByUserId, addProductToCart, updateProductQuantity } from "./api/cartService";
 
-// Import Firebase services
-import { getFcmToken, registerFcmToken, onForegroundMessage } from "./firebase";
-
-/* ---------- Route Guards ---------- */
 const RequireUser = ({ children }) => {
   const token = localStorage.getItem("userToken");
   return token ? children : <Navigate to="/login" replace />;
@@ -43,139 +47,239 @@ const RequireUser = ({ children }) => {
 
 const RequireAdmin = ({ children }) => {
   const token = localStorage.getItem("adminToken");
-  return token !== null ? children : <Navigate to="/login" replace />;
+  return token ? children : <Navigate to="/login" replace />;
 };
 
 const RedirectIfAuthed = ({ children }) => {
   const token = localStorage.getItem("userToken");
   return token ? <Navigate to="/" replace /> : children;
 };
-/* ---------------------------------- */
 
 function App() {
-  // Logic FCM Token (Thay thế cho logic getUserById/geocode cũ)
-  useEffect(() => {
-    console.log("App mounted. Initializing FCM logic..."); // DEBUG LOG
+  const [cartItems, setCartItems] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [user, setUser] = useState(null);
 
-    const saveToken = async () => {
-      console.log("Starting saveToken function..."); // DEBUG LOG
+  const getUserIdFromStorage = () => {
+    const userInfo = localStorage.getItem("userInfo");
+    if (!userInfo) return null;
+    try {
+      const parsed = JSON.parse(userInfo);
+      return parsed.user?._id || parsed._id || parsed.id || parsed.user?.id || null;
+    } catch (e) {
+      console.error("Lỗi parse userInfo:", e);
+      return null;
+    }
+  };
+
+  const fetchCart = useCallback(async (openCart = false) => {
+    const userId = getUserIdFromStorage();
+    if (!userId) {
+      setCartItems([]);
+      return;
+    }
+
+    try {
+      const res = await getCartByUserId(userId);
+      const serverItems = res.data?.productsInfo || [];
       
+      const mappedItems = serverItems.map(item => ({
+        _id: item.productId._id || item.productId,
+        name: item.productName || item.productId.name,
+        price: item.price || item.productId.price,
+        image: item.productImageUrl || item.productId.imageInfo?.url || "",
+        quantity: item.quantity,
+      }));
+
+      setCartItems(mappedItems);
+      
+      if (openCart) {
+        setIsCartOpen(true);
+      }
+      
+    } catch (error) {
+      console.error("Lỗi tải giỏ hàng:", error);
+    }
+  }, []);
+
+  const addToCart = async (product) => {
+    const userId = getUserIdFromStorage();
+    
+    if (!userId) {
+      alert("Vui lòng đăng nhập để mua hàng!");
+      return;
+    }
+
+    const pId = product._id || product.id;
+    if (!pId) {
+      console.error("Sản phẩm không có ID hợp lệ:", product);
+      alert("Lỗi dữ liệu sản phẩm.");
+      return;
+    }
+
+    try {
+      await addProductToCart(userId, { 
+        productId: pId, 
+        productName: product.name || "Sản phẩm",
+        productImageUrl: product.image || product.imageInfo?.url || "",
+        price: product.price || 0, 
+        quantity: 1
+      });
+      
+      await fetchCart(true); 
+      
+    } catch (error) {
+      console.error("Lỗi thêm giỏ hàng:", error);
+      alert("Không thể thêm vào giỏ hàng. Vui lòng thử lại sau.");
+    }
+  };
+
+  const handleUpdateQuantity = async (id, quantity) => {
+    const userId = getUserIdFromStorage();
+    if (!userId) return;
+
+    try {
+      await updateProductQuantity(userId, { productId: id, quantity });
+      fetchCart();
+    } catch (error) {
+      console.error("Lỗi cập nhật:", error);
+    }
+  };
+
+  useEffect(() => {
+    const loadData = () => {
       const userInfo = localStorage.getItem("userInfo");
-      console.log("Raw userInfo from localStorage:", userInfo); // DEBUG LOG
-
-      let userId = null;
-      try {
-        if (userInfo) {
-           const parsedUser = JSON.parse(userInfo);
-           // Kiểm tra kỹ cấu trúc object để tránh lỗi undefined
-           userId = parsedUser.user ? parsedUser.user._id : parsedUser._id;
-        }
-      } catch (e) {
-        console.error("Error parsing userInfo JSON:", e);
-      }
-
-      console.log("Resolved userId:", userId); // DEBUG LOG
-
-      if (!userId) {
-        console.warn("No userId found. Skipping FCM token registration.");
-        return;
-      }
-
-      try {
-        console.log("Calling getFcmToken()..."); // DEBUG LOG
-        const token = await getFcmToken();
-        
-        if (token) {
-          console.log("FCM Token received:", token); // DEBUG LOG
-          localStorage.setItem("fcmToken", token);
-          
-          console.log(`Registering FCM token for userId: ${userId}...`); // DEBUG LOG
-          await registerFcmToken(userId, token);
-          console.log("Success: FCM token registered with backend.");
-        } else {
-          console.warn("Warning: No FCM token generated from Firebase.");
-        }
-      } catch (err) {
-        console.error("Error during FCM registration process:", err);
+      if (userInfo) {
+        try {
+          const parsed = JSON.parse(userInfo);
+          setUser(parsed.user || parsed);
+          fetchCart();
+        } catch {}
+      } else {
+        setUser(null);
+        setCartItems([]);
       }
     };
 
-    console.log("Checking Notification permission:", Notification.permission); // DEBUG LOG
+    loadData();
+
+    const handleAuthChange = () => loadData();
+    const handleCartUpdate = () => fetchCart();
+
+    window.addEventListener("auth-changed", handleAuthChange);
+    window.addEventListener("cart-updated", handleCartUpdate);
+
+    return () => {
+      window.removeEventListener("auth-changed", handleAuthChange);
+      window.removeEventListener("cart-updated", handleCartUpdate);
+    };
+  }, [fetchCart]);
+
+  useEffect(() => {
+    const initFcm = async () => {
+      const userId = getUserIdFromStorage();
+      
+      if (!userId) {
+        return; 
+      }
+      
+      try {
+        const token = await getFcmToken();
+        
+        if (token) {
+          localStorage.setItem("fcmToken", token);
+          await registerFcmToken(userId, token);
+        }
+      } catch (err) {
+        console.error("Lỗi khi khởi tạo FCM:", err);
+      }
+    };
 
     if (Notification.permission === "granted") {
-      saveToken();
+      initFcm();
     } else if (Notification.permission !== "denied") {
-      console.log("Requesting Notification permission..."); // DEBUG LOG
       Notification.requestPermission().then((permission) => {
-        console.log("Notification permission result:", permission);
-        if (permission === "granted") {
-          saveToken();
-        } else {
-          console.warn("Notification permission denied by user.");
-        }
+        if (permission === "granted") initFcm();
       });
-    } else {
-      console.warn("Notification permission is currently denied.");
     }
 
     onForegroundMessage((payload) => {
-      console.log("Foreground message received:", payload); // DEBUG LOG
       alert(`${payload.notification?.title}\n${payload.notification?.body}`);
     });
   }, []);
 
+
+  // const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  
   return (
-    <div>
-      <BrowserRouter>
+    <Router>
+      <div className="app">
+        <Header
+          // cartCount={totalItems}
+          onSearch={setSearchQuery}
+          searchQuery={searchQuery}
+          onOpenCart={() => setIsCartOpen(true)}
+          user={user}
+          onLogout={() => {
+            localStorage.removeItem("userToken");
+            localStorage.removeItem("userInfo");
+            setUser(null);
+            setCartItems([]);
+            window.dispatchEvent(new Event("auth-changed"));
+          }}
+        />
+
         <Routes>
-          {/* === PUBLIC ROUTES === */}
-          <Route path="/" element={<PublicLayout />}>
-            <Route path="/" element={<Shop />} />
-            <Route
-              path="/meats"
-              element={<ShopCategory banner={meat_banner} category="Meat" />}
-            />
-            <Route
-              path="/vegs"
-              element={<ShopCategory banner={veg_banner} category="Vegetable" />}
-            />
-            {/* <Route
-              path="/others"
-              element={<ShopCategory banner={others_banner} category="Others" />}
-            /> */}
-            <Route
-              path="/all-products"
-              element={<ShopCategory banner={all_banner} category="" />}
-            />
+          <Route path="/" element={<Shop onAddToCart={addToCart} />} />
 
-            <Route
-              path="/checkout"
-              element={
-                <RequireUser>
-                  <Checkout />
-                </RequireUser>
-              }
-            />
+          <Route
+            path="/meats"
+            element={<ShopCategory banner={meat_banner} category="Meat" onAddToCart={addToCart} />}
+          />
+          <Route
+            path="/vegs"
+            element={<ShopCategory banner={veg_banner} category="Vegetable" onAddToCart={addToCart} />}
+          />
+          <Route
+            path="/all-products"
+            element={<ShopCategory banner={all_banner} category="" onAddToCart={addToCart} />}
+          />
 
-            <Route path="/product/:productId" element={<Product />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/orders" element={<Orders />} />
+          <Route
+            path="/product/:productId"
+            element={<Product onAddToCart={addToCart} />}
+          />
 
-            <Route
-              path="/login"
-              element={
-                <RedirectIfAuthed>
-                  <LoginSignup />
-                </RedirectIfAuthed>
-              }
-            />
+          <Route
+            path="/cart"
+            element={<CartPage />}
+          />
 
-            <Route path="/exclusive-offers" element={<ExclusiveOffers />} />
-            <Route path="/search" element={<SearchResults />} />
-          </Route>
+          <Route
+            path="/login"
+            element={
+              <RedirectIfAuthed>
+                <Login onLogin={(u) => setUser(u)} />
+              </RedirectIfAuthed>
+            }
+          />
 
-          {/* === ADMIN ROUTES === */}
+          <Route path="/search" element={<SearchResults onAddToCart={addToCart} />} />
+          <Route path="/exclusive-offers" element={<ExclusiveOffers onAddToCart={addToCart} />} />
+
+          <Route
+            path="/checkout"
+            element={
+              <RequireUser>
+                <Checkout />
+              </RequireUser>
+            }
+          />
+
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/orders" element={<Orders />} />
+
           <Route
             path="/admin"
             element={
@@ -193,8 +297,16 @@ function App() {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </BrowserRouter>
-    </div>
+
+        {isCartOpen && (
+          <FloatingCart
+            items={cartItems}
+            onUpdateQuantity={handleUpdateQuantity}
+            onClose={() => setIsCartOpen(false)}
+          />
+        )}
+      </div>
+    </Router>
   );
 }
 

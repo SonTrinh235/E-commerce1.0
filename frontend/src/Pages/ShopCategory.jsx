@@ -26,7 +26,8 @@ function toItemProps(p, idx) {
 }
 
 const ShopCategory = (props) => {
-  const { category, banner } = props;
+  // SỬA 1: Nhận thêm onAddToCart từ props
+  const { category, banner, onAddToCart } = props;
 
   const [list, setList] = useState([]);
   const [page, setPage] = useState(1); 
@@ -152,7 +153,14 @@ const ShopCategory = (props) => {
         ) : (
           sortedProducts.map((p, i) => {
             const reactKey = p._id || p.id || `prod-${i}`;
-            return <Item key={reactKey} {...toItemProps(p, i)} />;
+            // SỬA 2: Truyền onAddToCart xuống cho Item
+            return (
+              <Item 
+                key={reactKey} 
+                {...toItemProps(p, i)} 
+                onAddToCart={onAddToCart} 
+              />
+            );
           })
         )}
       </div>

@@ -1,0 +1,169 @@
+.product-reviews-container {
+  margin-top: 40px;
+  padding: 24px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.reviews-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.reviews-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.average-score .score {
+  font-size: 48px;
+  font-weight: bold;
+  color: #333;
+}
+
+.average-score .max-score {
+  font-size: 18px;
+  color: #888;
+}
+
+.total-count {
+  margin-top: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+.divider {
+  border: 0;
+  border-top: 1px solid #eee;
+  margin: 24px 0;
+}
+
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.review-item {
+  display: flex;
+  gap: 16px;
+}
+
+.review-avatar {
+  width: 40px;
+  height: 40px;
+  background: #f0f0f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+}
+
+.review-content {
+  flex: 1;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.reviewer-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.review-date {
+  font-size: 12px;
+  color: #999;
+}
+
+.review-text {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #444;
+}
+
+.no-reviews {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+}
+
+.write-review h3 {
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+.login-prompt {
+  background: #f8f9fa;
+  padding: 16px;
+  text-align: center;
+  border-radius: 4px;
+}
+
+.login-prompt a {
+  color: #007bff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.rating-select {
+  margin-bottom: 16px;
+}
+
+.rating-select label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.comment-box textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.comment-box textarea:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.error-msg {
+  color: #dc3545;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.submit-review-btn {
+  margin-top: 16px;
+  padding: 10px 24px;
+  background: #00f5fd;
+  color: #000000;
+  font-weight: 1200;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.submit-review-btn:hover {
+  background: #00aeff;
+}
+
+.submit-review-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}

@@ -1,19 +1,33 @@
-import React from "react";
-import Popular from "../Components/Popular/Popular";
-import NewsLetter from "../Components/NewsLetter/NewsLetter";
-import NewArrivals from "../Components/NewArrivals/NewArrivals";
-import ShopCategory from "./ShopCategory";
-import all_banner from "../assets/banner_all.png";
+import React, { useState } from 'react';
+import { Banner } from '../Components/Banner/Banner';
+import { CategoryNav } from '../Components/CategoryNav/CategoryNav';
+import ProductGrid from '../Components/ProductGrid/ProductGrid';
+import { useNavigate } from 'react-router-dom';
 
-const Shop = () => {
+// Nhận prop onAddToCart từ App.js truyền xuống
+export default function Shop({ onAddToCart }) {
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery] = useState('');
+  const navigate = useNavigate();
+  const handleProductClick = (product) => {
+    navigate(`/product/${product.id || product._id}`);
+  };
+
   return (
     <div className="shop-page">
-      <Popular />
-      <ShopCategory category={null} banner = {all_banner} />
-      <NewArrivals />
-      <NewsLetter />
+      <Banner />
+      
+      <CategoryNav 
+        selectedCategory={selectedCategory} 
+        onSelectCategory={setSelectedCategory} 
+      />
+
+      <ProductGrid 
+        selectedCategory={selectedCategory}
+        searchQuery={searchQuery}
+        onAddToCart={onAddToCart} 
+        onProductClick={handleProductClick}
+      />
     </div>
   );
-};
-
-export default Shop;
+}

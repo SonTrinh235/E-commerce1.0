@@ -13,7 +13,7 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Received background message ', payload);
+  console.log('[firebase-message-sw.js] Received background message ', payload);
 
   const notification = payload.notification || {};
   const title = notification.title || 'Thông báo mới';

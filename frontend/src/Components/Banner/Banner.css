@@ -1,0 +1,233 @@
+.banner-container {
+  padding: 16px 0; /* Giảm padding trên dưới một chút để sát hơn */
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* Class mới để định dạng độ rộng "gần bằng màn hình" */
+.banner-layout {
+  width: 98%; /* Chiếm 98% chiều rộng màn hình */
+  max-width: 1920px; /* Giới hạn tối đa cho màn hình cực lớn */
+  margin: 0 auto;
+}
+
+.banner-wrapper {
+  position: relative;
+  border-radius: 32px; /* Bo góc tròn hơn vì banner to hơn */
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  height: 350px; /* Tăng chiều cao mặc định (Mobile) */
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .banner-wrapper {
+    height: 500px; /* Tablet: Cao hơn */
+  }
+}
+
+@media (min-width: 1200px) {
+  .banner-wrapper {
+    height: 600px; /* Desktop: Rất cao và thoáng */
+  }
+}
+
+.banner-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32px; 
+  transition: all 0.7s ease;
+}
+
+@media (min-width: 768px) {
+  .banner-content {
+    padding: 0 100px; /* Padding ngang lớn để nội dung tập trung */
+  }
+}
+
+.banner-orange {
+  background: linear-gradient(90deg, #fb923c 0%, #ef4444 100%);
+}
+
+.banner-green {
+  background: linear-gradient(90deg, #4ade80 0%, #10b981 100%);
+}
+
+.banner-pink {
+  background: linear-gradient(90deg, #f472b6 0%, #dc2626 100%);
+}
+
+.banner-text {
+  color: white;
+  max-width: 700px; /* Cho phép text trải dài hơn */
+  animation: fadeInLeft 0.7s ease;
+  z-index: 2; /* Đảm bảo text nổi lên trên decoration */
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.banner-text h2 {
+  font-size: 40px;
+  margin-bottom: 20px;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.banner-text p {
+  font-size: 20px;
+  margin-bottom: 32px;
+  opacity: 0.95;
+}
+
+@media (min-width: 768px) {
+  .banner-text h2 {
+    font-size: 64px; /* Chữ rất to trên PC */
+  }
+  .banner-text p {
+    font-size: 28px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .banner-text h2 {
+    font-size: 80px; /* Cực đại */
+  }
+  .banner-text p {
+    font-size: 32px;
+  }
+}
+
+.banner-cta {
+  background: white;
+  color: #111827;
+  padding: 16px 48px; /* Nút to hơn */
+  border-radius: 50px;
+  font-size: 18px;
+  font-weight: 700;
+  transition: all 0.3s;
+  cursor: pointer;
+  border: none;
+}
+
+.banner-cta:hover {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  transform: scale(1.05) translateY(-2px);
+}
+
+.banner-decoration {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .banner-decoration {
+    display: block;
+    position: absolute;
+    right: 10%;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+
+.decoration-circle {
+  width: 400px; /* Vòng tròn to hơn */
+  height: 400px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  animation: pulse 3s infinite;
+  backdrop-filter: blur(5px);
+}
+
+/* Nút điều hướng to hơn và đẩy ra sát mép hơn */
+.banner-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 12px;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s;
+  z-index: 10;
+  cursor: pointer;
+  border: none;
+}
+
+.banner-nav:hover {
+  background: white;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.banner-nav-left {
+  left: 24px;
+}
+
+.banner-nav-right {
+  right: 24px;
+}
+
+.nav-icon {
+  width: 28px;
+  height: 28px;
+  color: #1f2937;
+}
+
+.banner-indicators {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+}
+
+.banner-indicator {
+  width: 12px;
+  height: 12px;  
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.banner-indicator:hover {
+  background: rgba(255, 255, 255, 0.8);
+  transform: scale(1.2);
+}
+
+.indicator-active {
+  background: white;
+  width: 32px; /* Indicator dài ra khi active */
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+}

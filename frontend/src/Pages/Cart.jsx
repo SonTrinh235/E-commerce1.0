@@ -1,284 +1,251 @@
-import React, { useContext, useEffect, useState } from "react";
-import "./CSS/Cart.css";
-import { useNavigate } from "react-router-dom";
-import promoCodes from "../data/Promo.js";
-import CartItem from "../Components/CartItem/CartItem";
-import { CartContext } from "../Context/CartContext";
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, Plus, Minus, Trash2, ShoppingBag, Tag } from 'lucide-react';
+import { getCartByUserId, updateProductQuantity, removeProductFromCart } from '../api/cartService';
+import './CSS/Cart.css';
 
-// Import APIs
-import { getAllVouchers } from "../api/voucherService.js";
-
-// Import utils
-import { vnd } from "../utils/currencyUtils.js";
-
-const Cart = () => {
-  // Import cart from CartContext
-  const {
-    // Cart is loading
-    isCartLoading,
-
-    // cartTotal: Total cart price
-    cartTotal,
-    // cartItems: Items in cart with prod id and count
-    cartItems,
-    cartTotalItems,
-
-    // productsLookup: Lookup objects of products in cart (full product data)
-    productsLookup,
-
-    // Implemented API callers
-    // cartAddProductToCart(productId)
-    cartAddProductToCart,
-    // cartUpdateProductQuantity(productId,quantity)
-    cartUpdateProductQuantity,
-    // cartRemoveProductFromCart(productId)
-    cartRemoveProductFromCart,
-
-    //voucher
-    appliedVoucher, setAppliedVoucher
-  } = useContext(CartContext);
-
-  const [voucherList, setVoucherList] = useState([]);
-
+export default function Cart() {
   const navigate = useNavigate();
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(null);
 
-  const handleCheckoutClick = () => {
-    if (cartTotalItems === 0) {
-      alert("Giỏ hàng của bạn đang trống")
-    } else {
-      navigate("/checkout")
-    }
-  }
-
-
-  const fetchVouchers = async (page = 1, limit = 20) => {
-    const response = await getAllVouchers(page,limit);
-    setVoucherList(response.data.list);
-  }
-
+  // --- 1. Lấy User ID & Load Giỏ hàng từ API ---
   useEffect(() => {
-    fetchVouchers();
-  },[])
+    const fetchCart = async () => {
+      try {
+        // Lấy User ID từ localStorage (giả sử bạn lưu dạng object userInfo)
+        const storedUser = localStorage.getItem('userInfo');
+        if (!storedUser) {
+          // Chưa đăng nhập thì chuyển về login hoặc để giỏ trống
+          setLoading(false);
+          return;
+        }
 
+        const parsedUser = JSON.parse(storedUser);
+        // Tùy backend của bạn trả về _id hay id, hay user._id
+        const uId = parsedUser.id || parsedUser._id || (parsedUser.user && parsedUser.user._id);
+        setUserId(uId);
 
-  // ============ BELOW IGNORED =============================
-  // =========== BELOW IGNORED ===========================
+        if (uId) {
+          setLoading(true);
+          const res = await getCartByUserId(uId);
+          console.log("[Cart Page] API Response:", res); 
 
-  const SHIPPING_FEE = 0;
+          // --- SỬA LỖI Ở ĐÂY: Lấy productsInfo theo đúng tài liệu API ---
+          let cartProducts = [];
+          
+          if (res?.data && res.data.productsInfo && Array.isArray(res.data.productsInfo)) {
+             cartProducts = res.data.productsInfo;
+          } else if (Array.isArray(res?.data)) {
+             // Fallback nếu API trả về mảng trực tiếp (trường hợp hiếm)
+             cartProducts = res.data;
+          }
+          
+          // Map lại dữ liệu dựa trên "Thuộc tính của Object" trong doc
+          const mappedItems = cartProducts.map(item => ({
+            id: item.productId, // productId: string
+            name: item.productName, // productName: string
+            image: item.productImageUrl || "", // productImageUrl: string
+            quantity: item.quantity, // quantity: int
+            price: item.price, // price: int
+            // Các trường này có thể không có trong productsInfo theo doc, cần check lại hoặc để default
+            originalPrice: item.originalPrice || null, 
+            unit: item.unit || "Cái",
+            discount: item.discount || 0
+          }));
 
-  const [voucherError, setVoucherError] = useState("");
-  const [inputVoucherCode, setInputVoucherCode] = useState(''); 
+          setItems(mappedItems);
+        }
+      } catch (error) {
+        console.error("Lỗi tải giỏ hàng:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchCart();
+  }, []);
 
-  const applyVoucher = (event) => {
-    // Prevent page refresh on submit
-    event.preventDefault();
-    if (!inputVoucherCode.trim()) {
-      setVoucherError("Please enter a promo code");
-      return;
+  // --- 2. Xử lý Cập nhật số lượng (Gọi API PUT) ---
+  const handleUpdateQuantity = async (productId, newQuantity) => {
+    if (newQuantity < 1) return;
+
+    // Optimistic Update: Cập nhật UI trước cho mượt
+    const oldItems = [...items];
+    setItems(prev => prev.map(item => 
+      item.id === productId ? { ...item, quantity: newQuantity } : item
+    ));
+
+    try {
+      // Theo doc: updateProductQuantity (PUT) /order/:userId/update
+      // Body: productId, quantity, price (có thể cần truyền lại price hiện tại)
+      const currentItem = items.find(i => i.id === productId);
+      await updateProductQuantity(userId, { 
+        productId, 
+        quantity: newQuantity,
+        price: currentItem ? currentItem.price : 0 
+      });
+    } catch (error) {
+      console.error("Lỗi cập nhật số lượng:", error);
+      // Nếu lỗi thì revert lại UI cũ
+      setItems(oldItems);
+      alert("Không thể cập nhật số lượng. Vui lòng thử lại.");
     }
+  };
 
-    console.log(inputVoucherCode);
-    const foundVoucher = voucherList.find(
-      (voucher) => voucher.code.trim().toUpperCase() === inputVoucherCode.trim().toUpperCase()
-    );
+  // --- 3. Xử lý Xóa sản phẩm (Gọi API DELETE) ---
+  const handleRemove = async (productId) => {
+    if (!window.confirm("Bạn chắc chắn muốn xóa sản phẩm này?")) return;
 
-    if (foundVoucher) {
-      setAppliedVoucher(foundVoucher);
-    } else {
-      setVoucherError("Voucher không hợp lệ!");
-      setAppliedVoucher(null);
+    const oldItems = [...items];
+    setItems(prev => prev.filter(item => item.id !== productId));
+
+    try {
+      // Theo doc: removeProductFromCart (DELETE) /order/:userId/remove
+      await removeProductFromCart(userId, productId);
+    } catch (error) {
+      console.error("Lỗi xóa sản phẩm:", error);
+      setItems(oldItems);
+      alert("Xóa thất bại.");
     }
   };
 
-  const calculateDiscountAmount = () => {
-    if (!appliedVoucher) return 0;
+  // --- Tính toán tổng tiền ---
+  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const discountAmount = items.reduce(
+    (sum, item) => {
+        // Nếu có originalPrice thì mới tính discount, nếu không thì 0
+        if (item.originalPrice && item.originalPrice > item.price) {
+            return sum + ((item.originalPrice - item.price) * item.quantity);
+        }
+        return sum;
+    },
+    0
+  );
+  const shippingFee = subtotal > 0 ? (subtotal >= 200000 ? 0 : 25000) : 0;
+  const total = subtotal + shippingFee;
 
-    const voucherType = appliedVoucher.discountType;
-    const voucherValue = appliedVoucher.discountValue;
-    const subtotal = cartTotal;
+  const handleBack = () => navigate('/');
+  const handleCheckout = () => navigate('/checkout');
 
-    if (voucherType === "percentage") {
-      return (subtotal * voucherValue/100);
-    } else if (voucherType === "fixed") {
-      return Math.min(subtotal, voucherValue);
-    }
-    return 0;
-  };
+  const getImage = (src) => (!src || src.trim() === "") ? "/logo192.png" : src;
 
-  const getShippingFee = () => {
-    return SHIPPING_FEE;
-  };
-
-  const getFinalTotal = () => {
-    const subtotal = cartTotal;
-    const discount = calculateDiscountAmount();
-    // const shippingFee = getShippingFee();
-    return subtotal - discount + SHIPPING_FEE;
-  };
-
-  // ================ ABOVE IGNORED =======================
-  // ================ ABOVE IGNORED =======================
+  if (loading) return <div className="cart-page"><div className="container" style={{textAlign:'center', paddingTop: 100}}>Đang tải giỏ hàng...</div></div>;
 
   return (
-    <div className="Cart-container">
+    <div className="cart-page">
+      <div className="container">
+        <button onClick={handleBack} className="back-button">
+          <ArrowLeft className="icon" /> Tiếp tục mua sắm
+        </button>
 
-      {/* LIST CART ITEM */}
-      {/* LIST CART ITEM */}
-      <div className="Cart-cart">
-      <h1> Giỏ Hàng Của Tôi: </h1>
-        {isCartLoading ? (
-          <div>Loading cart ... </div>
-        ) : (
-          <table id="table">
-            <thead>
-              {cartTotalItems === 0 ? (
-                <div>Giỏ hàng của bạn đang trống</div>
-              ) : ( 
-                <tr>
-                <th id="index-col">#</th>
-                <th id="image-col">Sản Phẩm</th>
-                <th id="name-col">Tên Sản Phẩm</th>
-                <th id="price-col">Giá Thành/1</th>
-                <th id="quantity-col">Số Lượng</th>
-                <th id="total-col">Tổng Cộng</th>
-                <th id="remove-col">Xóa</th>
-              </tr>
-              )}
-            </thead>
-            <tbody>
-              {/* Map values cartItems as item */}
-              {Object.values(cartItems).map((item, i) => {
-                // Get product data for current cart item
-                const currentItemData = productsLookup[item.productId];
-                const index = i + 1;
-                return (
-                  // Cart item card
-                    <CartItem
-                      index={index}
-                      {...item}
-                      {...currentItemData}
-                      onIncrease={() =>
-                        cartUpdateProductQuantity(
-                          item.productId,
-                          item.quantity + 1
-                        )
-                      }
-                      onDecrease={() =>
-                        cartUpdateProductQuantity(
-                          item.productId,
-                          item.quantity - 1
-                        )
-                      }
-                      onRemove={() => cartRemoveProductFromCart(item.productId)}
-                    />
-                );
-              })}
-            </tbody>
-          </table>
-
-        )}
-      </div>
-
-      {/* CHECKOUT */}
-      {/* CHECKOUT */}
-      <div className="Cart-checkout">
-        <div className="Cart-total">
-          <h1>Tổng cộng</h1>
-          <div>
-            <div className="Cart-total-item">
-              <p>Tổng tiền sản phẩm</p>
-              <p>{vnd(cartTotal)}</p>
+        <div className="cart-content">
+          <div className="cart-main">
+            <div className="cart-header">
+              <h1>Giỏ hàng của bạn</h1>
+              <p className="item-count">{items.length} sản phẩm</p>
             </div>
-            <hr />
 
+            {items.length === 0 ? (
+              <div className="empty-cart">
+                <ShoppingBag className="empty-icon" />
+                <h2>Giỏ hàng trống</h2>
+                <p>Hãy thêm sản phẩm vào giỏ hàng để tiếp tục mua sắm</p>
+                <button onClick={handleBack} className="shop-now-btn">
+                  Mua sắm ngay
+                </button>
+              </div>
+            ) : (
+              <div className="cart-items">
+                {items.map((item) => (
+                  <div key={item.id} className="cart-item">
+                    <div className="item-image">
+                      <img
+                        src={getImage(item.image)}
+                        alt={item.name}
+                        className="image"
+                        onError={(e) => (e.target.src = "/logo192.png")}
+                      />
+                      {item.discount > 0 && <div className="item-discount-badge">-{item.discount}%</div>}
+                    </div>
 
-            {appliedVoucher && (
-              <>
-                <div className="Cart-total-item">
+                    <div className="item-info">
+                      <h3 className="item-name">{item.name}</h3>
+                      <p className="item-unit">Đơn vị: {item.unit}</p>
+                      <div className="item-price-section">
+                        <span className="item-price">{item.price?.toLocaleString("vi-VN")}đ</span>
+                        {item.originalPrice > item.price && (
+                          <span className="item-original-price">{item.originalPrice?.toLocaleString("vi-VN")}đ</span>
+                        )}
+                      </div>
+                    </div>
 
-                  <p>
-                    Giảm giá (
-
-                      {appliedVoucher.discountType === 'percentage' ? (
-                        <>{appliedVoucher.discountValue}%</>
-                      ) : appliedVoucher.discountType === 'fixed' ? (
-                        <>{vnd(appliedVoucher.discountValue)}</>
-                      ) : (
-                        <>Unexpected discountType</>
-                      )}
-
-                    )
-                  </p>
-
-                  <p>{vnd(calculateDiscountAmount())}</p>
-
-                </div>
-                <hr />
-              </>
+                    <div className="item-actions">
+                      <div className="quantity-control">
+                        <button
+                          onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                          className="qty-btn"
+                          disabled={item.quantity <= 1}
+                        >
+                          <Minus className="qty-icon" />
+                        </button>
+                        <span className="qty-value">{item.quantity}</span>
+                        <button
+                          onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                          className="qty-btn qty-btn-plus"
+                        >
+                          <Plus className="qty-icon" />
+                        </button>
+                      </div>
+                      <div className="item-total">{(item.price * item.quantity).toLocaleString("vi-VN")}đ</div>
+                      <button onClick={() => handleRemove(item.id)} className="remove-btn">
+                        <Trash2 className="remove-icon" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
-
-
-            <div className="Cart-total-item">
-              <p>Phí vận chuyển</p>
-              <p>{vnd(getShippingFee())}</p>
-            </div>
-            <hr />
-            
-            <div className="Cart-total-item">
-              <h3>Tổng Thanh Toán</h3>
-              <h3>{vnd(getFinalTotal())}</h3>
-            </div>
           </div>
-          
-          {/* Checkout button */}
-          <button onClick={handleCheckoutClick}>
-            Mua Hàng
-          </button>
 
-        </div>
-        
-        
-         {/* PROMO CODE SECTION */}
-        <div className="Cart-promocode">
-          <h2>Mã Khuyến Mãi</h2>
-          {appliedVoucher && (
-            <div className="applied-promo">
-              <p>
-                Applied: {appliedVoucher.code} ({appliedVoucher.description})
-              </p>
-              <button onClick={() => setAppliedVoucher(null)}>Remove</button>
+          {items.length > 0 && (
+            <div className="cart-sidebar">
+              <div className="order-summary">
+                <h2>Tóm tắt đơn hàng</h2>
+                <div className="summary-section">
+                  <div className="summary-row">
+                    <span>Tạm tính ({items.length} sản phẩm)</span>
+                    <span>{subtotal.toLocaleString("vi-VN")}đ</span>
+                  </div>
+                  {discountAmount > 0 && (
+                    <div className="summary-row discount-row">
+                      <span><Tag className="discount-icon" /> Tiết kiệm</span>
+                      <span className="discount-amount">-{discountAmount.toLocaleString("vi-VN")}đ</span>
+                    </div>
+                  )}
+                  <div className="summary-row">
+                    <span>Phí vận chuyển</span>
+                    <span className={shippingFee === 0 ? "free-shipping" : ""}>
+                      {shippingFee === 0 ? "Miễn phí" : shippingFee.toLocaleString("vi-VN") + "đ"}
+                    </span>
+                  </div>
+                  {subtotal < 200000 && subtotal > 0 && (
+                    <div className="shipping-notice">
+                      Mua thêm {(200000 - subtotal).toLocaleString("vi-VN")}đ để được miễn phí vận chuyển
+                    </div>
+                  )}
+                </div>
+                <div className="summary-total">
+                  <span>Tổng cộng</span>
+                  <span className="total-amount">{total.toLocaleString("vi-VN")}đ</span>
+                </div>
+                <button onClick={handleCheckout} className="checkout-btn">Thanh toán</button>
+              </div>
             </div>
           )}
-          <form className="Cart-promobox" onSubmit={applyVoucher}>
-            <input
-              type="text"
-              placeholder="Nhập mã khuyến mãi"
-              value={inputVoucherCode}
-              onChange={(e) => setInputVoucherCode(e.target.value)}
-            />
-            <button onClick={applyVoucher}>Thêm</button>
-          </form>
-          {voucherError && <b className="promo-error" style={{color: 'rgba(184, 55, 55, 1)'}}>{voucherError}</b>}
-
-          {/* testing */}
-          <div className="available-promos">
-            <p>
-              <strong>Mã khuyến mãi có sẵn:</strong>
-            </p>
-            <ul>
-              {voucherList.map((voucher, i) => (
-                <li key={i}>
-                  {voucher.code} - {voucher.description}
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
       </div>
-
     </div>
   );
-};
-
-export default Cart;
+}

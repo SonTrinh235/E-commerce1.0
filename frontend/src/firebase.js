@@ -48,7 +48,7 @@ export async function getFcmToken() {
     if (navigator.serviceWorker.controller) {
       swReg = await navigator.serviceWorker.ready;
     } else {
-      swReg = await navigator.serviceWorker.register("/firebase-messaging-sw.js", {
+      swReg = await navigator.serviceWorker.register("/firebase-message-sw.js", {
         scope: "/"
       });
     }

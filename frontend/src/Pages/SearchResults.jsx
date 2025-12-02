@@ -14,7 +14,8 @@ function matches(product, q) {
   return name.includes(q) || catText.includes(q);
 }
 
-const SearchResults = () => {
+// SỬA 1: Nhận prop onAddToCart ở đây
+const SearchResults = ({ onAddToCart }) => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const query = queryParams.get("query")?.trim().toLowerCase() || "";
@@ -146,7 +147,12 @@ const SearchResults = () => {
         ) : sorted.length > 0 ? (
           <div className="searchresults-products">
             {sorted.map((p, i) => (
-              <Item key={p._id || p.id || i} {...toItemProps(p, i)} />
+              // SỬA 2: Truyền prop onAddToCart xuống Item
+              <Item 
+                key={p._id || p.id || i} 
+                {...toItemProps(p, i)} 
+                onAddToCart={onAddToCart}
+              />
             ))}
           </div>
         ) : (

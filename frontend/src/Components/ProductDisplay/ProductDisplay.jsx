@@ -1,168 +1,216 @@
-// ProductDisplay.jsx
-import React, { useContext, useMemo, useState } from "react";
-import "./ProductDisplay.css";
-import star_icon from "../../assets/star_icon.png";
-import star_dull_icon from "../../assets/star_dull_icon.png";
-import { CartContext } from "../../Context/CartContext";
-import { vnd } from "../../utils/currencyUtils.js";
+import React, { useEffect, useState, useContext } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { ArrowLeft, Plus, Minus, ShoppingCart, Star, Check } from 'lucide-react';
+import { ImageWithFallback } from '../../Components/figma/ImageWithFallback.tsx';
+import { getProductById } from '../../api/productService.js';
+import { CartContext } from '../../Context/CartContext'; 
+import ProductReviews from '../../Components/Review/ProductReviews';
+import './ProductDisplay.css';
 
-const ProductDisplay = ({ product }) => {
-  const { cartAddProductToCart } = useContext(CartContext) || {};
+const isLikelyObjectId = (s) => {
+  if (!s || typeof s !== 'string') return false;
+  const hex24 = /^[0-9a-fA-F]{24}$/;
+  return hex24.test(s);
+};
 
-  const p = useMemo(() => {
-    if (!product) return null;
-    const raw = product.raw || product;
-
-    const id = String(raw._id ?? product._id ?? product.id ?? "");
-    const name = raw.name ?? product.name ?? "Sản phẩm";
-    const price = Number(raw.price ?? product.price ?? product.new_price ?? 0);
-
-    const oldPrice =
-      typeof product?.old_price === "number" ? product.old_price : null;
-
-    const description = raw.description ?? product.description ?? "";
-    const ratingCount =
-      (Array.isArray(raw.ratings) && raw.ratings.length) ||
-      (Array.isArray(raw.ratingIds) && raw.ratingIds.length) ||
-      0;
-
-    const catRaw = raw.category ?? product.category;
-    const categoryText = Array.isArray(catRaw)
-      ? catRaw.join(", ")
-      : (catRaw ?? "");
-
-    return {
-      id,
-      name,
-      price,
-      oldPrice,
-      description,
-      ratingCount,
-      categoryText,
-      raw,
-    };
-  }, [product]);
-
-  const gallery = useMemo(() => {
-    if (!p) return [];
-    const urls = new Set();
-    const add = (u) => {
-      if (u && String(u).trim()) urls.add(u);
-    };
-
-    const imgs = p.raw?.images;
-    if (Array.isArray(imgs)) {
-      for (const it of imgs) {
-        if (typeof it === "string") add(it);
-        else if (it && typeof it === "object" && it.url) add(it.url);
-      }
+const extractIdFromPath = (pathname) => {
+  try {
+    const path = pathname.split('?')[0].split('#')[0];
+    const parts = path.split('/').filter(Boolean);
+    if (parts.length === 0) return null;
+    for (let i = parts.length - 1; i >= 0; i--) {
+      if (isLikelyObjectId(parts[i])) return parts[i];
     }
-    add(product?.image);
-    add(p.raw?.imageInfo?.url);
-    add(product?.imageUrl);
+    return null;
+  } catch (e) {
+    return null;
+  }
+};
 
-    return Array.from(urls).slice(0, 6);
-  }, [p, product]);
+const ProductDetail = () => {
+  const params = useParams();
+  const paramId = params?.id || params?.productId;
+  const navigate = useNavigate();
+  
+  // 1. Lấy Context
+  const { cartAddProductToCart, setIsCartOpen } = useContext(CartContext);
 
-  const [activeIdx, setActiveIdx] = useState(0);
-  const mainImg = gallery[activeIdx];
+  const [idFromUrl] = useState(() => {
+    if (isLikelyObjectId(paramId)) return paramId;
+    const extracted = extractIdFromPath(window.location.pathname);
+    return extracted || null;
+  });
 
-  if (!p) return null;
+  const idToUse = isLikelyObjectId(paramId) ? paramId : idFromUrl;
 
-  const handleAdd = () => {
-    if (p.id && typeof cartAddProductToCart === "function") {
-      cartAddProductToCart(p.id);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [quantity, setQuantity] = useState(1);
+  const [selectedImage, setSelectedImage] = useState(0);
+  
+  // 2. State cho hiệu ứng nút thêm giỏ hàng
+  const [isAdding, setIsAdding] = useState(false);
+
+  useEffect(() => {
+    if (!idToUse) {
+      setError("ID sản phẩm không hợp lệ.");
+      setLoading(false);
+      return;
+    }
+
+    let alive = true;
+
+    const fetchProduct = async () => {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await getProductById(idToUse);
+        const data = res?.data ?? null;
+
+        if (!alive) return;
+
+        if (!data || !data._id) {
+          setError("Không tìm thấy sản phẩm.");
+          setProduct(null);
+          return;
+        }
+
+        setProduct({
+          ...data,
+          price: data.price ?? 0,
+          stock: data.stock ?? 0,
+          rating: data.rating ?? 0,
+          description: data.description ?? "",
+          name: data.name ?? "Sản phẩm",
+          imageInfo: data.imageInfo ?? { url: "" },
+          ratings: Array.isArray(data.ratings) ? data.ratings : []
+        });
+      } catch (e) {
+        console.error(e);
+        if (!alive) return;
+        setError("Không tải được dữ liệu sản phẩm.");
+        setProduct(null);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    };
+
+    fetchProduct();
+    return () => { alive = false; }
+  }, [idToUse]);
+
+  // 3. Hàm xử lý thêm vào giỏ với hiệu ứng
+  const handleAddToCart = async () => {
+    if (!product) return;
+    
+    setIsAdding(true); // Bắt đầu hiệu ứng
+
+    try {
+        // Loop để thêm đúng số lượng
+        for (let i = 0; i < quantity; i++) {
+            await cartAddProductToCart(product._id);
+        }
+        
+        // Mở giỏ hàng (Check null để tránh lỗi nếu chưa update Context)
+        if (setIsCartOpen) {
+            setIsCartOpen(true);
+        }
+        
+        // Tắt hiệu ứng sau 1 giây
+        setTimeout(() => setIsAdding(false), 1000);
+
+    } catch (err) {
+        console.error("Lỗi thêm vào giỏ:", err);
+        alert("Có lỗi xảy ra khi thêm vào giỏ hàng.");
+        setIsAdding(false);
     }
   };
+  
+  const increaseQuantity = () => setQuantity(q => q + 1);
+  const decreaseQuantity = () => setQuantity(q => Math.max(1, q - 1));
+
+  const images = product ? [product.imageInfo?.url || ''] : [''];
+  const nextImage = () => setSelectedImage(prev => (prev + 1) % images.length);
+  const prevImage = () => setSelectedImage(prev => (prev - 1 + images.length) % images.length);
+
+  if (loading) return <div className="product-detail-page"><h2>Đang tải sản phẩm…</h2></div>;
+  if (error || !product) return (
+    <div className="product-detail-page">
+      <div className="not-found">
+        <h2>{error || "Không tìm thấy sản phẩm."}</h2>
+        <button onClick={() => navigate(-1)} className="back-button">
+          <ArrowLeft className="icon" /> Quay lại
+        </button>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="productdisplay">
-      <div className="productdisplay-left">
-        <div className="productdisplay-img-list">
-          {gallery.length > 0 ? (
-            gallery.map((src, i) => (
-              <img
-                key={`${src}-${i}`}
-                src={src}
-                alt={`${p.name} thumbnail ${i + 1}`}
-                onClick={() => setActiveIdx(i)}
-                className={i === activeIdx ? "active-thumb" : ""}
-                onError={(e) => (e.currentTarget.style.display = "none")}
-              />
-            ))
-          ) : (
-            <>
-              <div className="thumb placeholder" />
-              <div className="thumb placeholder" />
-              <div className="thumb placeholder" />
-              <div className="thumb placeholder" />
-            </>
-          )}
-        </div>
+    <div className="product-detail-page">
+      <div className="container">
+        <button onClick={() => navigate(-1)} className="back-button">
+          <ArrowLeft className="icon" /> Quay lại trang trước
+        </button>
 
-        <div className="productdisplay-img">
-          {mainImg ? (
-            <img
-              className="productdisplay-main-img"
-              src={mainImg}
-              alt={p.name}
-              onError={(e) => (e.currentTarget.style.display = "none")}
-            />
-          ) : (
-            <div className="productdisplay-main-img placeholder">No Image</div>
-          )}
-        </div>
-      </div>
-
-      <div className="productdisplay-right">
-        <h1>{p.name}</h1>
-
-        <div className="productdisplay-right-star">
-          <img src={star_icon} alt="star" />
-          <img src={star_icon} alt="star" />
-          <img src={star_icon} alt="star" />
-          <img src={star_icon} alt="star" />
-          <img src={star_dull_icon} alt="star" />
-          <p>({p.ratingCount})</p>
-        </div>
-
-        <div className="productdisplay-right-prices">
-          {p.oldPrice != null && p.oldPrice > p.price && (
-            <div className="productdisplay-right-price-old">
-              {vnd(p.oldPrice)}
+        <div className="product-detail-content">
+          <div className="product-detail-left">
+            <div className="product-main-image">
+              <ImageWithFallback src={images[selectedImage]} alt={product.name} className="main-image" />
+              {images.length > 1 && <>
+                <button className="image-nav image-nav-left" onClick={prevImage}>‹</button>
+                <button className="image-nav image-nav-right" onClick={nextImage}>›</button>
+              </>}
             </div>
-          )}
-          <div className="productdisplay-right-price-new">{vnd(p.price)}</div>
-        </div>
+          </div>
 
-        <div className="productdisplay-right-description">
-          {p.description || `PRODUCT DESCRIPTION ${p.id}`}
-        </div>
+          <div className="product-detail-right">
+            <h1 className="product-detail-name">{product.name}</h1>
+            <div className="product-rating">
+              {[...Array(5)].map((_, i) => (
+                <Star key={i} className={i < Math.round(product.rating) ? 'star-filled' : 'star'} />
+              ))}
+              <span className="rating-text">({product.ratings.length} đánh giá)</span>
+            </div>
 
-        <div className="productdisplay-right-size">
-          <h1>OPTIONAL</h1>
-          <div className="productdisplay-right-sizes">
-            <div>1</div>
-            <div>2</div>
-            <div>3</div>
-            <div>4</div>
-            <div>5</div>
+            <div className="product-price-section">
+              <div className="price-main">
+                <span className="price-current">{product.price.toLocaleString('vi-VN')}đ</span>
+              </div>
+              <div>Kho: {product.stock} sản phẩm</div>
+            </div>
+
+            <div className="product-description">
+              <h3>Mô tả sản phẩm</h3>
+              <p>{product.description}</p>
+            </div>
+
+            <div className="product-actions">
+              <div className="quantity-selector">
+                <button className="quantity-btn" onClick={decreaseQuantity}><Minus className="quantity-icon" /></button>
+                <span className="quantity-value">{quantity}</span>
+                <button className="quantity-btn quantity-btn-plus" onClick={increaseQuantity}><Plus className="quantity-icon" /></button>
+              </div>
+              
+              {/* Nút thêm giỏ hàng với hiệu ứng loading */}
+              <button 
+                className={`add-to-cart-large ${isAdding ? 'adding' : ''}`} 
+                onClick={handleAddToCart}
+                disabled={isAdding}
+                style={isAdding ? { backgroundColor: '#4caf50', borderColor: '#4caf50' } : {}}
+              >
+                {isAdding ? <Check className="cart-icon" /> : <ShoppingCart className="cart-icon" />}
+                {isAdding ? 'Đã thêm vào giỏ!' : 'Thêm vào giỏ hàng'}
+              </button>
+            </div>
           </div>
         </div>
 
-        <button onClick={handleAdd} disabled={!p.id}>
-          ADD TO CART
-        </button>
+        <ProductReviews productId={product._id} />
 
-        <p className="productdisplay-right-category">
-          <span>Category:</span> {p.categoryText || "—"}
-        </p>
-        <p className="productdisplay-right-category">
-          <span>Tags:</span>
-        </p>
       </div>
     </div>
   );
 };
 
-export default ProductDisplay;
+export default ProductDetail;

@@ -1,0 +1,85 @@
+.category-nav {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  position: sticky;
+  top: 88px;
+  z-index: 40;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  width: 100%;
+}
+
+.category-list {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  
+  /* QUAN TRỌNG: 
+     - Xóa margin-left.
+     - Dùng padding-left để tạo khoảng cách đầu dòng. 
+     - Padding này giúp item đầu tiên không bị cắt khi phóng to (scale).
+  */
+  padding: 16px 20px; 
+  
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
+}
+
+.category-list::-webkit-scrollbar {
+  display: none;
+}
+
+.category-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 50px;
+  white-space: nowrap;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 15px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  background: #f9fafb;
+  color: #4b5563;
+  flex-shrink: 0;
+}
+
+.category-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* --- MÀU SẮC --- */
+.category-all { background: #f3f4f6; color: #374151; }
+.category-all:hover { background: #e5e7eb; }
+
+.category-fruits { background: #fef2f2; color: #dc2626; }
+.category-fruits:hover { background: #fee2e2; }
+
+.category-meat { background: #fdf2f8; color: #db2777; }
+.category-meat:hover { background: #fce7f3; }
+
+.category-vegetables { background: #f0fdf4; color: #16a34a; }
+.category-vegetables:hover { background: #dcfce7; }
+
+.category-dairy { background: #eff6ff; color: #2563eb; }
+.category-dairy:hover { background: #dbeafe; }
+
+.category-snacks { background: #fff7ed; color: #ea580c; }
+.category-snacks:hover { background: #ffedd5; }
+
+.category-hot { background: #fef2f2; color: #ef4444; }
+.category-hot:hover { background: #fee2e2; }
+
+.category-new { background: #faf5ff; color: #9333ea; }
+.category-new:hover { background: #f3e8ff; }
+
+.category-active {
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  transform: scale(1.05); /* Hiệu ứng này cần padding để không bị cắt */
+  font-weight: 600;
+}
