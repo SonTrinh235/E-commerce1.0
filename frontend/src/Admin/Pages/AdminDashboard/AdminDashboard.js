@@ -1,54 +1,93 @@
 import "./AdminDashboard.css";
 import { useState, useEffect } from "react";
+// Import components
+import ReportsModal from "../../Components/ReportsModal/ReportsModal";
 
 // Import APIs
-import { getAllProducts } from "../../../api/productService";
 import { getAllOrders } from "../../../api/orderService";
+import * as dataService from "../../../api/dataService";
 
 // Import utils
 import { vnd } from "../../../utils/currencyUtils";
+import { formatDate } from "../../../utils/dateUtils";
 import { shipStatusMap } from "../../../utils/constantsMap";
 
 function AdminDashboard() {
   const [loading, setLoading] = useState(false);
-  const [totalProducts, setTotalProducts] = useState(0);
-  const [totalOrders, setTotalOrders] = useState(0);
+  const [showReports, setShowReports] = useState(false);
+
+  // Stats state - will be populated from API
+  const [monthRevenue, setMonthRevenue] = useState(0);
+  const [todayRevenue, setTodayRevenue] = useState(0);
+  const [todayOrderCount, setTodayOrderCount] = useState(0);
+  const [monthOrderCount, setMonthOrderCount] = useState(0);
+  const [newOrderCount, setNewOrderCount] = useState(0);
+
   const [topProducts, setTopProducts] = useState([]);
   const [topOrders, setTopOrders] = useState([]);
 
   function generateOrderSummaryString(order) {
     if (!order || !order.productsInfo || order.productsInfo.length === 0) {
-        return "No products found in the order.";
+      return "No products found in the order.";
     }
     const products = order.productsInfo;
     const firstName = products[0].productName;
     const totalCount = products.length;
     const remainingCount = totalCount - 1;
-    
+
     if (remainingCount === 0) {
-        return firstName;
+      return firstName;
     }
 
     return `${firstName}, + ${remainingCount} SP khác`;
-}
+  }
 
-  const fetchProductsAll = async (page = 1, limit = 4) => {
+  const getRankClass = (index) => {
+    if (index === 0) return "gold";
+    if (index === 1) return "silver";
+    if (index === 2) return "bronze";
+    return "";
+  };
+
+  const fetchGeneralStats = async (page = 1, limit = 4) => {
     setLoading(true);
     try {
-      const response = await getAllProducts(page, limit);
-      setTotalProducts(response.data.total);
-      setTopProducts(response.data.list);
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth();
+
+      const res1 = await dataService.getMonthlyRevenueInYear(currentYear);
+      setMonthRevenue(res1.data[currentMonth - 1].total);
+      const res2 = await dataService.getMonthlyOrdersCountInYear(currentYear);
+      setMonthOrderCount(res2.data[currentMonth - 1].count);
+      const res3 = await dataService.getTodayRevenue();
+      setTodayRevenue(res3.data);
+      const res4 = await dataService.getTodayOrdersCount();
+      setTodayOrderCount(res4.data);
+      const res5 = await dataService.getNewOrdersCount();
+      setNewOrderCount(res5.data);
+    } catch (error) {
+      alert("Failed to get general stats from server");
+      console.log(error);
+    }
+
+    setLoading(false);
+  };
+  const fetchTopProducts = async (page = 1, limit = 4) => {
+    setLoading(true);
+    try {
+      const response = await dataService.getTopSellingProducts();
+      setTopProducts(response.data);
     } catch (error) {
       console.log(error);
       alert("Fetch products failed, see console");
     }
     setLoading(false);
   };
-  const fetchOrdersAll = async (page = 1, limit = 4) => {
+  const fetchTopOrders = async (page = 1, limit = 10) => {
     setLoading(true);
     try {
       const response = await getAllOrders(page, limit);
-      setTotalOrders(response.data.total);
       setTopOrders(response.data.list);
     } catch (error) {
       console.log(error);
@@ -58,42 +97,53 @@ function AdminDashboard() {
   };
 
   useEffect(() => {
-    fetchProductsAll();
-    fetchOrdersAll();
+    fetchTopProducts();
+    fetchTopOrders();
+    fetchGeneralStats();
   }, []);
 
   const stats = [
     {
-      label: "Tổng doanh thu",
-      value: "x ₫",
+      label: "Tổng doanh thu tháng này",
+      value: vnd(todayRevenue),
+      change: "+x%",
+      positive: true,
+      icon: "💰",
+      type: "revenue",
+    },
+
+    // {
+    //   label: "Đơn hàng tháng này",
+    //   value: monthOrderCount,
+    //   change: "+x%",
+    //   positive: true,
+    //   icon: "📦",
+    //   type: "orders",
+    // },
+
+    {
+      label: "Doanh thu hôm nay",
+      value: vnd(todayRevenue),
       change: "+x%",
       positive: true,
       icon: "💰",
       type: "revenue",
     },
     {
-      label: "Đơn hàng",
-      value: totalOrders,
+      label: "Đơn hàng hôm nay",
+      value: todayOrderCount,
       change: "+x%",
       positive: true,
       icon: "📦",
       type: "orders",
     },
     {
-      label: "Sản phẩm",
-      value: totalProducts,
+      label: "Đơn hàng mới",
+      value: newOrderCount,
       change: "+x%",
       positive: true,
-      icon: "📦",
+      icon: "🆕",
       type: "products",
-    },
-    {
-      label: "Khách hàng",
-      value: "x",
-      change: "-%",
-      positive: false,
-      icon: "👥",
-      type: "customers",
     },
   ];
 
@@ -102,34 +152,47 @@ function AdminDashboard() {
       icon: "➕",
       title: "Thêm sản phẩm mới",
       description: "Thêm sản phẩm vào kho",
-      url: "./products"
+      onClick: () => (window.location.href = "./products"),
     },
     {
       icon: "📋",
       title: "Xem đơn hàng mới",
       description: "Kiểm tra đơn hàng chờ xử lý",
-      url: "./orders"
+      onClick: () => (window.location.href = "./orders"),
     },
     {
       icon: "🎁",
       title: "Tạo voucher",
       description: "Tạo mã giảm giá mới",
-      url: "./vouchers"
+      onClick: () => (window.location.href = "./vouchers"),
     },
-    // {
-    //   icon: "📊",
-    //   title: "Xem báo cáo",
-    //   description: "Thống kê doanh thu",
-    //   url: "#"
-    // },
+    {
+      icon: "📊",
+      title: "Xem báo cáo",
+      description: "Thống kê doanh thu",
+      onClick: () => setShowReports(true),
+    },
   ];
 
   return (
     <div className="dashboard">
       <div className="dashboard-page-header">
         <div className="dashboard-page-header-content">
-          <div className="dashboard-page-header-icon">📊</div>
-          <h1 className="dashboard-page-header-title">Tổng quan</h1>
+          <div className="dashboard-page-header-left">
+            <div className="dashboard-page-header-icon">📊</div>
+            <h1 className="dashboard-page-header-title">Tổng quan</h1>
+          </div>
+
+          <button
+            className="dashboard-action-btn"
+            onClick={() => setShowReports(true)}
+          >
+            <div className="dashboard-action-icon">📊</div>
+            <div className="dashboard-action-text">
+              <h4>Xem báo cáo</h4>
+              <p>Thống kê doanh thu</p>
+            </div>
+          </button>
         </div>
       </div>
 
@@ -164,7 +227,7 @@ function AdminDashboard() {
           </div>
           <div className="dashboard-card-body">
             <div className="dashboard-recent-orders">
-              {topOrders.map((order) => (
+              {topOrders.slice(0, 6).map((order) => (
                 <div key={order.id} className="dashboard-order-item">
                   <div className="dashboard-order-left">
                     <img
@@ -174,7 +237,10 @@ function AdminDashboard() {
                     />
                     <div className="dashboard-order-info">
                       <h4>{generateOrderSummaryString(order)}</h4>
-                      <p>{order.shippingAddressInfo?.displayName}</p>
+                      <p className="customer">
+                        {order.shippingAddressInfo?.displayName}
+                      </p>
+                      <p>Lúc {formatDate(order.createdAt)}</p>
                     </div>
                   </div>
                   <div className="dashboard-order-right">
@@ -200,10 +266,13 @@ function AdminDashboard() {
           </div>
           <div className="dashboard-card-body">
             <div className="dashboard-top-products">
-              {topProducts.map((product) => (
+              {topProducts.slice(0, 6).map((product, index) => (
                 <div key={product._id} className="dashboard-product-item">
+                  <div className={`top-product-rank ${getRankClass(index)}`}>
+                    {index + 1}
+                  </div>
                   <img
-                    src={product.imageInfo?.url}
+                    src={product.imageInfo?.url || ""}
                     alt={product.name}
                     className="dashboard-product-image"
                   />
@@ -212,11 +281,11 @@ function AdminDashboard() {
                     <span className="dashboard-order-price">
                       {vnd(product.price)}
                     </span>
-                    <p>{product.categoryInfo.name}</p>
+                    <p>{product.categoryInfo?.name || "Phân loại"}</p>
                   </div>
                   <div className="dashboard-product-sales">
                     <span className="dashboard-product-sold">
-                      Còn lại: {product.stock}
+                      Đã bán: {product.totalQuantitySold}
                     </span>
                     <span className="dashboard-product-rating">
                       {product.rating}⭐
@@ -235,7 +304,11 @@ function AdminDashboard() {
           <div className="dashboard-card-body">
             <div className="dashboard-quick-actions">
               {quickActions.map((action, index) => (
-                <button key={index} className="dashboard-action-btn" onClick={() => {window.location.href = action.url}}>
+                <button
+                  key={index}
+                  className="dashboard-action-btn"
+                  onClick={action.onClick}
+                >
                   <div className="dashboard-action-icon">{action.icon}</div>
                   <div className="dashboard-action-text">
                     <h4>{action.title}</h4>
@@ -247,6 +320,7 @@ function AdminDashboard() {
           </div>
         </div>
       </div>
+      {showReports && <ReportsModal onClose={() => setShowReports(false)} />}
     </div>
   );
 }
