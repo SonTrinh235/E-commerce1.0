@@ -245,7 +245,7 @@ export function Login({ onBack, onLogin }) {
                 <ShoppingBag className="bag-icon" />
               </div>
               <h1>Chào mừng đến với</h1>
-              <h2>Bách Hóa Xanh</h2>
+              <h2>Bách Khoa Xanh</h2>
               <p>Mua sắm thực phẩm tươi ngon mỗi ngày</p>
             </div>
           </div>

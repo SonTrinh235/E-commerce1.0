@@ -514,8 +514,10 @@
 
 .input-wrapper {
   position: relative;
+  margin-left: 10px;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
 .input-icon {
@@ -535,8 +537,8 @@
 }
 
 .input-wrapper input {
-  width: 100%;
-  padding: 15px 18px 15px 52px;
+  width: 345px;
+  padding: 15px 18px 15px 60px;
   border: 2px solid #e5e7eb;
   border-radius: 14px;
   font-size: 15px;
@@ -560,10 +562,17 @@
   box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
 }
 
-/* Đảm bảo input admin có padding đúng cho toggle password button */
-.input-wrapper input[type="password"],
-.input-wrapper input[type="text"] {
+.input-wrapper input[type="password"] {
+  padding-left: 50px !important ;
   padding-right: 52px;
+}
+.input-wrapper input[type="text"] {
+  padding-left: 50px !important ;
+  padding-right: 52px;
+}
+.input-wrapper input[type="tel"] {
+  padding-left: 50px !important;
+  padding-right: 52px; 
 }
 
 .toggle-password {
@@ -716,24 +725,25 @@
 .shield-icon {
   color: #f59e0b;
 }
-
 .otp-inputs {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  display: flex;
+  justify-content: flex-start;
   gap: 10px;
+  margin-top: 8px;
 }
 
 .otp-input {
-  width: 100%;
-  aspect-ratio: 1;
+  width: 32.2px;
+  height: 32.2px;
   text-align: center;
-  font-size: 26px;
+  font-size: 18px;
   font-weight: 700;
   border: 2px solid #e5e7eb;
-  border-radius: 14px;
+  border-radius: 8px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: #111827;
   background: white;
+  padding: 0;
 }
 
 .otp-input:hover {
@@ -743,8 +753,8 @@
 .otp-input:focus {
   border-color: #10b981;
   outline: none;
-  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
-  transform: scale(1.05);
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+  transform: translateY(-2px);
 }
 
 .otp-input:not(:placeholder-shown) {
