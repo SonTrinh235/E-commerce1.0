@@ -2,12 +2,12 @@
   position: fixed;
   bottom: 24px;
   right: 24px;
-  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  background: #469be5;
   color: white;
   border: none;
   padding: 16px;
   border-radius: 50%;
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 8px 24px rgba(120, 235, 243, 0.4);
   transition: all 0.3s;
   z-index: 50;
   animation: bounce 2s infinite;
