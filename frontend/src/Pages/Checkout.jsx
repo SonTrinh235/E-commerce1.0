@@ -1,115 +1,118 @@
 import React, { useContext, useState, useEffect } from "react";
-import { ShopContext } from "../Context/ShopContext";
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, MapPin, Phone, User, CreditCard, Truck, Calendar, Clock, Check, Mail } from 'lucide-react';
 import { CartContext } from "../Context/CartContext";
-import CheckoutOrderPreview from "../Components/CheckoutOrderPreview/CheckoutOrderPreview.jsx";
-import "./CSS/Checkout.css";
+import { ShopContext } from "../Context/ShopContext";
+import { ImageWithFallback } from '../Components/figma/ImageWithFallback.tsx';
+import AddressSelector from "../Components/AddressSelector/AddressSelector";
+import LoadingOverlay from "../Components/LoadingOverlay/LoadingOverlay";
+
+// Utils & API
+import { createOrder } from "../api/orderService";
+import { getPublicIp } from "../api/getPublicIp";
+import { geocodeAddress } from "../api/geocodeService";
+import { editAddress } from "../api/userService";
+import { vnd } from "../utils/currencyUtils";
+
+import './CSS/Checkout.css';
+
+// Payment Logos
 import COD_light from "../assets/COD_light.png";
 import VNPAYLogo from "../assets/Logo-VNPAY-QR.png";
-import DefaultImage from "../assets/placeholder-image.png";
 
-import { vnd } from "../utils/currencyUtils.js";
-import AddressSelector from "../Components/AddressSelector/AddressSelector";
-import { geocodeAddress } from "../api/geocodeService";
-
-// import APIs
-import { createOrder } from "../api/orderService.js";
-import { getPublicIp } from "../api/getPublicIp.js";
-import { editAddress } from "../api/userService";
-import LoadingOverlay from "../Components/LoadingOverlay/LoadingOverlay.jsx";
-
-const Checkout = () => {
-  const [loading, setLoading] = useState(false);
+export default function Checkout() {
+  const navigate = useNavigate();
   const { userId } = useContext(ShopContext);
-
-  const {
-    isCartLoading,
-    cartTotal,
-    cartItems,
-    cartTotalItems,
-    productsLookup,
-    appliedVoucher,
-    resetCart,
+  const { 
+    cartItems, 
+    cartTotal, 
+    productsLookup, 
+    cartTotalItems, 
+    resetCart, 
+    appliedVoucher 
   } = useContext(CartContext);
 
+  const [loading, setLoading] = useState(false);
+  
+  // Form State
   const [formData, setFormData] = useState({
-    name: "",
-    address: "",
-    phone: "",
-    email: "",
+    fullName: '',
+    phone: '',
+    email: '',
+    addressDetail: '',
+    note: ''
   });
-
-  // Address selector state
+  
   const [addressObj, setAddressObj] = useState(null);
-
-  // Shipping fee state
+  
   const [shippingFee, setShippingFee] = useState(0);
   const [lastLocationKey, setLastLocationKey] = useState(null);
+  
+  const [paymentMethod, setPaymentMethod] = useState('CASH'); 
+  const [deliveryTime, setDeliveryTime] = useState('asap');
+  const [customTime, setCustomTime] = useState('');
+  
+  const [errors, setErrors] = useState({});
 
-  // Load address from localStorage on mount
   useEffect(() => {
     try {
-      // Prefer locally saved checkout address override
       const uaRaw = localStorage.getItem("userAddress");
       const ua = uaRaw ? JSON.parse(uaRaw) : null;
+      
+      const rawInfo = localStorage.getItem("userInfo") || "{}";
+      const info = JSON.parse(rawInfo);
+      const user = info?.user || info;
+
       if (ua) {
         setAddressObj(ua);
-        const addressString = `${ua.houseNumber || ""}, ${ua.ward?.name || ""} - ${ua.district?.name || ""} - ${ua.province?.name || ""}`.trim();
-        setFormData(prev => ({ ...prev, address: addressString, name: ua.contactName || prev.name, email: ua.contactEmail || prev.email, phone: ua.contactPhone || prev.phone }));
-      } else {
-        const raw = localStorage.getItem("userInfo") || "{}";
-        const info = JSON.parse(raw);
-        const addr = info?.user?.address;
-        if (addr) {
-          setAddressObj(addr);
-          const addressString = `${addr.houseNumber || ""}, ${addr.ward?.name || ""} - ${addr.district?.name || ""} - ${addr.province?.name || ""}`.trim();
-          setFormData(prev => ({ ...prev, address: addressString }));
-        }
-        if (info?.user) {
-          setFormData(prev => ({ ...prev, name: info.user.displayName || prev.name, email: info.user.email || prev.email, phone: info.user.phoneNumber || prev.phone }));
+        setFormData(prev => ({
+          ...prev,
+          addressDetail: ua.houseNumber || "",
+          fullName: ua.contactName || user?.displayName || "",
+          phone: ua.contactPhone || user?.phoneNumber || "",
+          email: ua.contactEmail || user?.email || ""
+        }));
+      } else if (user) {
+        setFormData(prev => ({
+          ...prev,
+          fullName: user.displayName || "",
+          phone: user.phoneNumber || "",
+          email: user.email || ""
+        }));
+        if (user.address) {
+            setAddressObj(user.address);
+            setFormData(prev => ({ ...prev, addressDetail: user.address.houseNumber || "" }));
         }
       }
     } catch (e) {
-      console.warn("Failed to load address from localStorage", e);
+      console.warn("Error loading user info", e);
     }
   }, []);
 
-  // Update formData.address when addressObj changes
-  useEffect(() => {
-    if (addressObj) {
-      const addressString = `${addressObj.houseNumber || ""}, ${addressObj.ward?.name || ""} - ${addressObj.district?.name || ""} - ${addressObj.province?.name || ""}`.trim();
-      setFormData(prev => ({ ...prev, address: addressString }));
-    }
-  }, [addressObj]);
-
-
-  // Store coordinates for the shop (store origin) — adjust to your actual store location
   const STORE_COORDS = { lat: 10.762622, lon: 106.660172 };
-
-  // Haversine distance (km)
   const haversineKm = (lat1, lon1, lat2, lon2) => {
     const toRad = (deg) => (deg * Math.PI) / 180;
-    const R = 6371; // km
+    const R = 6371;
     const dLat = toRad(lat2 - lat1);
     const dLon = toRad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
 
-  // When province/district/ward change (codes), geocode and compute shippingFee
   useEffect(() => {
     const addr = addressObj;
     if (!addr) return;
-    const provCode = addr.province?.code || "";
-    const distCode = addr.district?.code || "";
-    const wardCode = addr.ward?.code || "";
-    // only proceed if we have the three codes
+    const provCode = addr.province?.code;
+    const distCode = addr.district?.code;
+    const wardCode = addr.ward?.code;
+    
     if (!(provCode && distCode && wardCode)) return;
+    
     const key = `${provCode}-${distCode}-${wardCode}`;
-    if (key === lastLocationKey) return; // don't re-call if same codes
+    if (key === lastLocationKey) return;
     setLastLocationKey(key);
 
     (async () => {
@@ -117,404 +120,375 @@ const Checkout = () => {
         const q = `${addr.houseNumber || ""} ${addr.ward?.name || ""} ${addr.district?.name || ""} ${addr.province?.name || ""}`.trim();
         const coords = await geocodeAddress(q);
         if (coords) {
-          // save coords locally
-          localStorage.setItem("userAddressCoords", JSON.stringify(coords));
-          // compute distance to store
           const distKm = haversineKm(STORE_COORDS.lat, STORE_COORDS.lon, coords.lat, coords.lon);
           let fee = 30000;
           if (distKm <= 5) fee = 15000;
           else if (distKm <= 15) fee = 20000;
           else if (distKm <= 30) fee = 25000;
-          else fee = 30000;
+          
           setShippingFee(fee);
         }
       } catch (e) {
-        console.error("Failed to geocode and compute shipping fee", e);
+        console.error("Geocode failed", e);
       }
     })();
-  }, [addressObj]);
+  }, [addressObj, lastLocationKey]);
 
-  const orderContent = Object.values(cartItems).map(cartItem => {
-    // strip key "order"
-    const { order, ...restOfCartItem } = cartItem;
-
-    const productId = cartItem.productId;
-    const productInfo = productsLookup[productId];
-
+  const displayItems = Object.values(cartItems).map(item => {
+    const productInfo = productsLookup[item.productId];
     return {
-      ...restOfCartItem, // Spread all existing cart item properties
-      productName: productInfo?.name || null,  // Add prod name from the lookup
-      productImageUrl: productInfo?.imageInfo?.url || null // Add imageInfo from the lookup
-
+      ...item,
+      id: item.productId,
+      name: productInfo?.name || "Đang tải...",
+      image: productInfo?.imageInfo?.url || "",
+      originalPrice: productInfo?.originalPrice,
+      price: item.price
     };
   });
 
-  const SHIPPING_FEE = shippingFee || 0;
-
-    const calculateDiscountAmount = () => {
+  const subtotal = cartTotal;
+  const calculateDiscount = () => {
     if (!appliedVoucher) return 0;
-
-    const voucherType = appliedVoucher.discountType;
-    const voucherValue = appliedVoucher.discountValue;
-    const subtotal = cartTotal;
-
-    if (voucherType === "percentage") {
-      return (subtotal * voucherValue/100);
-    } else if (voucherType === "fixed") {
-      return Math.min(subtotal, voucherValue);
+    if (appliedVoucher.discountType === "percentage") {
+      return (subtotal * appliedVoucher.discountValue / 100);
+    } else if (appliedVoucher.discountType === "fixed") {
+      return Math.min(subtotal, appliedVoucher.discountValue);
     }
     return 0;
   };
+  const discountAmount = calculateDiscount();
+  const total = subtotal + shippingFee - discountAmount;
 
-  const getShippingFee = () => {
-    return SHIPPING_FEE;
-  };
-
-  const getFinalTotal = () => {
-    const subtotal = cartTotal;
-    const discount = calculateDiscountAmount();
-    // const shippingFee = getShippingFee();
-    return subtotal - discount + SHIPPING_FEE;
-  };
-
-
-  // Snapshots to display order preview upon order create
-  const [orderSnapshot, setOrderSnapshot] = useState(null);
-  const [orderLookupSnapshot, setOrderLookupSnapshot] = useState(null);
-  const [orderTotalItemSnapshot, setOrderTotalItemSnapshot] = useState(null);
-  const [orderTotalSnapshot, setOrderTotalSnapshot] = useState(null);
-
-  const captureOrderSnapshot = () => {
-    setOrderSnapshot(orderContent);
-    setOrderLookupSnapshot(productsLookup);
-    setOrderTotalItemSnapshot(cartTotalItems);
-    setOrderTotalSnapshot(getFinalTotal());
-  };
-
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("CASH");
-
-  const [showOrderPreview, setShowOrderPreview] = useState(false);
-
-  const handleChange = (e) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
-  const handleSubmit = (e) => {
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.fullName.trim()) newErrors.fullName = 'Vui lòng nhập họ tên';
+    if (!formData.phone.trim()) newErrors.phone = 'Vui lòng nhập số điện thoại';
+    else if (!/^[0-9]{10,11}$/.test(formData.phone.replace(/\s/g, ''))) newErrors.phone = 'SĐT không hợp lệ';
+    
+    if (!addressObj || !addressObj.province || !addressObj.district || !addressObj.ward) {
+        newErrors.address = 'Vui lòng chọn đầy đủ địa chỉ';
+    }
+    if (!formData.addressDetail.trim()) newErrors.addressDetail = 'Vui lòng nhập số nhà/tên đường';
+
+    if (deliveryTime === 'custom' && !customTime) newErrors.customTime = 'Vui lòng chọn giờ';
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!true) {
-      alert("Your cart is empty!");
-      return;
-    }
-    alert(
-      `Order placed successfully!\n\nName: ${formData.name}\nAddress: ${
-        formData.address
-      }\nPhone: ${formData.phone}\nEmail: ${formData.email}\n\nTotal: ${vnd(
-        cartTotal
-      )}`
-    );
-  };
+    if (!validateForm()) return;
 
-  const ConfirmPlaceOrder = () => {
     if (cartTotalItems === 0) {
-      alert("Giỏ hàng của bạn đang trống!");
-    } else {
-      if (!userId || !selectedPaymentMethod) {
-        alert("Đơn hàng của bạn thiếu thông tin!");
-      } else {
-        if (window.confirm("Đơn hàng sẽ được đặt, hãy xác nhận:")) {
-          placeOrder();
-        }
-      }
+        alert("Giỏ hàng trống!");
+        return;
     }
-  };
 
-  const placeOrder = async () => {
     setLoading(true);
+    
+    const fullAddressString = `${formData.addressDetail}, ${addressObj.ward.name}, ${addressObj.district.name}, ${addressObj.province.name}`;
+    
+    const productsInfo = displayItems.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        price: item.price,
+        productName: item.name,
+        productImageUrl: item.image
+    }));
 
-    console.log("Checkout: New order");
-    console.log("Checkout: User ID: ", userId);
-    console.log("Checkout: Order content: ", orderContent);
-    console.log("Checkout: Payment method: ", selectedPaymentMethod);
-
-    let userPublicIp = null;
-    // Call API
-
-    // fetch IP
     try {
-      userPublicIp = await getPublicIp();
-    } catch(error) {
-      console.log("IP fetch failed", error);
-    }
+        const userPublicIp = await getPublicIp();
+        
+        const shippingAddressInfo = {
+            displayName: formData.fullName,
+            phoneNumber: formData.phone,
+            provinceCode: addressObj.province.code,
+            districtCode: addressObj.district.code,
+            wardCode: addressObj.ward.code,
+            provinceName: addressObj.province.name,
+            districtName: addressObj.district.name,
+            wardName: addressObj.ward.name,
+            street: formData.addressDetail,
+            note: formData.note
+        };
 
-    // create order
-    try {
-      // Build shippingAddressInfo in the shape backend expects (see your screenshot)
-      const shippingAddressInfo = addressObj
-        ? {
-            displayName: formData.name || null,
-            phoneNumber: formData.phone || null,
-            provinceCode: addressObj.province?.code || null,
-            districtCode: addressObj.district?.code || null,
-            wardCode: addressObj.ward?.code || null,
-            provinceName: addressObj.province?.name || null,
-            districtName: addressObj.district?.name || null,
-            wardName: addressObj.ward?.name || null,
-            street: addressObj.houseNumber || "",
-            note: "",
-          }
-        : {
-            displayName: formData.name || null,
-            phoneNumber: formData.phone || null,
-            provinceCode: null,
-            districtCode: null,
-            wardCode: null,
-            provinceName: null,
-            districtName: null,
-            wardName: null,
-            street: formData.address || "",
-            note: "",
-          };
+        const payload = {
+            userId: userId,
+            paymentMethod: paymentMethod,
+            productsInfo: productsInfo,
+            voucherCode: appliedVoucher?.code || null,
+            ipAddr: userPublicIp,
+            shippingFee: shippingFee,
+            shippingAddressInfo: shippingAddressInfo,
+            shippingAddressString: fullAddressString,
+            contactName: formData.fullName,
+            contactPhone: formData.phone,
+            contactEmail: formData.email
+        };
 
-      const payload = {
-        userId: userId,
-        paymentMethod: selectedPaymentMethod,
-        productsInfo: orderContent,
-        voucherCode: appliedVoucher?.code || null,
-        ipAddr: userPublicIp,
-        // ensure backend-required shippingFee is present and positive
-        shippingFee: SHIPPING_FEE && SHIPPING_FEE > 0 ? SHIPPING_FEE : 15000,
-        shippingAddressInfo,
-      };
-      console.log("createOrder payload:", payload);
-      // Temporary debug: persist the exact payload we're about to send so it's easy to inspect
-      try {
-        localStorage.setItem("lastOrderPayload", JSON.stringify(payload));
-      } catch (err) {
-        console.warn("Could not save lastOrderPayload to localStorage", err);
-      }
-      const res = await createOrder(payload);
-      console.log("createOrder response:", res);
-      
-      
-      // Open payment page if should
-      if (selectedPaymentMethod === "VNBANK" || selectedPaymentMethod === "INTCARD") {
-        const ImmediatePaymentUrl = res.data.newPayment.paymentUrl;
-        if (ImmediatePaymentUrl) {
-          window.open(ImmediatePaymentUrl, '_blank');
+        console.log("Creating order...", payload);
+        const res = await createOrder(payload);
+        
+        if (paymentMethod === "VNBANK" || paymentMethod === "INTCARD") {
+            const paymentUrl = res.data?.newPayment?.paymentUrl;
+            if (paymentUrl) window.location.href = paymentUrl;
+        } else {
+            alert('Đặt hàng thành công! Cảm ơn bạn đã mua sắm.');
+            resetCart();
+            navigate('/'); 
         }
-      }
 
-
-      // Capture snapshot for order preview
-      captureOrderSnapshot();
-      // Display order preview
-      setShowOrderPreview(true);
-      // Update cart
-      resetCart();
-
-      // If user had no saved address in their profile, save the checkout address to their profile now
-      try {
-        const raw = localStorage.getItem("userInfo") || "{}";
-        const info = JSON.parse(raw);
-        const hasSavedAddress = !!(info?.user && info.user.address);
-        // addressObj may be null if user typed free-text; prefer addressObj, otherwise use formData.address
-        if (!hasSavedAddress && (addressObj || (formData.address && formData.address.trim()))) {
-          const addressString = addressObj
-            ? `${addressObj.houseNumber || ""}, ${addressObj.ward?.name || ""} - ${addressObj.district?.name || ""} - ${addressObj.province?.name || ""}`.trim()
-            : formData.address;
-          // call editAddress to persist on server
-          try {
-            await editAddress({ fullName: formData.name, address: addressObj || null, addressString });
-            // update localStorage.userInfo and localStorage.userAddress
-            try {
-              const u = info?.user || info || {};
-              u.address = addressObj || null;
-              u.addressString = addressString;
-              const updated = { ...info, user: u };
-              localStorage.setItem("userInfo", JSON.stringify(updated));
-              const savedAddr = { ...(addressObj || {}), houseNumber: (addressObj?.houseNumber || formData.address || ""), contactName: formData.name, contactPhone: formData.phone, contactEmail: formData.email };
-              localStorage.setItem("userAddress", JSON.stringify(savedAddr));
-            } catch (err) {
-              console.error("Failed to persist saved address locally", err);
+        try {
+            const savedAddr = { ...addressObj, houseNumber: formData.addressDetail, contactName: formData.fullName, contactPhone: formData.phone, contactEmail: formData.email };
+            localStorage.setItem("userAddress", JSON.stringify(savedAddr));
+            if (userId) {
+                await editAddress({ fullName: formData.fullName, address: savedAddr, addressString: fullAddressString });
             }
-          } catch (err) {
-            console.warn("editAddress failed after order; persisting locally", err);
-            // fallback: persist locally even if API fails
-            try {
-              const savedAddr = { ...(addressObj || {}), houseNumber: (addressObj?.houseNumber || formData.address || ""), contactName: formData.name, contactPhone: formData.phone, contactEmail: formData.email };
-              localStorage.setItem("userAddress", JSON.stringify(savedAddr));
-            } catch (err2) {
-              console.error("Failed fallback local save for address", err2);
-            }
-          }
-        }
-      } catch (err) {
-        console.error("post-order address-save routine failed", err);
-      }
+        } catch (err) { console.warn("Save address failed", err); }
+
     } catch (error) {
-      console.error("createOrder failed:", error);
-      // If apiClient attached body/status, show a more informative alert and log details
-      if (error && (error.body || error.status)) {
-        console.error("createOrder server error body/status:", error.status, error.body);
-        const msg = (error.body && (error.body.message || JSON.stringify(error.body))) || error.message || "Unknown server error";
-        alert(`Create Order failed: ${msg} (status ${error.status || "?"})`);
-      } else {
-        alert("Create Order failed: check console");
-      }
+        console.error("Order failed:", error);
+        alert("Đặt hàng thất bại. Vui lòng thử lại.");
+    } finally {
+        setLoading(false);
     }
-
-    setLoading(false);
   };
 
-  return (
-    // Page Container
-    <div className="Checkout-page">
-
-      {loading && <LoadingOverlay/>}
-
-      <div className="Checkout-container">
-        <h1 className="Checkout-title">Thanh Toán</h1>
-        <div className="Checkout-content">
-          {isCartLoading ? (
-            <div>Loading cart ... </div>
-          ) : (
-            // Cart content
-            <div className="Checkout-items">
-              <h3>Sản Phẩm Mua:</h3>
-              {cartTotalItems === 0 ? (
-                <div>Giỏ hàng của bạn đang trống</div>
-              ) : (
-                Object.values(cartItems).map((item) => {
-                  const currentItemData = productsLookup[item.productId];
-                  return (
-                    <div key={item.productId} className="Checkout-item">
-                      <img
-                        src={currentItemData.imageInfo?.url || DefaultImage}
-                        alt={currentItemData.name}
-                      />
-                      <div>
-                        <h3>{currentItemData.name}</h3>
-                        <p>
-                          Số lượng {item.quantity} x {vnd(item.price)} ={" "}
-                          <b>{vnd(item.price * item.quantity)}</b>
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          )}
-
-          {/* RIGHT SIDE CHECKOUT */}
-          <div className="Checkout-right">
-            {/* Ship Info */}
-            <div className="Checkout-shipinfo">
-              <h3>Thông Tin Giao Hàng</h3>
-              <form onSubmit={handleSubmit}>
-                <input
-                  type="text"
-                  name="name"
-                  placeholder="Họ và Tên"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                />
-                <div style={{ marginBottom: 10 }}>
-                  <AddressSelector value={addressObj} onChange={(addr) => setAddressObj(addr)} />
-                </div>
-                <input
-                  type="text"
-                  name="phone"
-                  placeholder="Số Điện Thoại"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                />
-                <input
-                  type="email"
-                  name="email"
-                  placeholder="Email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </form>
-            </div>
-
-            {/* Checkout Summary */}
-            <div className="Checkout-summary">
-              <h3>Tổng Quan Đơn Hàng</h3>
-              <p>Tổng số lượng: {cartTotalItems} sản phẩm</p>
-              <b> Giá trị hàng: {vnd(cartTotal)}</b>
-              <p> Giảm giá: {vnd(calculateDiscountAmount())}</p>
-              <p> Phí vận chuyển: {vnd(getShippingFee())}</p>
-              <h3>Tổng thanh toán: {vnd(getFinalTotal())}</h3>
-            </div>
-
-            {/* Payments */}
-            <div className="Checkout-payments">
-              <h3>Chọn phương thức thanh toán: </h3>
-              <div className="option">
-                <label>
-                  <input
-                    type="radio"
-                    name="payment-method"
-                    value="CASH"
-                    checked={selectedPaymentMethod === "CASH"}
-                    onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                  />
-                  <img src={COD_light} alt="" />
-                  Thanh toán khi nhận hàng (COD)
-                </label>
-              </div>
-              <div className="option">
-                <label>
-                  <input
-                    type="radio"
-                    name="payment-method"
-                    value="VNBANK"
-                    checked={selectedPaymentMethod === "VNBANK"}
-                    onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                  ></input>
-                  <img src={VNPAYLogo} alt="" />
-                  VN Pay
-                </label>
-              </div>
-              <div className="option">
-                <label>
-                  <input
-                    type="radio"
-                    name="payment-method"
-                    value="INTCARD"
-                    checked={selectedPaymentMethod === "INTCARD"}
-                    onChange={(e) => setSelectedPaymentMethod(e.target.value)}
-                  ></input>
-                  Thẻ quốc tế
-                </label>
-              </div>
-            </div>
-            {/* Place Order */}
-            <button className="Checkout-placeorder" onClick={ConfirmPlaceOrder}>
-              Đặt Hàng
+  if (cartTotalItems === 0) {
+    return (
+      <div className="checkout-page">
+        <div className="container">
+          <div className="empty-checkout">
+            <h2>Giỏ hàng trống</h2>
+            <p>Vui lòng thêm sản phẩm vào giỏ hàng trước khi thanh toán</p>
+            <button onClick={() => navigate('/')} className="back-home-btn">
+              Về trang chủ
             </button>
           </div>
         </div>
       </div>
+    );
+  }
 
-      {showOrderPreview && (
-        <div className="Checkout-OrderPreview-overlay">
-          <CheckoutOrderPreview
-            orderContent={orderSnapshot}
-            productsLookup={orderLookupSnapshot}
-            orderTotalItems={orderTotalItemSnapshot}
-            orderTotal={orderTotalSnapshot}
-          />
+  return (
+    <div className="checkout-page">
+      {loading && <LoadingOverlay />}
+      
+      <div className="container">
+        <button onClick={() => navigate('/cart')} className="back-button">
+          <ArrowLeft className="icon" /> Quay lại giỏ hàng
+        </button>
+
+        <h1 className="page-title">Thanh toán</h1>
+
+        <div className="checkout-content">
+          <form onSubmit={handleSubmit} className="checkout-form">
+            
+            <div className="form-section">
+              <h2 className="section-title">
+                <MapPin className="section-icon" /> Thông tin giao hàng
+              </h2>
+              
+              <div className="form-grid">
+                <div className="form-group full-width">
+                  <label htmlFor="fullName"><User className="label-icon" /> Họ và tên <span className="required">*</span></label>
+                  <input
+                    type="text" name="fullName" id="fullName"
+                    value={formData.fullName} onChange={handleInputChange}
+                    placeholder="Nhập họ và tên"
+                    className={errors.fullName ? 'error' : ''}
+                  />
+                  {errors.fullName && <span className="error-message">{errors.fullName}</span>}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="phone"><Phone className="label-icon" /> Số điện thoại <span className="required">*</span></label>
+                  <input
+                    type="tel" name="phone" id="phone"
+                    value={formData.phone} onChange={handleInputChange}
+                    placeholder="Nhập số điện thoại"
+                    className={errors.phone ? 'error' : ''}
+                  />
+                  {errors.phone && <span className="error-message">{errors.phone}</span>}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="email"><Mail className="label-icon" /> Email</label>
+                  <input
+                    type="email" name="email" id="email"
+                    value={formData.email} onChange={handleInputChange}
+                    placeholder="Nhập email (để nhận hóa đơn)"
+                  />
+                </div>
+
+                <div className="form-group full-width">
+                    <label><MapPin className="label-icon" /> Địa chỉ (Tỉnh - Huyện - Xã) <span className="required">*</span></label>
+                    <div className={errors.address ? 'selector-error' : ''}>
+                        <AddressSelector value={addressObj} onChange={setAddressObj} />
+                    </div>
+                    {errors.address && <span className="error-message">{errors.address}</span>}
+                </div>
+
+                <div className="form-group full-width">
+                  <label htmlFor="addressDetail">Số nhà, tên đường <span className="required">*</span></label>
+                  <input
+                    type="text" name="addressDetail" id="addressDetail"
+                    value={formData.addressDetail} onChange={handleInputChange}
+                    placeholder="Ví dụ: 123 Nguyễn Văn Linh"
+                    className={errors.addressDetail ? 'error' : ''}
+                  />
+                  {errors.addressDetail && <span className="error-message">{errors.addressDetail}</span>}
+                </div>
+
+                <div className="form-group full-width">
+                  <label htmlFor="note">Ghi chú</label>
+                  <textarea
+                    name="note" id="note" rows="2"
+                    value={formData.note} onChange={handleInputChange}
+                    placeholder="Ghi chú về đơn hàng (tùy chọn)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="form-section">
+              <h2 className="section-title">
+                <Truck className="section-icon" /> Thời gian giao hàng
+              </h2>
+              
+              <div className="delivery-options">
+                <label className={`delivery-option ${deliveryTime === 'asap' ? 'selected' : ''}`}>
+                  <input type="radio" name="deliveryTime" value="asap" checked={deliveryTime === 'asap'} onChange={(e) => setDeliveryTime(e.target.value)} />
+                  <div className="option-content">
+                    <Clock className="option-icon" />
+                    <div><h4>Giao ngay</h4><p>Trong vòng 1-2 giờ</p></div>
+                  </div>
+                  {deliveryTime === 'asap' && <Check className="check-icon" />}
+                </label>
+
+                <label className={`delivery-option ${deliveryTime === 'custom' ? 'selected' : ''}`}>
+                  <input type="radio" name="deliveryTime" value="custom" checked={deliveryTime === 'custom'} onChange={(e) => setDeliveryTime(e.target.value)} />
+                  <div className="option-content">
+                    <Calendar className="option-icon" />
+                    <div><h4>Chọn giờ giao</h4><p>Tùy chỉnh thời gian</p></div>
+                  </div>
+                  {deliveryTime === 'custom' && <Check className="check-icon" />}
+                </label>
+
+                {deliveryTime === 'custom' && (
+                  <div className="custom-time-input">
+                    <input
+                      type="datetime-local"
+                      value={customTime}
+                      onChange={(e) => setCustomTime(e.target.value)}
+                      min={new Date().toISOString().slice(0, 16)}
+                      className={errors.customTime ? 'error' : ''}
+                    />
+                    {errors.customTime && <span className="error-message">{errors.customTime}</span>}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="form-section">
+              <h2 className="section-title">
+                <CreditCard className="section-icon" /> Phương thức thanh toán
+              </h2>
+              <div className="payment-options">
+                <label className={`payment-option ${paymentMethod === 'CASH' ? 'selected' : ''}`}>
+                  <input type="radio" name="paymentMethod" value="CASH" checked={paymentMethod === 'CASH'} onChange={(e) => setPaymentMethod(e.target.value)} />
+                  <div className="option-content">
+                    <div className="payment-icon"><img src={COD_light} alt="COD" style={{width: 32}}/></div>
+                    <div><h4>Tiền mặt (COD)</h4><p>Thanh toán khi nhận hàng</p></div>
+                  </div>
+                  {paymentMethod === 'CASH' && <Check className="check-icon" />}
+                </label>
+
+                <label className={`payment-option ${paymentMethod === 'VNBANK' ? 'selected' : ''}`}>
+                  <input type="radio" name="paymentMethod" value="VNBANK" checked={paymentMethod === 'VNBANK'} onChange={(e) => setPaymentMethod(e.target.value)} />
+                  <div className="option-content">
+                    <div className="payment-icon"><img src={VNPAYLogo} alt="VNPAY" style={{width: 32}}/></div>
+                    <div><h4>VNPAY QR</h4><p>Quét mã qua ứng dụng ngân hàng</p></div>
+                  </div>
+                  {paymentMethod === 'VNBANK' && <Check className="check-icon" />}
+                </label>
+
+                <label className={`payment-option ${paymentMethod === 'INTCARD' ? 'selected' : ''}`}>
+                  <input type="radio" name="paymentMethod" value="INTCARD" checked={paymentMethod === 'INTCARD'} onChange={(e) => setPaymentMethod(e.target.value)} />
+                  <div className="option-content">
+                    <div className="payment-icon">💳</div>
+                    <div><h4>Thẻ quốc tế</h4><p>Visa, Mastercard, JCB</p></div>
+                  </div>
+                  {paymentMethod === 'INTCARD' && <Check className="check-icon" />}
+                </label>
+              </div>
+            </div>
+          </form>
+
+          <div className="checkout-sidebar">
+            <div className="order-summary">
+              <h2>Đơn hàng của bạn</h2>
+              <div className="order-items">
+                {displayItems.map((item) => (
+                  <div key={item.id} className="order-item">
+                    <div className="item-image-wrapper">
+                      <ImageWithFallback src={item.image} alt={item.name} className="item-image" />
+                      <span className="item-quantity">{item.quantity}</span>
+                    </div>
+                    <div className="item-details">
+                      <h4>{item.name}</h4>
+                      <p className="item-price">{vnd(item.price * item.quantity)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="order-totals">
+                <div className="total-row">
+                  <span>Tạm tính</span>
+                  <span>{vnd(subtotal)}</span>
+                </div>
+                {appliedVoucher && (
+                  <div className="total-row discount-row">
+                    <span>Voucher ({appliedVoucher.code})</span>
+                    <span className="discount-amount">-{vnd(discountAmount)}</span>
+                  </div>
+                )}
+                <div className="total-row">
+                  <span>Phí vận chuyển</span>
+                  <span className={shippingFee === 0 ? 'free-text' : ''}>
+                    {shippingFee === 0 ? 'Miễn phí' : vnd(shippingFee)}
+                  </span>
+                </div>
+                <div className="total-row grand-total">
+                  <span>Tổng cộng</span>
+                  <span className="total-amount">{vnd(total)}</span>
+                </div>
+              </div>
+
+              <button type="button" onClick={handleSubmit} className="submit-order-btn">
+                <Check className="btn-icon" /> Xác nhận đặt hàng
+              </button>
+
+              <div className="security-info">
+                <div className="security-item">
+                  <span className="security-icon"></span><span>Thanh toán an toàn & bảo mật</span>
+                </div>
+                <div className="security-item">
+                  <span className="security-icon">✓</span><span>Hoàn tiền 100% nếu không hài lòng</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
-};
-
-export default Checkout;
+}

@@ -5,8 +5,11 @@ import { CartContext } from '../../Context/CartContext';
 import './Header.css';
 import LogoImg from '../../assets/logo.png';
 
-export function Header({ onOpenCart }) {
+export function Header() { 
   const navigate = useNavigate();
+  
+  // Lấy cartTotalItems từ Context (để hiện số lượng badge)
+  // KHÔNG lấy setIsCartOpen ở đây nữa vì nút giỏ hàng sẽ navigate thẳng sang trang Cart
   const { cartTotalItems } = useContext(CartContext);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -119,12 +122,9 @@ export function Header({ onOpenCart }) {
     navigate('/admin/dashboard');
   };
 
+  // SỬA: Hàm này giờ chỉ đơn giản là chuyển hướng đến trang /cart
   const handleCartClick = () => {
-    if (onOpenCart) {
-        onOpenCart();
-    } else {
-        navigate('/cart');
-    }
+    navigate('/cart');
   };
 
   const getDisplayLabel = () => {

@@ -1,19 +1,19 @@
-import { ShoppingCart, Tag, Check } from 'lucide-react'; // Thêm Check icon
+import { ShoppingCart, Tag, Check } from 'lucide-react'; 
 import { ImageWithFallback } from '../figma/ImageWithFallback.tsx';
-import { useState, useContext } from 'react'; // Import useContext
+import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CartContext } from '../../Context/CartContext'; // Import Context
+import { CartContext } from '../../Context/CartContext';
 import './ProductCard.css';
 
 export function ProductCard({ product }) {
   const [isAdding, setIsAdding] = useState(false);
   const navigate = useNavigate();
 
-  const { cartAddProductToCart} = useContext(CartContext);
+  const { cartAddProductToCart } = useContext(CartContext);
 
   const handleAddToCart = async (e) => {
     e.stopPropagation();
-
+    if (isAdding) return; 
     setIsAdding(true);
 
     try {
@@ -26,7 +26,7 @@ export function ProductCard({ product }) {
   };
 
   const handleViewDetail = () => {
-    navigate(`/product/${product._id}`);
+    navigate(`/product/${product._id || product.id}`);
   };
 
   return (
@@ -67,10 +67,10 @@ export function ProductCard({ product }) {
             onClick={handleAddToCart}
             disabled={isAdding}
             className={`add-to-cart-btn ${isAdding ? 'adding' : ''}`}
-            style={isAdding ? { backgroundColor: '#4caf50', borderColor: '#4caf50' } : {}}
+            style={isAdding ? { backgroundColor: '#4caf50', borderColor: '#4caf50', color: 'white' } : {}}
           >
             {isAdding ? <Check className="cart-icon" /> : <ShoppingCart className="cart-icon" />}
-            <span>{isAdding ? 'Đã thêm!' : 'Thêm vào giỏ'}</span>
+            <span>{isAdding ? 'Đã thêm' : 'Thêm vào giỏ'}</span>
           </button>
         </div>
       </div>

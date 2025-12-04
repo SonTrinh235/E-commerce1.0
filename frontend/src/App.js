@@ -51,8 +51,8 @@ const RequireAdmin = ({ children }) => {
 };
 
 const RedirectIfAuthed = ({ children }) => {
-  const token = localStorage.getItem("userToken");
-  return token ? <Navigate to="/" replace /> : children;
+  const userInfo = localStorage.getItem("userInfo");
+  return userInfo ? <Navigate to="/" replace /> : children;
 };
 
 function App() {
@@ -298,13 +298,13 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
 
-        {isCartOpen && (
-          <FloatingCart
-            items={cartItems}
-            onUpdateQuantity={handleUpdateQuantity}
-            onClose={() => setIsCartOpen(false)}
-          />
-        )}
+        <FloatingCart
+          items={cartItems}
+          isOpen={isCartOpen}
+          onToggle={() => setIsCartOpen(!isCartOpen)}
+          onUpdateQuantity={handleUpdateQuantity}
+          onClose={() => setIsCartOpen(false)}
+        />
       </div>
     </Router>
   );
