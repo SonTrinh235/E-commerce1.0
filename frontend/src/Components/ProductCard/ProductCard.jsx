@@ -1,15 +1,49 @@
-import { ShoppingCart, Tag, Check } from 'lucide-react'; 
+import { ShoppingCart, Tag, Check, Star } from 'lucide-react'; 
 import { ImageWithFallback } from '../figma/ImageWithFallback.tsx';
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react'; 
 import { useNavigate } from 'react-router-dom';
 import { CartContext } from '../../Context/CartContext';
+import { getReviewsByProductId } from '../../api/reviewService'; 
 import './ProductCard.css';
 
 export function ProductCard({ product }) {
   const [isAdding, setIsAdding] = useState(false);
-  const navigate = useNavigate();
+  
+  const [ratingStats, setRatingStats] = useState({ average: 0, count: 0 });
 
+  const navigate = useNavigate();
   const { cartAddProductToCart } = useContext(CartContext);
+
+  useEffect(() => {
+    const fetchRating = async () => {
+      if (product.averageRating !== undefined) {
+          setRatingStats({ 
+              average: product.averageRating, 
+              count: product.reviewCount || 0 
+          });
+          return;
+      }
+
+      try {
+        const id = product._id || product.id;
+        const res = await getReviewsByProductId(id);
+        const reviews = res.data || [];
+
+        if (reviews.length > 0) {
+          const totalScore = reviews.reduce((acc, curr) => acc + (curr.rating || curr.score || 0), 0);
+          const avg = totalScore / reviews.length;
+          setRatingStats({
+            average: avg,
+            count: reviews.length
+          });
+        }
+      } catch (error) {
+        console.error("Lỗi lấy đánh giá cho sp:", product.name);
+      }
+    };
+
+    fetchRating();
+  }, [product]);
 
   const handleAddToCart = async (e) => {
     e.stopPropagation();
@@ -50,6 +84,22 @@ export function ProductCard({ product }) {
         <h3 className="product-name" onClick={handleViewDetail} style={{ cursor: 'pointer' }}>
           {product.name}
         </h3>
+
+        <div className="product-rating-summary">
+            <div className="stars">
+                <Star 
+                  size={14} 
+                  fill={ratingStats.average > 0 ? "#FFD700" : "#e5e7eb"} 
+                  color={ratingStats.average > 0 ? "#FFD700" : "#e5e7eb"} 
+                />
+            </div>
+            <span className="rating-number">
+                {ratingStats.average > 0 ? ratingStats.average.toFixed(1) : '0'}
+            </span>
+            <span className="review-count">
+                ({ratingStats.count} đánh giá)
+            </span>
+        </div>
 
         <div className="product-price">
           <span className="price-current">

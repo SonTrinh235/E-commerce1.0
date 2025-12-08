@@ -83,18 +83,18 @@
 .product-price {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 12px;
 }
 
 .price-current {
   color: #3b82f6;
-  font-size: 18px;
+  font-size: 12px;
   font-weight: 700;
 }
 
 .price-original {
-  font-size: 14px;
+  font-size: 12px;
   color: #9ca3af;
   text-decoration: line-through;
 }
@@ -155,4 +155,28 @@
 .cart-icon {
   width: 16px;
   height: 16px;
+}
+
+.product-rating-summary {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.product-rating-summary .stars {
+  display: flex;
+  align-items: center;
+}
+
+.product-rating-summary .rating-number {
+  font-weight: 600;
+  color: #1f2937;
+  margin-left: 2px;
+}
+
+.product-rating-summary .review-count {
+  color: #9ca3af;
+  font-size: 11px;
 }

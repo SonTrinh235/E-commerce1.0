@@ -1,25 +1,19 @@
 .category-nav {
+  margin-left: 305px;
   background: white;
   border-bottom: 1px solid #e5e7eb;
   position: sticky;
   top: 88px;
   z-index: 40;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  width: 100%;
+  width: 72%;
 }
 
 .category-list {
   display: flex;
   align-items: center;
   gap: 12px;
-  
-  /* QUAN TRỌNG: 
-     - Xóa margin-left.
-     - Dùng padding-left để tạo khoảng cách đầu dòng. 
-     - Padding này giúp item đầu tiên không bị cắt khi phóng to (scale).
-  */
   padding: 16px 20px; 
-  
   overflow-x: auto;
   scrollbar-width: none;
   scroll-behavior: smooth;
