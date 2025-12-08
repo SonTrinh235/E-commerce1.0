@@ -24,3 +24,6 @@ yarn-error.log*
 
 
 ../backend
+
+/public/service-account.json
+service-account.json
