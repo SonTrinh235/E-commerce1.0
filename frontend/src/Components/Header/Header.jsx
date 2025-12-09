@@ -1,4 +1,4 @@
-import { ShoppingCart, Search, User, LogOut, ChevronDown, UserCircle, Package, LayoutDashboard } from 'lucide-react';
+import { ShoppingCart, Search, User, LogOut, ChevronDown, UserCircle, Package, LayoutDashboard, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect, useContext } from 'react';
 import { CartContext } from '../../Context/CartContext';
@@ -7,9 +7,6 @@ import LogoImg from '../../assets/logo.png';
 
 export function Header() { 
   const navigate = useNavigate();
-  
-  // Lấy cartTotalItems từ Context (để hiện số lượng badge)
-  // KHÔNG lấy setIsCartOpen ở đây nữa vì nút giỏ hàng sẽ navigate thẳng sang trang Cart
   const { cartTotalItems } = useContext(CartContext);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -116,7 +113,10 @@ export function Header() {
     setIsDropdownOpen(false);
     navigate('/orders');
   };
-
+  const handleNotificationsClick = () => {
+    setIsDropdownOpen(false);
+    navigate('/notifications');
+  };
   const handleAdminDashboardClick = () => {
     setIsDropdownOpen(false);
     navigate('/admin/dashboard');
@@ -220,8 +220,13 @@ export function Header() {
                             <Package size={18} />
                             <span>Đơn hàng của tôi</span>
                           </div>
+                          <div className="dropdown-item" onClick={handleNotificationsClick}>
+                            <Bell size={18} />
+                            <span>Thông báo</span>
+                          </div>
                         </>
                       )}
+                      
                       
                       <div className="dropdown-divider"></div>
                       

@@ -36,7 +36,10 @@ export async function getFcmToken() {
     }
 
     const saved = localStorage.getItem("fcmToken");
-    if (saved) return saved;
+    if (saved) {
+      console.log("FCM Token:", saved);
+      return saved;
+    }
 
     const permission = await Notification.requestPermission();
     if (permission !== "granted") {
@@ -66,7 +69,7 @@ export async function getFcmToken() {
     }
 
     localStorage.setItem("fcmToken", token);
-    console.log("FCM token:", token);
+    // console.log("FCM token Mới:", token);
     return token;
 
   } catch (err) {
@@ -84,15 +87,28 @@ export function onForegroundMessage(callback) {
     callback(payload);
   });
 }
+
 export async function registerFcmToken(userId, fcmToken) {
+  console.log(" [API] Calling registerFcmToken...");
   try {
+    const authToken = localStorage.getItem("userToken"); 
     const res = await fetch(`${BASE_URL}/user/${userId}/fcmToken`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        ...(authToken ? { "Authorization": `Bearer ${authToken}` } : {})
+      },
       body: JSON.stringify({ fcmToken }),
     });
-    if (!res.ok) return null;
-    return await res.json();
+    
+    if (!res.ok) {
+        console.error(`Register Token Failed: ${res.status} ${res.statusText}`);
+        return null;
+    }
+    
+    const data = await res.json();
+    console.log("Register Token Success:", data);
+    return data;
   } catch (err) {
     console.error("Lỗi API registerFcmToken:", err);
     return null;

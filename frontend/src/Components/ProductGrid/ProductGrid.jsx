@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { getAllProducts } from "../../api/productService";
 import { ProductCard } from "../ProductCard/ProductCard";
 import "./ProductGrid.css";
 
@@ -11,17 +10,38 @@ export default function ProductGrid({ selectedCategory = "all", searchQuery = ""
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const res = await getAllProducts(1, 50);
-        const list = res?.data?.list || [];
-        const mappedList = list.map((p) => ({
-          id: p._id,
-          ...p,
-          image: p.imageInfo?.url || "",
-          discount: p.discount,
-          originalPrice: p.originalPrice || null,
-        }));
+        let url = "";
+        
+        if (selectedCategory === "all" || !selectedCategory) {
+          url = "https://www.bachkhoaxanh.xyz/search/products?query=a&page=1&limit=50";
+        } else {
+          url = `https://www.bachkhoaxanh.xyz/product/products/category/${selectedCategory}?page=1&limit=50`;
+        }
 
-        setProducts(mappedList);
+        const res = await fetch(url, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          const list = Array.isArray(data.data) ? data.data : (data.data?.list || []);
+          
+          const mappedList = list.map((p) => ({
+            id: p._id,
+            ...p,
+            image: p.imageInfo?.url || "",
+            discount: p.discount || 0,
+            originalPrice: p.originalPrice || null,
+          }));
+
+          setProducts(mappedList);
+        } else {
+          setProducts([]);
+        }
       } catch (err) {
         console.error("Failed to fetch products:", err);
         setProducts([]);
@@ -31,15 +51,13 @@ export default function ProductGrid({ selectedCategory = "all", searchQuery = ""
     };
 
     fetchProducts();
-  }, []);
+  }, [selectedCategory]);
 
   const filteredProducts = products.filter((product) => {
-    const matchesCategory =
-      selectedCategory === "all" || product.categoryId === selectedCategory;
     const matchesSearch = product.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesSearch;
   });
 
   return (

@@ -8,11 +8,18 @@ import './ProductCard.css';
 
 export function ProductCard({ product }) {
   const [isAdding, setIsAdding] = useState(false);
-  
   const [ratingStats, setRatingStats] = useState({ average: 0, count: 0 });
 
   const navigate = useNavigate();
   const { cartAddProductToCart } = useContext(CartContext);
+
+  const getProductImage = () => {
+    if (product.imageInfo?.url) return product.imageInfo.url;
+    if (product.imageUrl) return product.imageUrl;
+    if (product.image) return product.image;
+    
+    return null;
+  };
 
   useEffect(() => {
     const fetchRating = async () => {
@@ -38,7 +45,7 @@ export function ProductCard({ product }) {
           });
         }
       } catch (error) {
-        console.error("Lỗi lấy đánh giá cho sp:", product.name);
+        // console.error("Lỗi lấy đánh giá:", error);
       }
     };
 
@@ -74,7 +81,7 @@ export function ProductCard({ product }) {
 
       <div className="product-image-wrapper" onClick={handleViewDetail} style={{ cursor: 'pointer' }}>
         <ImageWithFallback
-          src={product.imageInfo?.url || null}
+          src={getProductImage()}
           alt={product.name}
           className="product-image"
         />

@@ -22,6 +22,7 @@ import ExclusiveOffers from "./Pages/ExclusiveOffers";
 import Checkout from "./Pages/Checkout";
 import Profile from "./Pages/Profile";
 import NotFound from "./Pages/NotFound";
+import { Notifications } from './Pages/Notifications';
 
 import AdminLayout from "./Admin/AdminLayout";
 import AdminDashboard from "./Admin/Pages/AdminDashboard/AdminDashboard";
@@ -287,7 +288,7 @@ function App() {
 
           <Route path="/profile" element={<Profile />} />
           <Route path="/orders" element={<Orders />} />
-
+          <Route path="/notifications" element={<Notifications />} />
           <Route
             path="/admin"
             element={

@@ -1,12 +1,12 @@
 .category-nav {
-  margin-left: 305px;
+  margin-left: 200px;
   background: white;
   border-bottom: 1px solid #e5e7eb;
   position: sticky;
   top: 88px;
   z-index: 40;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  width: 72%;
+  width: 76%;
 }
 
 .category-list {
@@ -45,7 +45,6 @@
   height: 20px;
 }
 
-/* --- MÀU SẮC --- */
 .category-all { background: #f3f4f6; color: #374151; }
 .category-all:hover { background: #e5e7eb; }
 
@@ -74,6 +73,6 @@
   background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important;
   color: white !important;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-  transform: scale(1.05); /* Hiệu ứng này cần padding để không bị cắt */
+  transform: scale(1.05);
   font-weight: 600;
 }
