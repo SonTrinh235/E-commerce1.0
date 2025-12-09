@@ -1,5 +1,4 @@
 import { GoogleAuth } from "google-auth-library";
-import path from "path";
 
 async function main() {
   try {
@@ -10,10 +9,10 @@ async function main() {
 
     const client = await auth.getClient();
     const accessToken = await client.getAccessToken();
-    console.log("✅ Access Token thành công:");
+    console.log("✅ Access Token:");
     console.log(accessToken.token);
   } catch (error) {
-    console.error("❌ Vẫn lỗi:", error.message);
+    console.error("❌ Lỗi:", error.message);
   }
 }
 

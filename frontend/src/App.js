@@ -179,32 +179,40 @@ function App() {
   useEffect(() => {
     const initFcm = async () => {
       const userId = getUserIdFromStorage();
-      
+      console.log("[App.js] User ID:", userId); 
       if (!userId) {
+        console.warn("[App.js] Chưa có User ID -> Dừng việc lấy Token.");
         return; 
       }
       
       try {
         const token = await getFcmToken();
+        console.log("[App.js] Token :", token);
         
         if (token) {
           localStorage.setItem("fcmToken", token);
-          await registerFcmToken(userId, token);
+          const res = await registerFcmToken(userId, token);
         }
       } catch (err) {
-        console.error("Lỗi khi khởi tạo FCM:", err);
+        console.error("[App.js] Lỗi khi khởi tạo FCM:", err);
       }
     };
-
+  
+    console.log("[App.js] Quyền thông báo hiện tại:", Notification.permission);
+  
     if (Notification.permission === "granted") {
       initFcm();
     } else if (Notification.permission !== "denied") {
       Notification.requestPermission().then((permission) => {
+        console.log("[App.js] Người dùng vừa chọn quyền:", permission);
         if (permission === "granted") initFcm();
       });
+    } else {
+      console.warn("[App.js] Người dùng đã chặn thông báo (Denied).");
     }
-
+  
     onForegroundMessage((payload) => {
+      console.log("[App.js] Có thông báo foreground:", payload);
       alert(`${payload.notification?.title}\n${payload.notification?.body}`);
     });
   }, []);
