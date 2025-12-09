@@ -7,18 +7,30 @@ import { ImageWithFallback } from '../Components/figma/ImageWithFallback.tsx';
 import AddressSelector from "../Components/AddressSelector/AddressSelector";
 import LoadingOverlay from "../Components/LoadingOverlay/LoadingOverlay";
 
-// Utils & API
 import { createOrder } from "../api/orderService";
 import { getPublicIp } from "../api/getPublicIp";
 import { geocodeAddress } from "../api/geocodeService";
-import { editAddress } from "../api/userService";
+import { getUserById } from "../api/userService";
 import { vnd } from "../utils/currencyUtils";
 
 import './CSS/Checkout.css';
 
-// Payment Logos
 import COD_light from "../assets/COD_light.png";
 import VNPAYLogo from "../assets/Logo-VNPAY-QR.png";
+
+const STORE_COORDS = { lat: 10.762622, lon: 106.660172 };
+
+const haversineKm = (lat1, lon1, lat2, lon2) => {
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
 
 export default function Checkout() {
   const navigate = useNavigate();
@@ -34,7 +46,6 @@ export default function Checkout() {
 
   const [loading, setLoading] = useState(false);
   
-  // Form State
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -55,52 +66,52 @@ export default function Checkout() {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    try {
-      const uaRaw = localStorage.getItem("userAddress");
-      const ua = uaRaw ? JSON.parse(uaRaw) : null;
-      
-      const rawInfo = localStorage.getItem("userInfo") || "{}";
-      const info = JSON.parse(rawInfo);
-      const user = info?.user || info;
+    const loadUserData = async () => {
+        try {
+            const rawInfo = localStorage.getItem("userInfo") || "{}";
+            const info = JSON.parse(rawInfo);
+            let user = info?.user || info;
 
-      if (ua) {
-        setAddressObj(ua);
-        setFormData(prev => ({
-          ...prev,
-          addressDetail: ua.houseNumber || "",
-          fullName: ua.contactName || user?.displayName || "",
-          phone: ua.contactPhone || user?.phoneNumber || "",
-          email: ua.contactEmail || user?.email || ""
-        }));
-      } else if (user) {
-        setFormData(prev => ({
-          ...prev,
-          fullName: user.displayName || "",
-          phone: user.phoneNumber || "",
-          email: user.email || ""
-        }));
-        if (user.address) {
-            setAddressObj(user.address);
-            setFormData(prev => ({ ...prev, addressDetail: user.address.houseNumber || "" }));
+            const currentUserId = userId || user?._id || user?.id;
+            if (currentUserId) {
+                const res = await getUserById(currentUserId);
+                if (res && res.success && res.data) {
+                    user = res.data;
+                }
+            }
+
+            if (user) {
+                let formattedPhone = user.phoneNumber || "";
+                if (formattedPhone.startsWith("+84")) {
+                    formattedPhone = formattedPhone.replace("+84", "0");
+                }
+
+                setFormData(prev => ({
+                    ...prev,
+                    fullName: user.displayName || prev.fullName,
+                    phone: formattedPhone || prev.phone,
+                    email: user.email || prev.email,
+                }));
+
+                if (user.address && typeof user.address === 'object') {
+                    if (user.address.provinceCode) {
+                        setAddressObj({
+                            province: { code: user.address.provinceCode, name: user.address.provinceName },
+                            district: { code: user.address.districtCode, name: user.address.districtName },
+                            ward: { code: user.address.wardCode, name: user.address.wardName },
+                            houseNumber: user.address.street
+                        });
+                        setFormData(prev => ({ ...prev, addressDetail: user.address.street || "" }));
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn(e);
         }
-      }
-    } catch (e) {
-      console.warn("Error loading user info", e);
-    }
-  }, []);
+    };
 
-  const STORE_COORDS = { lat: 10.762622, lon: 106.660172 };
-  const haversineKm = (lat1, lon1, lat2, lon2) => {
-    const toRad = (deg) => (deg * Math.PI) / 180;
-    const R = 6371;
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-              Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-              Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
+    loadUserData();
+  }, [userId]);
 
   useEffect(() => {
     const addr = addressObj;
@@ -129,7 +140,7 @@ export default function Checkout() {
           setShippingFee(fee);
         }
       } catch (e) {
-        console.error("Geocode failed", e);
+        console.error(e);
       }
     })();
   }, [addressObj, lastLocationKey]);
@@ -233,7 +244,6 @@ export default function Checkout() {
             contactEmail: formData.email
         };
 
-        console.log("Creating order...", payload);
         const res = await createOrder(payload);
         
         if (paymentMethod === "VNBANK" || paymentMethod === "INTCARD") {
@@ -244,14 +254,6 @@ export default function Checkout() {
             resetCart();
             navigate('/'); 
         }
-
-        try {
-            const savedAddr = { ...addressObj, houseNumber: formData.addressDetail, contactName: formData.fullName, contactPhone: formData.phone, contactEmail: formData.email };
-            localStorage.setItem("userAddress", JSON.stringify(savedAddr));
-            if (userId) {
-                await editAddress({ fullName: formData.fullName, address: savedAddr, addressString: fullAddressString });
-            }
-        } catch (err) { console.warn("Save address failed", err); }
 
     } catch (error) {
         console.error("Order failed:", error);

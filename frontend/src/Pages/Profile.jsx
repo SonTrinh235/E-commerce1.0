@@ -35,12 +35,21 @@ const Profile = () => {
   const renderAddressString = (addr) => {
     if (!addr) return "Chưa có địa chỉ";
     
+    if (typeof addr === 'string') return addr;
+
     const street = addr.street || "";
     const ward = addr.wardName || "";
     const district = addr.districtName || "";
     const province = addr.provinceName || "";
     
     return [street, ward, district, province].filter(Boolean).join(", ");
+  };
+
+  const getUserId = () => {
+      const raw = localStorage.getItem("userInfo");
+      if (!raw) return null;
+      const info = JSON.parse(raw);
+      return info._id || info.id || (info.user && info.user._id);
   };
 
   useEffect(() => {
@@ -66,42 +75,56 @@ const Profile = () => {
 
   const saveName = async () => {
     if (!name) return alert("Tên không được để trống");
+    
+    const userId = getUserId();
+    if (!userId) return alert("Lỗi: Không tìm thấy ID người dùng. Hãy đăng nhập lại.");
+
     try {
-      await editName({ displayName: name }); 
+      await editName(userId, name); 
       
       const raw = localStorage.getItem("userInfo") || "{}";
       const info = JSON.parse(raw);
-      const u = info?.user || info || {};
-      u.displayName = name;
-      const updated = { ...info, user: u };
       
-      localStorage.setItem("userInfo", JSON.stringify(updated));
-      setUserInfo(updated);
+      if (info.user) {
+          info.user.displayName = name;
+      } else {
+          info.displayName = name;
+      }
+      
+      localStorage.setItem("userInfo", JSON.stringify(info));
+      setUserInfo(info);
       window.dispatchEvent(new Event("auth-changed"));
       alert("Cập nhật tên thành công");
     } catch (e) {
       console.error("saveName failed", e);
-      alert("Lỗi khi cập nhật tên");
+      alert("Lỗi khi cập nhật tên: " + e.message);
     }
   };
 
   const saveEmail = async () => {
     if (!email) return alert("Email không được để trống");
+    
+    const userId = getUserId();
+    if (!userId) return alert("Lỗi: Không tìm thấy ID người dùng.");
+
     try {
-      await editEmail({ email }); 
+      await editEmail(userId, email); 
       
       const raw = localStorage.getItem("userInfo") || "{}";
       const info = JSON.parse(raw);
-      const u = info?.user || info || {};
-      u.email = email;
-      const updated = { ...info, user: u };
       
-      localStorage.setItem("userInfo", JSON.stringify(updated));
-      setUserInfo(updated);
+      if (info.user) {
+          info.user.email = email;
+      } else {
+          info.email = email;
+      }
+      
+      localStorage.setItem("userInfo", JSON.stringify(info));
+      setUserInfo(info);
       alert("Cập nhật email thành công");
     } catch (e) {
       console.error("saveEmail failed", e);
-      alert("Lỗi khi cập nhật email");
+      alert("Lỗi khi cập nhật email: " + e.message);
     }
   };
 
@@ -109,60 +132,50 @@ const Profile = () => {
     if (!addressObj || !addressObj.province || !addressObj.district || !addressObj.ward) {
       return alert("Vui lòng chọn đầy đủ Tỉnh/Quận/Phường trước khi lưu địa chỉ");
     }
-    
-    const addressString = renderAddressString({
-        street: addressObj.houseNumber,
-        wardName: addressObj.ward.name,
-        districtName: addressObj.district.name,
-        provinceName: addressObj.province.name,
-    });
-    
-    try {
-      await editAddress({ 
-        fullName: name, 
-        address: addressString 
-      }); 
 
-      const flatApiAddress = {
-        street: addressObj.houseNumber || "",
-        provinceCode: addressObj.province.code, 
+    const userId = getUserId();
+    if (!userId) return alert("Lỗi: Không tìm thấy ID người dùng.");
+    
+    const addressPayload = {
+        provinceCode: addressObj.province.code,
         districtCode: addressObj.district.code,
         wardCode: addressObj.ward.code,
         provinceName: addressObj.province.name,
         districtName: addressObj.district.name,
-        wardName: addressObj.ward.name
-      };
-      
+        wardName: addressObj.ward.name,
+        street: addressObj.houseNumber || ""
+    };
+    
+    try {
+      await editAddress(userId, addressPayload); 
+
       const raw = localStorage.getItem("userInfo") || "{}";
       const info = JSON.parse(raw);
-      const u = info?.user || info || {};
       
-      u.address = flatApiAddress;
+      const newAddressData = {
+          ...addressPayload
+      };
+
+      if (info.user) {
+          info.user.address = newAddressData;
+      } else {
+          info.address = newAddressData;
+      }
       
-      const updated = { ...info, user: u };
-      localStorage.setItem("userInfo", JSON.stringify(updated));
+      localStorage.setItem("userInfo", JSON.stringify(info));
 
-      try {
-        const savedAddr = { 
-          ...addressObj, 
-          ...flatApiAddress,
-          contactName: name, 
-          contactPhone: phone, 
-          contactEmail: email 
-        };
-        localStorage.setItem("userAddress", JSON.stringify(savedAddr));
-      } catch {}
-
-      setUserInfo(updated);
+      setUserInfo(info);
       setEditingAddress(false);
       window.dispatchEvent(new Event("auth-changed"));
       alert("Cập nhật địa chỉ thành công");
       
     } catch (e) {
       console.error("saveAddress failed", e);
-      alert("Lưu địa chỉ thất bại (Lỗi API)");
+      alert("Lưu địa chỉ thất bại: " + e.message);
     }
   };
+
+  const currentAddress = userInfo?.user?.address || userInfo?.address;
 
   return (
     <div className="profile-page">
@@ -193,7 +206,7 @@ const Profile = () => {
         <div className="row">
           <label>Địa chỉ</label>
           <div className="address-summary">
-            <div>{renderAddressString(userInfo?.user?.address)}</div> 
+            <div>{renderAddressString(currentAddress)}</div> 
             <button onClick={() => setEditingAddress(true)}>Chỉnh sửa địa chỉ</button>
           </div>
         </div>
@@ -202,7 +215,7 @@ const Profile = () => {
       {editingAddress && (
         <div className="profile-modal">
           <div className="profile-modal-body">
-            <h3>Địa chỉ mới (thông tin cũ được tải sẵn)</h3>
+            <h3>Địa chỉ mới</h3>
             <div className="modal-row">
               <AddressSelector value={addressObj} onChange={(addr) => setAddressObj(addr)} />
             </div>

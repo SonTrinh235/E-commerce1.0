@@ -36,7 +36,7 @@ import all_banner from "./assets/banner_all.png";
 
 import {
   getFcmToken,
-  registerFcmToken,
+  // registerFcmToken,
   onForegroundMessage,
 } from "./firebase";
 import { getCartByUserId, addProductToCart, updateProductQuantity } from "./api/cartService";
@@ -188,11 +188,11 @@ function App() {
       
       try {
         const token = await getFcmToken();
-        console.log("[App.js] Token :", token);
+        // console.log("[App.js] Token :", token);
         
         if (token) {
           localStorage.setItem("fcmToken", token);
-          const res = await registerFcmToken(userId, token);
+          // const res = await registerFcmToken(userId, token);
         }
       } catch (err) {
         console.error("[App.js] Lỗi khi khởi tạo FCM:", err);

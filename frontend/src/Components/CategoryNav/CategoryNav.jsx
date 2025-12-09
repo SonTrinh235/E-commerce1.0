@@ -25,7 +25,7 @@ export function CategoryNav({ selectedCategory, onSelectCategory }) {
         const data = await res.json();
         
         if (data.success) {
-          const limitedCategories = data.data.slice(0, 5);
+          const limitedCategories = data.data.slice(0, 6);
 
           const apiCategories = limitedCategories.map(cat => {
             const style = getCategoryStyle(cat.slug, cat.name);
