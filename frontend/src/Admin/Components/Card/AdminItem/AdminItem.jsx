@@ -22,7 +22,7 @@ const AdminItem = (props) => {
           onClick={() => window.scrollTo(0, 0)}
           src={props.imageUrl || props.imageInfo?.url || DefaultImage}
           alt={"Image for " + props.name}
-          className="product-image"
+          className="cell-product-image"
         />
       </td>
       <td className="product-name-cell">
