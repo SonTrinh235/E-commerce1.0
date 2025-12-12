@@ -1,35 +1,33 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import StarRating from './StarRating';
 import { getReviewsByProductId, createReview } from '../../api/reviewService';
-import { User, CheckCircle } from 'lucide-react'; // Thêm icon CheckCircle
+import { User, CheckCircle } from 'lucide-react';
 import './ProductReviews.css';
 
 const ProductReviews = ({ productId }) => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // State cho form
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // 1. Lấy User Info từ LocalStorage
   const getUpdateUser = () => {
     const stored = localStorage.getItem('userInfo');
     if (!stored) return null;
     try {
         const parsed = JSON.parse(stored);
-        return parsed.user || parsed; // Lấy object user thực sự
+        return parsed.user || parsed;
     } catch {
         return null;
     }
   }
 
   const user = getUpdateUser();
-  const userId = user?._id || user?.id; // Lấy ID để gửi API
-  const isLoggedIn = !!userId; // Xác định trạng thái đăng nhập
+  const userId = user?._id || user?.id;
+  const isLoggedIn = !!userId;
 
   const fetchReviews = useCallback(async () => {
     if (!productId) return;
@@ -48,9 +46,8 @@ const ProductReviews = ({ productId }) => {
     fetchReviews();
   }, [fetchReviews]);
 
-  // Kiểm tra xem user hiện tại đã có bài đánh giá nào trong list chưa
   const userReview = reviews.find(r => {
-      const rUserId = r.userId?._id || r.userId; // userId có thể là object hoặc string
+      const rUserId = r.userId?._id || r.userId;
       return rUserId === userId;
   });
   const hasRated = !!userReview;
@@ -77,8 +74,6 @@ const ProductReviews = ({ productId }) => {
 
     try {
       // console.log("Submitting review for:", { userId, productId, rating });
-      
-      // 2. Gọi API
       await createReview({
         userId: userId, 
         productId: productId,
@@ -86,22 +81,17 @@ const ProductReviews = ({ productId }) => {
         comment: comment
       });
       
-      // Reset form
       setComment('');
       setRating(0);
       alert('Cảm ơn bạn đã đánh giá!');
       
-      // Reload lại danh sách
       await fetchReviews();
     } catch (err) {
-      // 3. Xử lý hiển thị lỗi từ Backend
-      // Log body để xem chi tiết lỗi 400 là gì
       console.error("Lỗi gửi đánh giá (Body):", err.body);
       
       const serverMsg = err.body?.message || err.body?.error || err.message;
       
       if (serverMsg) {
-         // Hiển thị message từ server (Ví dụ: "User already rated")
          setError(`Lỗi: ${serverMsg}`);
       } else {
          setError('Gửi đánh giá thất bại. Vui lòng thử lại sau.');
@@ -119,19 +109,19 @@ const ProductReviews = ({ productId }) => {
     <div className="product-reviews-container">
       <h2 className="reviews-title">Đánh giá sản phẩm ({reviews.length})</h2>
 
-      {/* SUMMARY */}
       <div className="reviews-summary">
         <div className="average-score">
             <span className="score">{averageRating}</span>
             <span className="max-score">/ 5</span>
         </div>
-        <StarRating rating={Math.round(averageRating)} />
-        <p className="total-count">Dựa trên {reviews.length} nhận xét</p>
+        <div className="summary-details">
+            <StarRating rating={Math.round(averageRating)} />
+            <p className="total-count">Dựa trên {reviews.length} nhận xét</p>
+        </div>
       </div>
 
       <hr className="divider" />
 
-      {/* REVIEWS LIST */}
       <div className="reviews-list">
         {loading ? (
           <p>Đang tải đánh giá...</p>
@@ -162,7 +152,6 @@ const ProductReviews = ({ productId }) => {
 
       <hr className="divider" />
 
-      {/* FORM REVIEW */}
       <div className="write-review">
         <h3>Viết đánh giá của bạn</h3>
         {!isLoggedIn ? (
@@ -170,7 +159,6 @@ const ProductReviews = ({ productId }) => {
             Vui lòng <a href="/login">đăng nhập</a> để viết đánh giá.
           </div>
         ) : hasRated ? (
-          // Hiển thị thông báo nếu đã đánh giá
           <div className="rated-message" style={{ textAlign: 'center', padding: '20px', background: '#f8f9fa', borderRadius: '8px' }}>
              <CheckCircle size={40} color="green" style={{ marginBottom: '10px' }} />
              <p style={{ fontWeight: 'bold', color: '#28a745' }}>Bạn đã đánh giá sản phẩm này.</p>
@@ -179,7 +167,7 @@ const ProductReviews = ({ productId }) => {
         ) : (
           <form onSubmit={handleSubmit}>
             <div className="rating-select">
-              <label>Bạn chấm sản phẩm này mấy sao?</label>
+              <label>Đánh giá sản phẩm</label>
               <StarRating 
                 isEditable={true} 
                 rating={rating} 

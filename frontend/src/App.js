@@ -1,45 +1,43 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 import "./App.css";
 
+// Components
 import { Header } from "./Components/Header/Header";
 import { FloatingCart } from "./Components/FloatingCart/FloatingCart";
 
+// Public Pages
 import Shop from "./Pages/Shop";
 import ShopCategory from "./Pages/ShopCategory";
 import Product from "./Pages/Product";
 import CartPage from "./Pages/Cart";
-import Orders from "./Pages/Orders";
 import Login from "./Pages/Login";
 import SearchResults from "./Pages/SearchResults";
 import ExclusiveOffers from "./Pages/ExclusiveOffers";
+import NotFound from "./Pages/NotFound";
+
+// User Pages
 import Checkout from "./Pages/Checkout";
 import Profile from "./Pages/Profile";
-import NotFound from "./Pages/NotFound";
+import Orders from "./Pages/Orders";
 import { Notifications } from './Pages/Notifications';
 
+// Admin Pages
 import AdminLayout from "./Admin/AdminLayout";
 import AdminDashboard from "./Admin/Pages/AdminDashboard/AdminDashboard";
 import ManageProducts from "./Admin/Pages/ManageProducts/ManageProducts";
 import ManageOrders from "./Admin/Pages/ManageOrders/ManageOrders";
 import ManageVouchers from "./Admin/Pages/ManageVouchers/ManageVouchers";
 
-import meat_banner from "./assets/banner_meats.png";
-import veg_banner from "./assets/banner_vegs.png";
-import all_banner from "./assets/banner_all.png";
+// Assets
+// Đã xóa import banner (meat, veg, all) vì không còn dùng
 
-import {
-  getFcmToken,
-  // registerFcmToken,
-  onForegroundMessage,
-} from "./firebase";
+// Services & API
+import { getFcmToken, onForegroundMessage } from "./firebase";
 import { getCartByUserId, addProductToCart, updateProductQuantity } from "./api/cartService";
+
+// --- Helper Components & Functions ---
 
 const RequireUser = ({ children }) => {
   const token = localStorage.getItem("userToken");
@@ -56,23 +54,23 @@ const RedirectIfAuthed = ({ children }) => {
   return userInfo ? <Navigate to="/" replace /> : children;
 };
 
+const getUserIdFromStorage = () => {
+  const userInfo = localStorage.getItem("userInfo");
+  if (!userInfo) return null;
+  try {
+    const parsed = JSON.parse(userInfo);
+    return parsed.user?._id || parsed._id || parsed.id || parsed.user?.id || null;
+  } catch (e) {
+    console.error("Lỗi parse userInfo:", e);
+    return null;
+  }
+};
+
 function App() {
   const [cartItems, setCartItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [user, setUser] = useState(null);
-
-  const getUserIdFromStorage = () => {
-    const userInfo = localStorage.getItem("userInfo");
-    if (!userInfo) return null;
-    try {
-      const parsed = JSON.parse(userInfo);
-      return parsed.user?._id || parsed._id || parsed.id || parsed.user?.id || null;
-    } catch (e) {
-      console.error("Lỗi parse userInfo:", e);
-      return null;
-    }
-  };
 
   const fetchCart = useCallback(async (openCart = false) => {
     const userId = getUserIdFromStorage();
@@ -95,9 +93,7 @@ function App() {
 
       setCartItems(mappedItems);
       
-      if (openCart) {
-        setIsCartOpen(true);
-      }
+      if (openCart) setIsCartOpen(true);
       
     } catch (error) {
       console.error("Lỗi tải giỏ hàng:", error);
@@ -148,6 +144,9 @@ function App() {
     }
   };
 
+  // --- Effects ---
+
+  // Auth & Cart Initialization
   useEffect(() => {
     const loadData = () => {
       const userInfo = localStorage.getItem("userInfo");
@@ -177,6 +176,7 @@ function App() {
     };
   }, [fetchCart]);
 
+  // FCM Initialization
   useEffect(() => {
     const initFcm = async () => {
       const userId = getUserIdFromStorage();
@@ -188,11 +188,8 @@ function App() {
       
       try {
         const token = await getFcmToken();
-        // console.log("[App.js] Token :", token);
-        
         if (token) {
           localStorage.setItem("fcmToken", token);
-          // const res = await registerFcmToken(userId, token);
         }
       } catch (err) {
         console.error("[App.js] Lỗi khi khởi tạo FCM:", err);
@@ -218,92 +215,64 @@ function App() {
     });
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem("userToken");
+    localStorage.removeItem("userInfo");
+    setUser(null);
+    setCartItems([]);
+    window.dispatchEvent(new Event("auth-changed"));
+  };
 
-  // const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  
   return (
     <Router>
       <div className="app">
         <Header
-          // cartCount={totalItems}
           onSearch={setSearchQuery}
           searchQuery={searchQuery}
           onOpenCart={() => setIsCartOpen(true)}
           user={user}
-          onLogout={() => {
-            localStorage.removeItem("userToken");
-            localStorage.removeItem("userInfo");
-            setUser(null);
-            setCartItems([]);
-            window.dispatchEvent(new Event("auth-changed"));
-          }}
+          onLogout={handleLogout}
         />
 
         <Routes>
           <Route path="/" element={<Shop onAddToCart={addToCart} />} />
 
-          <Route
-            path="/meats"
-            element={<ShopCategory banner={meat_banner} category="Meat" onAddToCart={addToCart} />}
-          />
-          <Route
-            path="/vegs"
-            element={<ShopCategory banner={veg_banner} category="Vegetable" onAddToCart={addToCart} />}
-          />
-          <Route
-            path="/all-products"
-            element={<ShopCategory banner={all_banner} category="" onAddToCart={addToCart} />}
-          />
+          {/* Product Details */}
+          <Route path="/product/:productId" element={<Product onAddToCart={addToCart} />} />
+          <Route path="/product/:categorySlug/:slug" element={<Product onAddToCart={addToCart} />} />
 
-          <Route
-            path="/product/:productId"
-            element={<Product onAddToCart={addToCart} />}
-          />
+          <Route path="/cart" element={<CartPage />} />
 
-          <Route
-            path="/cart"
-            element={<CartPage />}
-          />
-
-          <Route
-            path="/login"
+          <Route 
+            path="/login" 
             element={
               <RedirectIfAuthed>
                 <Login onLogin={(u) => setUser(u)} />
               </RedirectIfAuthed>
-            }
+            } 
           />
 
           <Route path="/search" element={<SearchResults onAddToCart={addToCart} />} />
           <Route path="/exclusive-offers" element={<ExclusiveOffers onAddToCart={addToCart} />} />
 
-          <Route
-            path="/checkout"
-            element={
-              <RequireUser>
-                <Checkout />
-              </RequireUser>
-            }
-          />
-
+          {/* User Protected Routes */}
+          <Route path="/checkout" element={<RequireUser><Checkout /></RequireUser>} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/notifications" element={<Notifications />} />
-          <Route
-            path="/admin"
-            element={
-              <RequireAdmin>
-                <AdminLayout />
-              </RequireAdmin>
-            }
-          >
+
+          {/* Admin Routes */}
+          <Route path="/admin" element={<RequireAdmin><AdminLayout /></RequireAdmin>}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="products" element={<ManageProducts />} />
             <Route path="orders" element={<ManageOrders />} />
             <Route path="vouchers" element={<ManageVouchers />} />
           </Route>
-
+          <Route 
+            path="/category/:categorySlug" 
+            element={<ShopCategory onAddToCart={addToCart} />} 
+          />
           <Route path="*" element={<NotFound />} />
         </Routes>
 

@@ -37,6 +37,28 @@ export async function getProductById(productId) {
   return data;
 }
 
+export async function getProductBySlug(categorySlug, slug) {
+  console.log(`[Product Service]Calling getProductBySlug(${categorySlug}, ${slug})`);
+  return await apiFetch(`/product/${categorySlug}/${slug}`, {
+    method: "GET",
+  });
+}
+
+export async function rateProduct(productId, userId, score, comment) {
+  console.log(`[Product Service]Calling rateProduct(${productId})`);
+  return await apiFetch(`/product/${productId}/rate`, {
+    method: "POST",
+    body: { userId, score, comment }
+  });
+}
+
+// Đã sửa hàm này: Dùng apiFetch thay vì axios, đổi tên cho khớp với ShopCategory.jsx
+export async function getAllCategoriesAPI() {
+  console.log("[Product Service] Calling getAllCategoriesAPI");
+  return await apiFetch(`/product/categories`, {
+    method: "GET",
+  });
+}
 
 export function createProduct(productData) {
   console.log("[Product Service]Calling createProduct");

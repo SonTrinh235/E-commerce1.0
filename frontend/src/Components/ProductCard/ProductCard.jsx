@@ -17,7 +17,6 @@ export function ProductCard({ product }) {
     if (product.imageInfo?.url) return product.imageInfo.url;
     if (product.imageUrl) return product.imageUrl;
     if (product.image) return product.image;
-    
     return null;
   };
 
@@ -45,7 +44,6 @@ export function ProductCard({ product }) {
           });
         }
       } catch (error) {
-        // console.error("Lỗi lấy đánh giá:", error);
       }
     };
 
@@ -67,8 +65,16 @@ export function ProductCard({ product }) {
   };
 
   const handleViewDetail = () => {
-    navigate(`/product/${product._id || product.id}`);
+    const categorySlug = product.categoryInfo?.slug || 'san-pham';
+    const productSlug = product.slug;
+
+    if (productSlug) {
+        navigate(`/product/${categorySlug}/${productSlug}`);
+    } else {
+        console.warn("Sản phẩm thiếu slug:", product.name);
+    }
   };
+  // ---------------------------------------------
 
   return (
     <div className="product-card">

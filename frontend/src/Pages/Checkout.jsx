@@ -133,7 +133,7 @@ export default function Checkout() {
         if (coords) {
           const distKm = haversineKm(STORE_COORDS.lat, STORE_COORDS.lon, coords.lat, coords.lon);
           let fee = 30000;
-          if (distKm <= 5) fee = 15000;
+          if (distKm <= 5) fee = 25000;
           else if (distKm <= 15) fee = 20000;
           else if (distKm <= 30) fee = 25000;
           

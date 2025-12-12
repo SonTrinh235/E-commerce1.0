@@ -2,73 +2,45 @@ import React, { useEffect, useState, useContext } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Plus, Minus, ShoppingCart, Star, Check } from 'lucide-react';
 import { ImageWithFallback } from '../../Components/figma/ImageWithFallback.tsx';
-import { getProductById } from '../../api/productService.js';
-import { CartContext } from '../../Context/CartContext'; 
+import { getProductById, getProductBySlug } from '../../api/productService.js';
+import { CartContext } from '../../Context/CartContext';
 import ProductReviews from '../../Components/Review/ProductReviews';
 import './ProductDisplay.css';
 
-const isLikelyObjectId = (s) => {
-  if (!s || typeof s !== 'string') return false;
-  const hex24 = /^[0-9a-fA-F]{24}$/;
-  return hex24.test(s);
-};
-
-const extractIdFromPath = (pathname) => {
-  try {
-    const path = pathname.split('?')[0].split('#')[0];
-    const parts = path.split('/').filter(Boolean);
-    if (parts.length === 0) return null;
-    for (let i = parts.length - 1; i >= 0; i--) {
-      if (isLikelyObjectId(parts[i])) return parts[i];
-    }
-    return null;
-  } catch (e) {
-    return null;
-  }
-};
-
 const ProductDetail = () => {
-  const params = useParams();
-  const paramId = params?.id || params?.productId;
+  const { productId, categorySlug, slug } = useParams();
   const navigate = useNavigate();
-  
-  // 1. Lấy Context
   const { cartAddProductToCart, setIsCartOpen } = useContext(CartContext);
-
-  const [idFromUrl] = useState(() => {
-    if (isLikelyObjectId(paramId)) return paramId;
-    const extracted = extractIdFromPath(window.location.pathname);
-    return extracted || null;
-  });
-
-  const idToUse = isLikelyObjectId(paramId) ? paramId : idFromUrl;
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-  
-  // 2. State cho hiệu ứng nút thêm giỏ hàng
   const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
-    if (!idToUse) {
-      setError("ID sản phẩm không hợp lệ.");
-      setLoading(false);
-      return;
-    }
-
     let alive = true;
 
     const fetchProduct = async () => {
       setLoading(true);
       setError("");
+      setProduct(null);
+
       try {
-        const res = await getProductById(idToUse);
-        const data = res?.data ?? null;
+        let res = null;
+
+        if (categorySlug && slug) {
+          res = await getProductBySlug(categorySlug, slug);
+        } else if (productId) {
+          res = await getProductById(productId);
+        } else {
+          throw new Error("URL thiếu tham số sản phẩm");
+        }
 
         if (!alive) return;
+
+        const data = res?.data ?? null;
 
         if (!data || !data._id) {
           setError("Không tìm thấy sản phẩm.");
@@ -86,6 +58,7 @@ const ProductDetail = () => {
           imageInfo: data.imageInfo ?? { url: "" },
           ratings: Array.isArray(data.ratings) ? data.ratings : []
         });
+
       } catch (e) {
         console.error(e);
         if (!alive) return;
@@ -98,35 +71,29 @@ const ProductDetail = () => {
 
     fetchProduct();
     return () => { alive = false; }
-  }, [idToUse]);
+  }, [productId, categorySlug, slug]);
 
-  // 3. Hàm xử lý thêm vào giỏ với hiệu ứng
   const handleAddToCart = async () => {
     if (!product) return;
-    
-    setIsAdding(true); // Bắt đầu hiệu ứng
+    setIsAdding(true);
 
     try {
-        // Loop để thêm đúng số lượng
-        for (let i = 0; i < quantity; i++) {
-            await cartAddProductToCart(product._id);
-        }
-        
-        // Mở giỏ hàng (Check null để tránh lỗi nếu chưa update Context)
-        if (setIsCartOpen) {
-            setIsCartOpen(true);
-        }
-        
-        // Tắt hiệu ứng sau 1 giây
-        setTimeout(() => setIsAdding(false), 1000);
+      for (let i = 0; i < quantity; i++) {
+        await cartAddProductToCart(product._id);
+      }
+
+      if (setIsCartOpen) {
+        setIsCartOpen(true);
+      }
+      setTimeout(() => setIsAdding(false), 1000);
 
     } catch (err) {
-        console.error("Lỗi thêm vào giỏ:", err);
-        alert("Có lỗi xảy ra khi thêm vào giỏ hàng.");
-        setIsAdding(false);
+      console.error(err);
+      alert("Có lỗi xảy ra khi thêm vào giỏ hàng.");
+      setIsAdding(false);
     }
   };
-  
+
   const increaseQuantity = () => setQuantity(q => q + 1);
   const decreaseQuantity = () => setQuantity(q => Math.max(1, q - 1));
 
@@ -135,12 +102,13 @@ const ProductDetail = () => {
   const prevImage = () => setSelectedImage(prev => (prev - 1 + images.length) % images.length);
 
   if (loading) return <div className="product-detail-page"><h2>Đang tải sản phẩm…</h2></div>;
+  
   if (error || !product) return (
     <div className="product-detail-page">
       <div className="not-found">
         <h2>{error || "Không tìm thấy sản phẩm."}</h2>
-        <button onClick={() => navigate(-1)} className="back-button">
-          <ArrowLeft className="icon" /> Quay lại
+        <button onClick={() => navigate('/')} className="back-button">
+          <ArrowLeft className="icon" /> Về trang chủ
         </button>
       </div>
     </div>
@@ -192,7 +160,6 @@ const ProductDetail = () => {
                 <button className="quantity-btn quantity-btn-plus" onClick={increaseQuantity}><Plus className="quantity-icon" /></button>
               </div>
               
-              {/* Nút thêm giỏ hàng với hiệu ứng loading */}
               <button 
                 className={`add-to-cart-large ${isAdding ? 'adding' : ''}`} 
                 onClick={handleAddToCart}

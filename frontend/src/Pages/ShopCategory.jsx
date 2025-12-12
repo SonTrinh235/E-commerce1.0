@@ -1,182 +1,206 @@
-import React, { useEffect, useMemo, useState } from "react";
-import "./CSS/ShopCategory.css";
-import Item from "../Components/Item/Item";
-import { getAllProducts } from "../api/productService"; 
+import React, { useEffect, useState, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ChevronRight, SlidersHorizontal, Loader2 } from 'lucide-react';
+import { ProductCard } from '../Components/ProductCard/ProductCard';
+import { getProductsByCategoryAPI, getAllCategoriesAPI } from '../api/productService';
+import './CSS/ShopCategory.css';
 
-function matchesCategory(prodCategory, wanted) {
-  if (!wanted) return true;
-  const w = String(wanted).trim().toLowerCase();
-  if (!prodCategory) return false;
+export default function ShopCategory({ onAddToCart }) {
+  const { categorySlug } = useParams();
+  const navigate = useNavigate();
 
-  if (Array.isArray(prodCategory)) {
-    return prodCategory.some((c) => String(c).trim().toLowerCase() === w);
-  }
-  const s = String(prodCategory).trim().toLowerCase();
-  return s === w || s.includes(w);
-}
-
-function toItemProps(p, idx) {
-  return {
-    id: p._id || p.id || `prod-${idx}`,
-    name: p.name ?? "Sản phẩm",
-    image: p.imageInfo?.url || p.image || null,
-    new_price: p.price ?? p.new_price ?? 0,
-    old_price: p.old_price ?? null,
+  const formatNameFromSlug = (slug) => {
+    if (!slug) return "Danh mục";
+    return slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
-}
 
-const ShopCategory = (props) => {
-  // SỬA 1: Nhận thêm onAddToCart từ props
-  const { category, banner, onAddToCart } = props;
-
-  const [list, setList] = useState([]);
-  const [page, setPage] = useState(1); 
-  const [limit] = useState(20);  
-  const [totalPages, setTotalPages] = useState(1);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [categoryName, setCategoryName] = useState(formatNameFromSlug(categorySlug));
+  
+  const [sortBy, setSortBy] = useState('default');
+  const [page, setPage] = useState(1);
+  const [limit] = useState(12);
+  const [totalPages, setTotalPages] = useState(1);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState("");
-  const [sortOption, setSortOption] = useState("default");
 
+  useEffect(() => {
+    setCategoryName(formatNameFromSlug(categorySlug));
+    setProducts([]);
+
+    const fetchCategoryName = async () => {
+      try {
+        const res = await getAllCategoriesAPI();
+        if (res && res.success && res.data) {
+          const foundCategory = res.data.find(cat => cat.slug === categorySlug);
+          if (foundCategory) {
+            setCategoryName(foundCategory.name);
+          }
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchCategoryName();
+  }, [categorySlug]);
 
   useEffect(() => {
     let alive = true;
-    (async () => {
+    const fetchFirstPage = async () => {
+      if (!categorySlug) return;
       try {
         setLoading(true);
-        setError("");
-
-        const res = await getAllProducts(1, limit);
-        const arr = Array.isArray(res?.data?.list) ? res.data.list : [];
-        const pages = Number(res?.data?.totalPages || 1);
-
-        if (!alive) return;
-
-        setList(arr);
         setPage(1);
-        setTotalPages(pages);
-      } catch (e) {
+        
+        const res = await getProductsByCategoryAPI(categorySlug, 1, limit);
+        
         if (!alive) return;
-        setError("Không lấy được dữ liệu từ backend.");
-        setList([]);
-        setTotalPages(1);
+
+        if (res && res.success && res.data) {
+          const fetchedList = res.data.list || [];
+          setProducts(fetchedList);
+          setTotalPages(res.data.totalPages || 1);
+
+          if (fetchedList.length > 0 && fetchedList[0].categoryInfo) {
+             setCategoryName(fetchedList[0].categoryInfo.name);
+          }
+        } else {
+          setProducts([]);
+        }
+      } catch (error) {
+        console.error(error);
       } finally {
         if (alive) setLoading(false);
       }
-    })();
-    return () => {
-      alive = false;
     };
 
-  }, [category, limit]);
+    fetchFirstPage();
+    return () => { alive = false; };
+  }, [categorySlug, limit]);
 
   const handleLoadMore = async () => {
-    if (loadingMore) return;
-    if (page >= totalPages) return;
-
-    let nextPage = page + 1;
+    if (loadingMore || page >= totalPages) return;
+    const nextPage = page + 1;
+    setLoadingMore(true);
     try {
-      setLoadingMore(true);
-      const res = await getAllProducts(nextPage, limit);
-      const arr = Array.isArray(res?.data?.list) ? res.data.list : [];
-      const pages = Number(res?.data?.totalPages || totalPages);
-
-      setList((prev) => {
-        const byId = new Map();
-        [...prev, ...arr].forEach((p) => {
-          const key = p?._id || p?.id;
-          if (key) byId.set(key, p);
+      const res = await getProductsByCategoryAPI(categorySlug, nextPage, limit);
+      if (res && res.success && res.data) {
+        setProducts(prev => {
+          const newItems = res.data.list || [];
+          const combined = [...prev, ...newItems];
+          const unique = combined.filter((item, index, self) => 
+            index === self.findIndex((t) => t._id === item._id)
+          );
+          return unique;
         });
-        return Array.from(byId.values());
-      });
-      setPage(nextPage);
-      setTotalPages(pages);
+        setPage(nextPage);
+      }
     } catch (e) {
-      setError("Tải thêm sản phẩm thất bại.");
+      console.error(e);
     } finally {
       setLoadingMore(false);
     }
   };
 
-  const filteredProducts = useMemo(() => {
-    return (list || []).filter((p) => matchesCategory(p?.category, category));
-  }, [list, category]);
-
   const sortedProducts = useMemo(() => {
-    const sorted = [...filteredProducts];
-    if (sortOption === "price-asc") {
-      sorted.sort(
-        (a, b) => (a.price ?? a.new_price ?? 0) - (b.price ?? b.new_price ?? 0)
-      );
-    } else if (sortOption === "price-desc") {
-      sorted.sort(
-        (a, b) => (b.price ?? b.new_price ?? 0) - (a.price ?? a.new_price ?? 0)
-      );
+    const sorted = [...products];
+    if (sortBy === 'price-low') {
+      sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
+    } else if (sortBy === 'price-high') {
+      sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
     }
     return sorted;
-  }, [filteredProducts, sortOption]);
-
-  const hasMore = page < totalPages;
+  }, [products, sortBy]);
 
   return (
-    <div className="shopcategory">
-      <div className="shopcategory-banner">
-        <img src={banner} alt="" />
+    <div className="shop-category">
+      <div className="breadcrumb-section">
+        <div className="container">
+          <div className="breadcrumb">
+            <span onClick={() => navigate('/')} className="breadcrumb-link">Trang chủ</span>
+            <ChevronRight className="breadcrumb-icon" />
+            <span className="breadcrumb-current">{categoryName}</span>
+          </div>
+        </div>
       </div>
 
-      <div className="shopcategory-indexSort">
-        <div className="shopcategory-index">
-          <p>
-            <b>Showing {sortedProducts.length}</b> results
-            {loading && " (đang tải...)"}
+      <div className="category-header">
+        <div className="container">
+          <h1 className="category-title">{categoryName}</h1>
+          <p className="category-count">
+            {loading ? '...' : `${sortedProducts.length} sản phẩm`}
           </p>
         </div>
-        <div className="shopcategory-sort">
-          <select
-            value={sortOption}
-            onChange={(e) => setSortOption(e.target.value)}
-          >
-            <option value="default">Sort</option>
-            <option value="price-asc">Increase</option>
-            <option value="price-desc">Decrease</option>
-          </select>
+      </div>
+
+      <div className="filters-section">
+        <div className="container">
+          <div className="filters-toolbar">
+            <div className="filters-left">
+              <button className="filter-btn">
+                <SlidersHorizontal className="icon" />
+                <span>Bộ lọc</span>
+              </button>
+            </div>
+
+            <div className="filters-right">
+              <div className="sort-dropdown">
+                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+                  <option value="default">Mặc định</option>
+                  <option value="price-low">Giá thấp đến cao</option>
+                  <option value="price-high">Giá cao đến thấp</option>
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {error && <div className="error" style={{ marginBottom: 8 }}>{error}</div>}
+      <div className="products-section">
+        <div className="container">
+          {loading && products.length === 0 ? (
+             <div className="no-products">
+               <Loader2 className="animate-spin" style={{margin: '0 auto'}} />
+               <p>Đang tải sản phẩm...</p>
+             </div>
+          ) : sortedProducts.length > 0 ? (
+            <>
+              <div className="products-grid">
+                {sortedProducts.map((product) => (
+                  <ProductCard
+                    key={product._id}
+                    id={product._id}
+                    product={product}
+                    name={product.name}
+                    image={product.imageInfo?.url || product.imageUrl || ""}
+                    price={product.price}
+                    old_price={product.price * 1.1} 
+                    onAddToCart={onAddToCart}
+                  />
+                ))}
+              </div>
 
-      <div className="shopcategory-products">
-        {loading && list.length === 0 ? (
-          <div className="loading">Đang tải sản phẩm…</div>
-        ) : sortedProducts.length === 0 ? (
-          <div className="empty">Không có sản phẩm trong danh mục này.</div>
-        ) : (
-          sortedProducts.map((p, i) => {
-            const reactKey = p._id || p.id || `prod-${i}`;
-            // SỬA 2: Truyền onAddToCart xuống cho Item
-            return (
-              <Item 
-                key={reactKey} 
-                {...toItemProps(p, i)} 
-                onAddToCart={onAddToCart} 
-              />
-            );
-          })
-        )}
-      </div>
-
-      {/* Load more */}
-      <div className="shopcategory-loadmore">
-        {hasMore ? (
-          <button onClick={handleLoadMore} disabled={loadingMore}>
-            {loadingMore ? "Đang tải..." : "Load more"}
-          </button>
-        ) : (
-          <span>Hết sản phẩm rồi bạn!</span>
-        )}
+              {page < totalPages && (
+                <div style={{ textAlign: 'center', marginTop: '40px' }}>
+                  <button 
+                    onClick={handleLoadMore} 
+                    disabled={loadingMore}
+                    className="filter-btn" 
+                    style={{ margin: '0 auto', background: '#1488DB', color: 'white', border: 'none' }}
+                  >
+                    {loadingMore ? <Loader2 className="animate-spin icon" /> : "Xem thêm sản phẩm"}
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="no-products">
+              <p>Chưa có sản phẩm nào trong danh mục "{categoryName}"</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
-};
-
-export default ShopCategory;
+}

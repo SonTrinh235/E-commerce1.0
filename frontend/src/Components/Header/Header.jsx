@@ -122,7 +122,6 @@ export function Header() {
     navigate('/admin/dashboard');
   };
 
-  // SỬA: Hàm này giờ chỉ đơn giản là chuyển hướng đến trang /cart
   const handleCartClick = () => {
     navigate('/cart');
   };
@@ -172,6 +171,20 @@ export function Header() {
             </div>
 
             <div className="header-actions">
+              {isUser && (
+                <Package 
+                  size={26} 
+                  onClick={handleOrdersClick} 
+                  style={{ 
+                    cursor: 'pointer', 
+                    marginRight: '15px', 
+                    color: '#374151',
+                    strokeWidth: 2
+                  }} 
+                  title="Đơn hàng của tôi"
+                />
+              )}
+
               {(isUser || isAdmin) ? (
                 <div className="user-dropdown-container" ref={dropdownRef}>
                   <button 
@@ -216,17 +229,18 @@ export function Header() {
                             <UserCircle size={18} />
                             <span>Hồ sơ cá nhân</span>
                           </div>
-                          <div className="dropdown-item" onClick={handleOrdersClick}>
+
+                          {/* <div className="dropdown-item" onClick={handleOrdersClick}>
                             <Package size={18} />
                             <span>Đơn hàng của tôi</span>
-                          </div>
+                          </div> */}
+
                           <div className="dropdown-item" onClick={handleNotificationsClick}>
                             <Bell size={18} />
                             <span>Thông báo</span>
                           </div>
                         </>
                       )}
-                      
                       
                       <div className="dropdown-divider"></div>
                       
