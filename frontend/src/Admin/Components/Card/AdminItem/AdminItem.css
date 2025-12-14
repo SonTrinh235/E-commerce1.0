@@ -1,9 +1,22 @@
+.AdminItem-row.is-hidden {
+  background-color: #e4e4e4; 
+  opacity: 0.5;
+  border-left: 5px solid #cc0000;
+}
+.AdminItem-row.is-hidden:hover {
+  background-color: #e4e4e4; 
+  opacity: 0.5;
+  border-left: 5px solid #cc0000;
+}
 
 
-
+.AdminItem-row td:nth-child(2) {
+  padding: 0;
+  text-align: center;
+}
 .AdminItem-row .cell-product-image {
-  width: 4rem;
-  height: 4rem;
+  width: 6rem;
+  height: 6rem;
   object-fit: cover;
   border-radius: 0.5rem;
 }
@@ -19,6 +32,7 @@
 
 .AdminItem-row .category-badge {
   display: inline-block;
+  text-align: center;
   padding: 0.25rem 0.75rem;
   background-color: #dbeafe;
   color: #1e40af;
@@ -98,4 +112,10 @@
 
 .AdminItem-row .delete-btn:hover {
   background-color: #dc2626;
+}
+
+.AdminItem-row .action-btn:disabled {
+  background: rgb(151, 151, 151);
+  border: none;
+  cursor: not-allowed;
 }
