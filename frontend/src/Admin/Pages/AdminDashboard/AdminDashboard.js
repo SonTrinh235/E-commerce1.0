@@ -2,6 +2,7 @@ import "./AdminDashboard.css";
 import { useState, useEffect } from "react";
 // Import components
 import ReportsModal from "../../Components/ReportsModal/ReportsModal";
+import LoadingOverlay from "../../../Components/LoadingOverlay/LoadingOverlay";
 
 // Import APIs
 import { getAllOrders } from "../../../api/orderService";
@@ -50,7 +51,6 @@ function AdminDashboard() {
   };
 
   const fetchGeneralStats = async (page = 1, limit = 4) => {
-    setLoading(true);
     try {
       const currentDate = new Date();
       const currentYear = currentDate.getFullYear();
@@ -71,10 +71,8 @@ function AdminDashboard() {
       console.log(error);
     }
 
-    setLoading(false);
   };
   const fetchTopProducts = async (page = 1, limit = 4) => {
-    setLoading(true);
     try {
       const response = await dataService.getTopSellingProducts();
       setTopProducts(response.data);
@@ -82,10 +80,8 @@ function AdminDashboard() {
       console.log(error);
       alert("Fetch products failed, see console");
     }
-    setLoading(false);
   };
   const fetchTopOrders = async (page = 1, limit = 10) => {
-    setLoading(true);
     try {
       const response = await getAllOrders(page, limit);
       setTopOrders(response.data.list);
@@ -93,13 +89,14 @@ function AdminDashboard() {
       console.log(error);
       alert("Fetch products failed, see console");
     }
-    setLoading(false);
   };
 
-  useEffect(() => {
-    fetchTopProducts();
-    fetchTopOrders();
-    fetchGeneralStats();
+  useEffect(async () => {
+    setLoading(true);
+    await fetchTopProducts();
+    await fetchTopOrders();
+    await fetchGeneralStats();
+    setLoading(false);
   }, []);
 
   const stats = [
@@ -176,6 +173,7 @@ function AdminDashboard() {
 
   return (
     <div className="dashboard">
+      {loading && <LoadingOverlay/>}
       <div className="dashboard-page-header">
         <div className="dashboard-page-header-content">
           <div className="dashboard-page-header-left">

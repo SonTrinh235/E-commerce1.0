@@ -31,7 +31,7 @@ const AdminItem = (props) => {
       <td>
         <span className="category-badge">{props.categoryInfo.name}</span>
       </td>
-      <td className="product-price">{vnd(props.price)}</td>
+      <td className="product-price-cell">{vnd(props.price)}</td>
       <td className="product-description-cell">
         <p className="product-description">{props.description}</p>
       </td>

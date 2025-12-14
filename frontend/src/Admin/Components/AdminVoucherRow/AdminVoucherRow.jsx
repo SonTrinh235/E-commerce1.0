@@ -19,6 +19,8 @@ const AdminVoucherRow = (props) => {
     return Math.ceil(durationInDay);
   }
 
+  const daysRemaining = daysUntil(props.expirationDate);
+
   return (
     <tr className="AdminVoucherRow">
       <td>
@@ -47,7 +49,7 @@ const AdminVoucherRow = (props) => {
         <p className="voucher-description">{props.description}</p>
       </td>
       <td>
-        <span className="expiry-date">{daysUntil(props.expirationDate)} ngày</span>
+        <span className="expiry-date">{daysRemaining > 0 ? (`Còn ${daysRemaining} ngày`) : (`Đã hết hạn (${-daysRemaining} ngày trước)`)}</span>
       </td>
       <td id="usage">
         <span className="usage-count">
