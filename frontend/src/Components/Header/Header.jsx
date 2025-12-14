@@ -258,11 +258,13 @@ export function Header() {
                 </button>
               )}
 
-              <button type="button" className="cart-btn" onClick={handleCartClick}>
-                <ShoppingCart className="icon" />
-                <span className="cart-text">Giỏ hàng</span>
-                {cartTotalItems > 0 && <span className="cart-badge">{cartTotalItems}</span>}
-              </button>
+              {isUser && (
+                <button type="button" className="cart-btn" onClick={handleCartClick}>
+                  <ShoppingCart className="icon" />
+                  <span className="cart-text">Giỏ hàng</span>
+                  {cartTotalItems > 0 && <span className="cart-badge">{cartTotalItems}</span>}
+                </button>
+              )}
             </div>
           </div>
         </div>
