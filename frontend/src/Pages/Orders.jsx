@@ -2,12 +2,64 @@ import React, { useContext, useState, useEffect, useCallback } from "react";
 import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Package, MapPin, Phone, User, 
-  Calendar, ChevronDown, ChevronUp, ShoppingBag, Truck, AlertCircle 
+  Calendar, ChevronDown, ChevronUp, ShoppingBag, Truck, AlertCircle,
+  Loader2, CreditCard, Clock, XCircle, CheckCircle, Timer
 } from 'lucide-react';
 import { ShopContext } from "../Context/ShopContext"; 
 import { getOrdersByUserId } from "../api/orderService"; 
+import { getPaymentByOrderId, refundOrder } from "../api/paymentService"; 
 import { ImageWithFallback } from '../Components/figma/ImageWithFallback.tsx';
 import "./CSS/Orders.css";
+
+// Import hàm lấy IP
+import { getPublicIp } from "../api/getPublicIp";
+
+// Component đếm ngược 15 phút
+const PaymentCountdown = ({ createdAt, onExpire }) => {
+    const [timeLeft, setTimeLeft] = useState(null);
+
+    useEffect(() => {
+        const calculateTimeLeft = () => {
+            const createdTime = new Date(createdAt).getTime();
+            const expireTime = createdTime + 15 * 60 * 1000;
+            const now = new Date().getTime();
+            const diff = expireTime - now;
+            return diff > 0 ? diff : 0;
+        };
+
+        const initialDiff = calculateTimeLeft();
+        setTimeLeft(initialDiff);
+        
+        if (initialDiff <= 0) {
+            if (onExpire) onExpire();
+            return;
+        }
+
+        const timer = setInterval(() => {
+            const diff = calculateTimeLeft();
+            setTimeLeft(diff);
+
+            if (diff <= 0) {
+                clearInterval(timer);
+                if (onExpire) onExpire();
+            }
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [createdAt, onExpire]);
+
+    if (timeLeft === null) return null;
+    if (timeLeft <= 0) return <span style={{color: '#ef4444', fontWeight: 'bold'}}>Hết hạn</span>;
+
+    const minutes = Math.floor((timeLeft / 1000 / 60) % 60);
+    const seconds = Math.floor((timeLeft / 1000) % 60);
+
+    return (
+        <span style={{color: '#f59e0b', fontWeight: 'bold', fontFamily: 'monospace', fontSize: '1.1em'}}>
+            {minutes}:{seconds < 10 ? `0${seconds}` : seconds}
+        </span>
+    );
+};
 
 function Orders() {
   const { userId } = useContext(ShopContext); 
@@ -16,7 +68,10 @@ function Orders() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [orders, setOrders] = useState([]);
-  
+  const [actionLoading, setActionLoading] = useState(null);
+
+  const [expiredOrders, setExpiredOrders] = useState({}); 
+
   const [totalOrders, setTotalOrders] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -58,26 +113,198 @@ function Orders() {
     setExpandedOrder(expandedOrder === orderId ? null : orderId);
   };
 
-  const getStatusInfo = (status) => {
-    const s = status?.toLowerCase() || 'pending';
+  const handleOrderExpire = (orderId) => {
+      setExpiredOrders(prev => ({...prev, [orderId]: true}));
+  };
+
+  const handleRepay = async (orderId) => {
+    try {
+      setActionLoading(orderId);
+      
+      const res = await getPaymentByOrderId(orderId);
+      
+      if (res && res.success && res.data) {
+          if (res.data.paymentUrl) {
+              window.location.href = res.data.paymentUrl;
+          } else {
+              alert("Không tìm thấy đường dẫn thanh toán. Vui lòng liên hệ hỗ trợ.");
+          }
+      } else {
+        alert("Không tìm thấy thông tin giao dịch (Transaction not found). Vui lòng liên hệ Admin.");
+      }
+    } catch (error) {
+      console.error("Lỗi hệ thống:", error);
+      alert("Lỗi kết nối khi lấy link thanh toán.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+// --- LOGIC HOÀN TIỀN (REFUND) - ĐÃ SỬA ---
+  const handleRefund = async (order) => {
+    // 1. Kiểm tra ID đơn hàng trước
+    console.log("DEBUG - Order Info:", order);
+    if (!order?._id) {
+        alert("Lỗi: Không lấy được ID đơn hàng.");
+        return;
+    }
+
+    if (!window.confirm(`Bạn có chắc muốn yêu cầu hoàn tiền số tiền ${order.grandTotal?.toLocaleString('vi-VN')}đ cho đơn này?`)) return;
+
+    try {
+      setActionLoading(order._id);
+      console.log(`DEBUG - Calling getPaymentByOrderId(${order._id})...`);
+      const paymentRes = await getPaymentByOrderId(order._id);
+      
+      console.log("DEBUG - Payment Response:", paymentRes);
+
+      if (!paymentRes?.success || !paymentRes?.data) {
+        console.error("Refund Error: Transaction not found", paymentRes);
+        alert(`Lỗi: Không tìm thấy lịch sử thanh toán. (API Success: ${paymentRes?.success})`);
+        return;
+      }
+      const userIp = await getPublicIp();
+      console.log("DEBUG - Refund IP:", userIp);
+      const transactionDate = paymentRes.data.vnpPayDate || paymentRes.data.transDate || paymentRes.data.createdAt;
+      
+      if (!transactionDate) {
+          alert("Lỗi: Không tìm thấy ngày giao dịch (vnpPayDate) để hoàn tiền.");
+          return;
+      }
+
+      const refundData = {
+        userId: userId,
+        transDate: transactionDate,
+        amount: order.grandTotal || order.amount || 0,
+        ipAddr: userIp || "127.0.0.1" 
+      };
+
+      console.log("DEBUG - Sending Refund Data:", refundData);
+
+      const res = await refundOrder(order._id, refundData);
+      console.log("DEBUG - Refund Result:", res);
+      
+      if (res && res.success) {
+        alert("Yêu cầu hoàn tiền thành công! Hệ thống đang xử lý.");
+        fetchOrders(currentPage); 
+      } else {
+        alert(res?.message || "Yêu cầu hoàn tiền thất bại. Vui lòng thử lại sau.");
+      }
+    } catch (error) {
+      console.error("Lỗi hoàn tiền (Exception):", error);
+      alert("Có lỗi xảy ra khi kết nối đến server hoàn tiền.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const renderActionButtons = (order) => {
+    const method = (order.paymentMethod || '').toUpperCase().trim();
+    const pStatus = (order.paymentStatus || '').toLowerCase().trim();
+    const oStatus = (order.status || '').toLowerCase().trim();
+
+    const isOnlinePayment = ['VNBANK', 'INTCARD'].includes(method);
+    if (!isOnlinePayment) return null;
+
+    const isLoading = actionLoading === order._id;
+
+    // --- BUTTON THANH TOÁN LẠI ---
+    const isUnpaid = ['unpaid', 'failed'].includes(pStatus);
+    const isNotCancelled = !oStatus.includes('cancel');
     
+    const createdTime = new Date(order.createdAt).getTime();
+    const now = new Date().getTime();
+    const isOverTime = (now - createdTime) > 15 * 60 * 1000;
+    const isExpiredLocal = isOverTime || expiredOrders[order._id];
+
+    if (isUnpaid && isNotCancelled) {
+      if (isExpiredLocal) {
+          return (
+             <div style={{ marginTop: 15, width: '100%', textAlign: 'center', color: '#ef4444', fontStyle: 'italic', fontSize: '0.9rem' }}>
+                 <AlertCircle size={14} style={{display: 'inline', marginRight: 4}}/>
+                 Hết thời gian thanh toán. Đơn hàng sẽ bị hủy.
+             </div>
+          );
+      }
+
+      return (
+        <div style={{ marginTop: 15, width: '100%' }}>
+            <button 
+            onClick={(e) => { e.stopPropagation(); handleRepay(order._id); }}
+            disabled={!!actionLoading}
+            style={{
+                width: '100%', 
+                padding: '10px', 
+                backgroundColor: '#1488DB', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: 4, 
+                cursor: 'pointer', 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                gap: 8, 
+                fontWeight: '600', 
+                fontSize: '1rem',
+                boxShadow: '0 2px 4px rgba(20, 136, 219, 0.2)'
+            }}
+            >
+            {isLoading ? <Loader2 className="animate-spin" size={18} /> : <CreditCard size={18}/>}
+            Thanh toán ngay ({order.grandTotal?.toLocaleString('vi-VN')}đ)
+            </button>
+            
+            <div style={{textAlign: 'center', fontSize: '0.85rem', color: '#666', marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5}}>
+                <Clock size={14}/> Còn lại: 
+                <PaymentCountdown createdAt={order.createdAt} onExpire={() => handleOrderExpire(order._id)} />
+            </div>
+        </div>
+      );
+    }
+
+    // --- BUTTON HOÀN TIỀN (REFUND) ---
+    const refundableStatuses = ['processing', 'canceled', 'cancelled_due_to_insufficient_stock', 'delivered'];
+    
+    if (pStatus === 'paid' && refundableStatuses.includes(oStatus)) {
+      return (
+        <button 
+          onClick={(e) => { e.stopPropagation(); handleRefund(order); }}
+          disabled={!!actionLoading}
+          style={{
+            marginTop: 15, width: '100%', padding: '10px', 
+            backgroundColor: '#fff', color: '#ef4444', 
+            border: '1px solid #ef4444', borderRadius: 4, 
+            cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, 
+            fontWeight: '600', fontSize: '1rem'
+          }}
+        >
+          {isLoading ? <Loader2 className="animate-spin" size={18} /> : "Yêu cầu hoàn tiền"}
+        </button>
+      );
+    }
+
+    return null;
+  };
+
+  const getStatusInfo = (status) => {
+    const s = (status || 'pending').toLowerCase().trim();
+    const iconSize = 16;
     const statusMap = {
-      'pending': { text: 'Chờ xử lý', color: '#f59e0b', icon: '⏳' },
-      'processing': { text: 'Đang chuẩn bị', color: '#3b82f6', icon: '📦' },
-      'confirmed': { text: 'Đã xác nhận', color: '#3b82f6', icon: '✓' },
-      'shipping': { text: 'Đang giao', color: '#8b5cf6', icon: '🚚' },
-      'delivered': { text: 'Giao thành công', color: '#10b981', icon: '✅' },
-      'cancelled': { text: 'Đã hủy', color: '#ef4444', icon: '❌' },
-      'cancelled_due_to_payment_expiry': { text: 'Hủy (Hết hạn thanh toán)', color: '#ef4444', icon: 'clock-x' },
-      'cancelled_due_to_insufficient_stock': { text: 'Hủy (Hết hàng)', color: '#ef4444', icon: 'package-x' },
-      'unpaid': { text: 'Chưa thanh toán', color: '#9ca3af', icon: '💳' }
+      'pending': { text: 'Chờ xử lý', color: '#f59e0b', icon: <Timer size={iconSize} /> },
+      'processing': { text: 'Đang chuẩn bị', color: '#3b82f6', icon: <Package size={iconSize} /> },
+      'confirmed': { text: 'Đã xác nhận', color: '#3b82f6', icon: <CheckCircle size={iconSize} /> },
+      'shipping': { text: 'Đang giao', color: '#8b5cf6', icon: <Truck size={iconSize} /> },
+      'delivered': { text: 'Giao thành công', color: '#10b981', icon: <CheckCircle size={iconSize} /> },
+      'cancelled': { text: 'Đã hủy', color: '#ef4444', icon: <XCircle size={iconSize} /> },
+      'cancelled_due_to_payment_expiry': { text: 'Hủy (Hết hạn thanh toán)', color: '#ef4444', icon: <Clock size={iconSize} /> },
+      'cancelled_due_to_insufficient_stock': { text: 'Hủy (Hết hàng)', color: '#ef4444', icon: <Package size={iconSize} /> },
+      'unpaid': { text: 'Chưa thanh toán', color: '#9ca3af', icon: <CreditCard size={iconSize} /> },
+      'failed': { text: 'Thanh toán lỗi', color: '#ef4444', icon: <AlertCircle size={iconSize} /> }
     };
     
     const info = statusMap[s];
     if(info) return info;
-
-    const icon = s.includes('cancel') ? '❌' : '📦';
-    return { text: s, color: '#666', icon: icon };
+    const DefaultIcon = s.includes('cancel') ? <XCircle size={iconSize} /> : <Package size={iconSize} />;
+    return { text: s, color: '#666', icon: DefaultIcon };
   };
 
   const formatDate = (dateString) => {
@@ -91,7 +318,7 @@ function Orders() {
   const filteredOrders = filterStatus === 'all' 
     ? orders 
     : orders.filter(order => {
-        const s = order.status?.toLowerCase();
+        const s = (order.status || '').toLowerCase();
         if (filterStatus === 'cancelled') {
             return s && s.includes('cancel');
         }
@@ -115,7 +342,6 @@ function Orders() {
   return (
     <div className="orders-page-container">
       <div className="container">
-        
         <button onClick={handleBack} className="back-button">
           <ArrowLeft className="icon" /> Về trang chủ
         </button>
@@ -170,19 +396,25 @@ function Orders() {
 
               const rawItems = order.productsInfo || [];
               const items = rawItems.map(item => {
-                  // --- SỬA LẠI ĐÚNG KEY TỪ LOG CỦA BẠN ---
                   const imageUrl = 
-                      item.productImageUrl ||       // <--- ĐÂY LÀ KEY ĐÚNG TỪ LOG
-                      item.imageInfo?.url ||       
-                      item.productImage ||         
+                      item.productImageUrl ||      
+                      item.imageInfo?.url ||      
+                      item.productImage ||        
                       item.image ||                
                       null;
+                  
+                  const computed = item.computedPrice || {};
+                  const lineTotal = computed.totalForItemPrice !== undefined 
+                                    ? Number(computed.totalForItemPrice) 
+                                    : (Number(item.price) || 0) * Number(item.quantity || 1);
 
                   return {
                       name: item.productName || item.name || "Sản phẩm",
                       image: imageUrl,
                       quantity: Number(item.quantity || 1),
-                      price: Number(item.price || 0)
+                      price: 0,
+                      computedPrice: computed,
+                      lineTotal: lineTotal
                   };
               });
 
@@ -215,14 +447,14 @@ function Orders() {
                           color: statusInfo.color,
                           border: `1px solid ${statusInfo.color}30`
                       }}>
-                        <span style={{ marginRight: 5 }}>{typeof statusInfo.icon === 'string' ? statusInfo.icon : '📦'}</span>
+                        <span style={{ marginRight: 5, display: 'flex', alignItems: 'center' }}>{statusInfo.icon}</span>
                         <span className="status-text">{statusInfo.text}</span>
                       </div>
                       
                       <div className="order-total-price">
                         {total.toLocaleString('vi-VN')}đ
                       </div>
-                      
+
                       <button className="expand-btn">
                         {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                       </button>
@@ -247,7 +479,7 @@ function Orders() {
                                 <p>Số lượng: <b>{item.quantity}</b></p>
                               </div>
                               <div className="item-price">
-                                {(item.price * item.quantity).toLocaleString('vi-VN')}đ
+                                {item.lineTotal.toLocaleString('vi-VN')}đ
                               </div>
                             </div>
                           ))}
@@ -300,6 +532,8 @@ function Orders() {
                            <span>Tổng thanh toán</span>
                            <span>{total.toLocaleString('vi-VN')}đ</span>
                         </div>
+
+                        {renderActionButtons(order)}
                       </div>
 
                     </div>

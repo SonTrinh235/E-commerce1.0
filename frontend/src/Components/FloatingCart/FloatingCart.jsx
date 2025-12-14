@@ -1,8 +1,8 @@
 import { useState, useContext, useMemo } from 'react';
-import { X, Plus, Minus, ArrowRight, ShoppingCart } from 'lucide-react';
+import { X, Plus, Minus, ArrowRight, ShoppingCart, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ImageWithFallback } from '../figma/ImageWithFallback.tsx';
-import { CartContext } from '../../Context/CartContext'; // Đảm bảo đúng đường dẫn
+import { CartContext } from '../../Context/CartContext';
 import './FloatingCart.css';
 
 export function FloatingCart() {
@@ -13,7 +13,6 @@ export function FloatingCart() {
     cartTotalItems, 
     cartItems, 
     productsLookup, 
-    cartTotal, 
     cartUpdateProductQuantity,
     cartRemoveProductFromCart
   } = useContext(CartContext);
@@ -33,16 +32,26 @@ export function FloatingCart() {
 
       if (!productInfo) return null; 
 
+      const computed = itemParams.computedPrice || {};
+      const quantity = Number(itemParams.quantity) || 1;
+
+      const lineTotal = computed.totalForItemPrice !== undefined 
+                        ? Number(computed.totalForItemPrice) 
+                        : (Number(itemParams.price) || 0) * quantity;
+
       return {
         _id: productId,
         name: productInfo.name,
-        image: productInfo.imageInfo?.url || null,
-        price: itemParams.price,
-        quantity: itemParams.quantity
+        image: itemParams.productImageUrl || productInfo.imageInfo?.url || null,
+        price: Number(itemParams.price) || 0,
+        computedPrice: computed,
+        lineTotal: lineTotal,
+        quantity: quantity
       };
     }).filter(item => item !== null);
   }, [cartItems, productsLookup]);
 
+  const currentCartTotal = renderList.reduce((acc, item) => acc + item.lineTotal, 0);
 
   return (
     <>
@@ -85,13 +94,38 @@ export function FloatingCart() {
                         alt={item.name}
                         className="item-image"
                       />
+                      {item.computedPrice?.flashQty > 0 && (
+                        <div style={{
+                            position: 'absolute', bottom: 0, right: 0, 
+                            background: '#eab308', color: 'white', 
+                            fontSize: '9px', padding: '2px 4px', 
+                            borderRadius: '4px 0 0 0'
+                        }}>
+                           <Zap size={8} style={{display: 'inline'}}/> FS
+                        </div>
+                      )}
                     </div>
 
                     <div className="cart-item-info">
                       <h3 className="line-clamp-2">{item.name}</h3>
-                      <p className="item-price">
-                        {item.price?.toLocaleString('vi-VN')}đ
-                      </p>
+                      
+                      <div className="item-price">
+                        {item.computedPrice?.flashQty > 0 ? (
+                           <div style={{display: 'flex', flexDirection: 'column', fontSize: '0.85rem'}}>
+                              <span style={{color: '#eab308', display: 'flex', alignItems: 'center', gap: 4}}>
+                                 <Zap size={10} fill="#eab308"/> 
+                                 {item.computedPrice.flashQty}x{Number(item.computedPrice.flashPrice).toLocaleString('vi-VN')}đ
+                              </span>
+                              {item.computedPrice.normalQty > 0 && (
+                                 <span style={{color: '#666', fontSize: '0.8rem'}}>
+                                    {item.computedPrice.normalQty}x{Number(item.computedPrice.normalPrice).toLocaleString('vi-VN')}đ
+                                 </span>
+                              )}
+                           </div>
+                        ) : (
+                           <span>{item.price.toLocaleString('vi-VN')}đ</span>
+                        )}
+                      </div>
 
                       <div className="quantity-controls">
                         <button
@@ -119,20 +153,19 @@ export function FloatingCart() {
                     </div>
 
                     <div className="cart-item-total">
-                      {(item.price * item.quantity).toLocaleString('vi-VN')}đ
+                      {item.lineTotal.toLocaleString('vi-VN')}đ
                     </div>
                   </div>
                 ))
               )}
             </div>
 
-            {/* FOOTER */}
             {renderList.length > 0 && (
               <div className="cart-footer">
                 <div className="cart-summary">
                   <div className="summary-row">
                     <span>Tạm tính:</span>
-                    <span>{cartTotal?.toLocaleString('vi-VN')}đ</span>
+                    <span>{currentCartTotal.toLocaleString('vi-VN')}đ</span>
                   </div>
                   <div className="summary-row">
                     <span>Phí vận chuyển:</span>
@@ -140,7 +173,7 @@ export function FloatingCart() {
                   </div>
                   <div className="summary-total">
                     <span>Tổng cộng:</span>
-                    <span className="total-price">{cartTotal?.toLocaleString('vi-VN')}đ</span>
+                    <span className="total-price">{currentCartTotal.toLocaleString('vi-VN')}đ</span>
                   </div>
                 </div>
 

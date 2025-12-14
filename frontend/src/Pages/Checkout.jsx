@@ -1,6 +1,6 @@
 import React, { useContext, useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Phone, User, CreditCard, Truck, Calendar, Clock, Check, Mail } from 'lucide-react';
+import { ArrowLeft, MapPin, Phone, User, CreditCard, Truck, Calendar, Clock, Check, Mail, Zap } from 'lucide-react';
 import { CartContext } from "../Context/CartContext";
 import { ShopContext } from "../Context/ShopContext";
 import { ImageWithFallback } from '../Components/figma/ImageWithFallback.tsx';
@@ -37,7 +37,6 @@ export default function Checkout() {
   const { userId } = useContext(ShopContext);
   const { 
     cartItems, 
-    cartTotal, 
     productsLookup, 
     cartTotalItems, 
     resetCart, 
@@ -147,17 +146,28 @@ export default function Checkout() {
 
   const displayItems = Object.values(cartItems).map(item => {
     const productInfo = productsLookup[item.productId];
+    const computed = item.computedPrice || {};
+    const quantity = Number(item.quantity) || 1;
+    
+    const lineTotal = computed.totalForItemPrice !== undefined 
+                      ? Number(computed.totalForItemPrice) 
+                      : (Number(item.price) || 0) * quantity;
+
     return {
       ...item,
       id: item.productId,
-      name: productInfo?.name || "Đang tải...",
-      image: productInfo?.imageInfo?.url || "",
+      name: item.productName || productInfo?.name || "Đang tải...",
+      image: item.productImageUrl || productInfo?.imageInfo?.url || "",
       originalPrice: productInfo?.originalPrice,
-      price: item.price
+      price: item.price,
+      computedPrice: computed,
+      lineTotal: lineTotal,
+      quantity: quantity
     };
   });
 
-  const subtotal = cartTotal;
+  const subtotal = displayItems.reduce((acc, item) => acc + item.lineTotal, 0);
+
   const calculateDiscount = () => {
     if (!appliedVoucher) return 0;
     if (appliedVoucher.discountType === "percentage") {
@@ -209,7 +219,6 @@ export default function Checkout() {
     const productsInfo = displayItems.map(item => ({
         productId: item.productId,
         quantity: item.quantity,
-        price: item.price,
         productName: item.name,
         productImageUrl: item.image
     }));
@@ -446,7 +455,15 @@ export default function Checkout() {
                     </div>
                     <div className="item-details">
                       <h4>{item.name}</h4>
-                      <p className="item-price">{vnd(item.price * item.quantity)}</p>
+                      <p className="item-price">
+                        {item.computedPrice?.flashQty > 0 ? (
+                           <span style={{color: '#eab308', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 'bold'}}>
+                              <Zap size={12} fill="#eab308"/> {vnd(item.lineTotal)}
+                           </span>
+                        ) : (
+                           vnd(item.lineTotal)
+                        )}
+                      </p>
                     </div>
                   </div>
                 ))}

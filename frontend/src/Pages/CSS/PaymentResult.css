@@ -1,0 +1,103 @@
+.payment-result-page {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    padding: 20px;
+}
+
+.result-card {
+    background-color: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+}
+
+.result-icon-wrapper {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.result-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.status-success {
+    color: #10b981;
+}
+
+.status-cancel {
+    color: #f59e0b;
+}
+
+.status-error {
+    color: #ef4444;
+}
+
+.status-loading {
+    color: #333;
+}
+
+.result-message {
+    color: #666;
+    margin-bottom: 30px;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.btn-result {
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+}
+
+.btn-home {
+    border: 1px solid #ddd;
+    background-color: white;
+    color: #333;
+}
+
+.btn-home:hover {
+    background-color: #f1f1f1;
+    border-color: #ccc;
+}
+
+.btn-orders {
+    border: none;
+    background-color: #1488DB;
+    color: white;
+}
+
+.btn-orders:hover {
+    background-color: #1070b5;
+}
+
+@media (max-width: 480px) {
+    .button-group {
+        flex-direction: column;
+    }
+    
+    .btn-result {
+        justify-content: center;
+        width: 100%;
+    }
+}

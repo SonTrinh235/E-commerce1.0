@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Minus, Trash2, ShoppingBag, Tag } from 'lucide-react';
+import { ArrowLeft, Plus, Minus, Trash2, ShoppingBag, Tag, Zap } from 'lucide-react';
 import { CartContext } from '../Context/CartContext';
 import './CSS/Cart.css';
 
@@ -12,7 +12,6 @@ export default function Cart() {
     productsLookup, 
     cartUpdateProductQuantity, 
     cartRemoveProductFromCart,
-    cartTotal,
     isCartLoading 
   } = useContext(CartContext);
 
@@ -20,24 +19,34 @@ export default function Cart() {
     return Object.keys(cartItems).map(productId => {
       const cartItem = cartItems[productId];
       const productDetail = productsLookup[productId];
+      const computed = cartItem.computedPrice || {};
+      const quantity = Number(cartItem.quantity) || 1;
+      
+      const lineTotal = computed.totalForItemPrice !== undefined 
+                        ? Number(computed.totalForItemPrice) 
+                        : (Number(cartItem.price) || 0) * quantity;
 
       return {
         id: productId,
-        name: productDetail?.name || cartItem.productName || "Đang tải...",
-        image: productDetail?.imageInfo?.url || cartItem.productImageUrl || "",
-        price: cartItem.price,
-        quantity: cartItem.quantity,
+        name: cartItem.productName || productDetail?.name || "Sản phẩm",
+        image: cartItem.productImageUrl || productDetail?.imageInfo?.url || "",
+        computedPrice: computed,
+        lineTotal: lineTotal,
+        quantity: quantity,
         unit: productDetail?.unit || "Cái",
-        originalPrice: productDetail?.originalPrice || 0,
-        discount: productDetail?.discount || 0,
+        originalPrice: Number(productDetail?.originalPrice) || 0,
+        discount: Number(productDetail?.discount) || 0,
+        displayPrice: computed.flashPrice || computed.normalPrice || cartItem.price || 0
       };
     });
   }, [cartItems, productsLookup]);
 
-  const subtotal = cartTotal || 0;
+  const subtotal = items.reduce((acc, item) => acc + item.lineTotal, 0);
+
   const discountAmount = items.reduce((sum, item) => {
-    if (item.originalPrice > item.price) {
-      return sum + ((item.originalPrice - item.price) * item.quantity);
+    // Nếu giá gốc > giá hiển thị (đã tính flash sale hoặc giá thường)
+    if (item.originalPrice > item.displayPrice) {
+      return sum + ((item.originalPrice - item.displayPrice) * item.quantity);
     }
     return sum;
   }, 0);
@@ -60,6 +69,42 @@ export default function Cart() {
   };
 
   const getImage = (src) => (!src || src.trim() === "") ? "/logo192.png" : src;
+
+  const renderPriceInfo = (item) => {
+    const { computedPrice } = item;
+    
+    if (computedPrice && computedPrice.flashQty > 0) {
+      return (
+        <div className="price-breakdown" style={{ fontSize: '0.9rem' }}>
+          <div style={{ color: '#eab308', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Zap size={12} fill="#eab308" />
+            <span>
+              {computedPrice.flashQty} x {Number(computedPrice.flashPrice).toLocaleString("vi-VN")}đ
+            </span>
+          </div>
+          
+          {computedPrice.normalQty > 0 && (
+            <div style={{ color: '#666', marginTop: 2 }}>
+              {computedPrice.normalQty} x {Number(computedPrice.normalPrice).toLocaleString("vi-VN")}đ
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="item-price-section">
+        <span className="item-price">
+          {(computedPrice.normalPrice || item.displayPrice || 0).toLocaleString("vi-VN")}đ
+        </span>
+        {item.originalPrice > (computedPrice.normalPrice || item.displayPrice || 0) && (
+          <span className="item-original-price">
+            {item.originalPrice.toLocaleString("vi-VN")}đ
+          </span>
+        )}
+      </div>
+    );
+  };
 
   if (isCartLoading && items.length === 0) {
     return (
@@ -106,20 +151,17 @@ export default function Cart() {
                         className="image"
                         onError={(e) => (e.target.src = "/logo192.png")}
                       />
-                      {item.discount > 0 && <div className="item-discount-badge">-{item.discount}%</div>}
+                      {item.computedPrice?.flashQty > 0 && (
+                        <div className="item-discount-badge" style={{background: '#eab308'}}>
+                          <Zap size={10} fill="white" style={{marginRight:2}}/> Flash Sale
+                        </div>
+                      )}
                     </div>
 
                     <div className="item-info">
                       <h3 className="item-name">{item.name}</h3>
                       <p className="item-unit">Đơn vị: {item.unit}</p>
-                      <div className="item-price-section">
-                        <span className="item-price">{item.price?.toLocaleString("vi-VN")}đ</span>
-                        {item.originalPrice > item.price && (
-                          <span className="item-original-price">
-                            {item.originalPrice?.toLocaleString("vi-VN")}đ
-                          </span>
-                        )}
-                      </div>
+                      {renderPriceInfo(item)}
                     </div>
 
                     <div className="item-actions">
@@ -143,7 +185,7 @@ export default function Cart() {
                       </div>
                       
                       <div className="item-total">
-                        {(item.price * item.quantity).toLocaleString("vi-VN")}đ
+                        {item.lineTotal.toLocaleString("vi-VN")}đ
                       </div>
                       
                       <button onClick={() => handleRemove(item.id)} className="remove-btn">
@@ -165,12 +207,18 @@ export default function Cart() {
                     <span>Tạm tính ({items.length} sản phẩm)</span>
                     <span>{subtotal.toLocaleString("vi-VN")}đ</span>
                   </div>
+                  
+                  {/* --- ĐÃ THÊM LẠI PHẦN HIỂN THỊ TIẾT KIỆM (SỬ DỤNG discountAmount) --- */}
                   {discountAmount > 0 && (
-                    <div className="summary-row discount-row">
-                      <span><Tag className="discount-icon" /> Tiết kiệm</span>
-                      <span className="discount-amount">-{discountAmount.toLocaleString("vi-VN")}đ</span>
+                    <div className="summary-row discount-row" style={{ color: '#10b981' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <Tag size={14} /> Tiết kiệm
+                      </span>
+                      <span>-{discountAmount.toLocaleString("vi-VN")}đ</span>
                     </div>
                   )}
+                  {/* ----------------------------------------------------------------- */}
+
                   <div className="summary-row">
                     <span>Phí vận chuyển</span>
                     <span className={shippingFee === 0 ? "free-shipping" : ""}>
