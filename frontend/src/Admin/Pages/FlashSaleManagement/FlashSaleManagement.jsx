@@ -33,7 +33,6 @@ import { vnd } from "../../../utils/currencyUtils";
 
 export function FlashSaleManagement() {
   const [batches, setBatches] = useState([]);
-  const [flashSaleProducts, setFlashSaleProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [selectedBatch, setSelectedBatch] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,8 +47,7 @@ export function FlashSaleManagement() {
 
   useEffect(async () => {
     await fetchBatches();
-    await fetchFlashSaleProducts();
-    await fetchAllProducts();
+    await fetchNonFlashSaleProducts();
   }, []);
 
   const fetchBatches = async () => {
@@ -65,19 +63,7 @@ export function FlashSaleManagement() {
     setLoading(false);
   };
 
-  const fetchFlashSaleProducts = async () => {
-    setLoading(true);
-    try {
-      const response = await fetchFlashSaleProductsAPI();
-      setFlashSaleProducts(response.data.list || []);
-    } catch (error) {
-      console.log(error);
-      alert("Fetch flash sale products failed, see console");
-    }
-    setLoading(false);
-  };
-
-  const fetchAllProducts = async () => {
+  const fetchNonFlashSaleProducts = async () => {
     setLoading(true);
     try {
       const response = await fetchNoFlashSaleProductsAPI();
@@ -97,6 +83,7 @@ export function FlashSaleManagement() {
       const response = await deleteFlashSaleBatchAPI(batchId);
       alert("Xóa đợt flash sale thành công!");
       fetchBatches();
+      fetchNonFlashSaleProducts();
     } catch (error) {
       console.error("Error deleting batch:", error);
       alert("Lỗi khi xóa đợt flash sale!");
@@ -112,6 +99,7 @@ export function FlashSaleManagement() {
     try {
       const response = await deleteFlashSaleProductAPI(productId);
       fetchBatches();
+      fetchNonFlashSaleProducts();
       alert("Xóa sản phẩm khỏi flash sale thành công!");
     } catch (error) {
       console.error("Error deleting flash sale product:", error);
@@ -172,9 +160,6 @@ export function FlashSaleManagement() {
     return matchesSearch && matchesStatus;
   });
 
-  const getProductsForBatch = (batchId) => {
-    return flashSaleProducts.filter((product) => product.batchId === batchId);
-  };
 
   return (
     <div className="flash-sale-management">
@@ -265,7 +250,6 @@ export function FlashSaleManagement() {
                         onClick={() => handleDeleteBatch(batchInfo._id)}
                         className="batch-action-btn delete-btn"
                         title="Xóa"
-                        disabled={status === 'ended'}
                       >
                         <Trash2 size={18} />
                       </button>
@@ -329,37 +313,36 @@ export function FlashSaleManagement() {
                           </thead>
                           <tbody>
                             {productsInBatch.map((product) => {
-                              const productInfo = product.product;
                               return (
                                 <tr key={product.productId}>
                                   <td>
                                     <img
-                                      src={productInfo.imageInfo?.url}
+                                      src={product.imageInfo?.url || ''}
                                       className="cell-product-image"
                                     />
                                   </td>
                                   <td>
                                     <div className="product-name-cell">
-                                      {productInfo.name ||
+                                      {product.name ||
                                         product.productId ||
                                         "N/A"}
                                     </div>
                                   </td>
                                   <td className="product-old-price-cell">
-                                    {vnd(productInfo.price)}
+                                    {vnd(product.price)}
                                   </td>
                                   <td>
                                     <span className="discount-badge">
-                                      {productInfo.flashSaleInfo?.flashSaleInfo.discountPercentage || 0}%
+                                      {product.flashSaleInfo?.discountPercentage || 0}%
                                     </span>
                                   </td>
                                   <td>
                                     <span className="product-price-cell">
-                                      {vnd(productInfo.flashSaleInfo?.flashSaleInfo.discountPrice || productInfo.price)}
+                                      {vnd(product.flashSaleInfo?.discountPrice || product.price)}
                                     </span>
                                   </td>
-                                  <td>{product.stock}</td>
-                                  <td>{productInfo.flashSaleInfo?.flashSaleInfo.sold || 0}</td>
+                                  <td>{product.flashSaleInfo?.stock}</td>
+                                  <td>{product.flashSaleInfo?.sold || 0}</td>
                                   <td>
                                     <div className="product-actions">
                                       <button
@@ -374,7 +357,7 @@ export function FlashSaleManagement() {
                                       </button>
                                       <button
                                         onClick={() =>
-                                          handleDeleteProduct(product.productId)
+                                          handleDeleteProduct(product._id)
                                         }
                                         className="product-action-btn delete-btn"
                                         title="Xóa"
@@ -428,14 +411,13 @@ export function FlashSaleManagement() {
         <AddFlashSaleProductModal
           batch={selectedBatch}
           allProducts={allProducts}
-          existingProducts={getProductsForBatch(selectedBatch._id)}
           onClose={() => {
             setIsAddProductModalOpen(false);
             setSelectedBatch(null);
           }}
           onSuccess={() => {
             fetchBatches();
-            fetchAllProducts();
+            fetchNonFlashSaleProducts();
             setIsAddProductModalOpen(false);
             setSelectedBatch(null);
           }}

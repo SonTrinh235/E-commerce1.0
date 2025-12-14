@@ -11,7 +11,6 @@ export function EditFlashSaleProductModal({
   onClose,
   onSuccess,
 }) {
-  const productInfo = product.product;
 
   const [formData, setFormData] = useState({
     discountPercentage: "",
@@ -25,10 +24,10 @@ export function EditFlashSaleProductModal({
     if (product) {
       setFormData({
         discountPercentage:
-          productInfo.flashSaleInfo?.flashSaleInfo.discountPercentage?.toString() ||
+          product.flashSaleInfo?.discountPercentage?.toString() ||
           "",
-        batchId: productInfo.flashSaleInfo?.flashSaleInfo.batchId || "",
-        stock: product.stock?.toString() || "",
+        batchId: product.flashSaleInfo?.batchId || "",
+        stock: product.flashSaleInfo?.stock?.toString() || "",
       });
     }
   }, [product]);
@@ -58,7 +57,7 @@ export function EditFlashSaleProductModal({
 
     setLoading(true);
     try {
-      const productId = product.productId;
+      const productId = product._id;
 
       const response = await editFlashSaleProductAPI(
         productId,
@@ -107,7 +106,7 @@ export function EditFlashSaleProductModal({
               </label>
               <input
                 type="text"
-                value={productInfo.name}
+                value={product.name}
                 className="form-input"
                 disabled
                 readOnly
