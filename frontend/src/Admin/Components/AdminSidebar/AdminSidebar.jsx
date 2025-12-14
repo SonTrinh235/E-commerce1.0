@@ -1,6 +1,7 @@
 import "./AdminSidebar.css";
 import { Link } from "react-router-dom";
 import { FaHome, FaBox, FaReceipt, FaGift } from "react-icons/fa";
+import { IoFlash } from "react-icons/io5";
 import { FiX} from "react-icons/fi";
 
 function AdminSidebar({ isOpen, onClose }) {
@@ -9,6 +10,7 @@ function AdminSidebar({ isOpen, onClose }) {
     { icon: FaBox, label: "Quản lí sản phẩm", href: "./products" },
     { icon: FaReceipt, label: "Quản lí đơn hàng", href: "./orders" },
     { icon: FaGift, label: "Quản lí voucher", href: "./vouchers" },
+    { icon: IoFlash, label: "Quản lí flash sale", href: "./flash-sale" },
   ];
 
   return (
