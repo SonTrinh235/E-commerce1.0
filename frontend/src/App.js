@@ -36,6 +36,7 @@ import ManageVouchers from "./Admin/Pages/ManageVouchers/ManageVouchers";
 // Services & API
 import { getFcmToken, onForegroundMessage } from "./firebase";
 import { getCartByUserId, addProductToCart, updateProductQuantity } from "./api/cartService";
+import PublicLayout from "./PublicLayout";
 
 // --- Helper Components & Functions ---
 
@@ -226,40 +227,36 @@ function App() {
   return (
     <Router>
       <div className="app">
-        <Header
-          onSearch={setSearchQuery}
-          searchQuery={searchQuery}
-          onOpenCart={() => setIsCartOpen(true)}
-          user={user}
-          onLogout={handleLogout}
-        />
 
         <Routes>
-          <Route path="/" element={<Shop onAddToCart={addToCart} />} />
+          {/* Seperated public layout, header and floating cart contained in publiclayout  Public layout simply wrap existing routes*/}
+          <Route path="/" element={<PublicLayout/>}>
+            <Route index element={<Shop onAddToCart={addToCart} />} />
 
-          {/* Product Details */}
-          <Route path="/product/:productId" element={<Product onAddToCart={addToCart} />} />
-          <Route path="/product/:categorySlug/:slug" element={<Product onAddToCart={addToCart} />} />
+            {/* Product Details */}
+            <Route path="/product/:productId" element={<Product onAddToCart={addToCart} />} />
+            <Route path="/product/:categorySlug/:slug" element={<Product onAddToCart={addToCart} />} />
 
-          <Route path="/cart" element={<CartPage />} />
+            <Route path="/cart" element={<CartPage />} />
 
-          <Route 
-            path="/login" 
-            element={
-              <RedirectIfAuthed>
-                <Login onLogin={(u) => setUser(u)} />
-              </RedirectIfAuthed>
-            } 
-          />
+            <Route 
+              path="/login" 
+              element={
+                <RedirectIfAuthed>
+                  <Login onLogin={(u) => setUser(u)} />
+                </RedirectIfAuthed>
+              } 
+              />
 
-          <Route path="/search" element={<SearchResults onAddToCart={addToCart} />} />
-          <Route path="/exclusive-offers" element={<ExclusiveOffers onAddToCart={addToCart} />} />
+            <Route path="/search" element={<SearchResults onAddToCart={addToCart} />} />
+            <Route path="/exclusive-offers" element={<ExclusiveOffers onAddToCart={addToCart} />} />
 
-          {/* User Protected Routes */}
-          <Route path="/checkout" element={<RequireUser><Checkout /></RequireUser>} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/notifications" element={<Notifications />} />
+            {/* User Protected Routes */}
+            <Route path="/checkout" element={<RequireUser><Checkout /></RequireUser>} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/notifications" element={<Notifications />} />
+          </Route>
 
           {/* Admin Routes */}
           <Route path="/admin" element={<RequireAdmin><AdminLayout /></RequireAdmin>}>
@@ -276,13 +273,6 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
 
-        <FloatingCart
-          items={cartItems}
-          isOpen={isCartOpen}
-          onToggle={() => setIsCartOpen(!isCartOpen)}
-          onUpdateQuantity={handleUpdateQuantity}
-          onClose={() => setIsCartOpen(false)}
-        />
       </div>
     </Router>
   );
