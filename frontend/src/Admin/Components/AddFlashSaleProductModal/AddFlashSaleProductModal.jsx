@@ -5,7 +5,7 @@ import './AddFlashSaleProductModal.css';
 // Import API
 import { addFlashSaleProductAPI } from '../../../api/flashSaleService';
 
-export function AddFlashSaleProductModal({ batch, allProducts, existingProducts, onClose, onSuccess }) {
+export function AddFlashSaleProductModal({ batch, allProducts, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     productId: '',
     discountPercentage: '',
@@ -14,13 +14,7 @@ export function AddFlashSaleProductModal({ batch, allProducts, existingProducts,
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Filter out products already in this batch
-  const existingProductIds = existingProducts.map(p => 
-    typeof p.productId === 'string' ? p.productId : p.productId?._id
-  );
-  const availableProducts = allProducts.filter(
-    product => !existingProductIds.includes(product._id)
-  );
+  const availableProducts = allProducts;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
