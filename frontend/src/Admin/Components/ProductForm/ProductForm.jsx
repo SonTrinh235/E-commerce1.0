@@ -216,9 +216,15 @@ function ProductForm({
     subTitle = "Thông tin sản phẩm sẽ được thay bằng thông tin mới";
     submitText = "Xác nhận chỉnh sửa";
   } else if (mode === "delete") {
-    title = "Xác nhận: Xóa sản phẩm";
-    subTitle = "Sản phẩm này sẽ bị xóa, hãy xác nhận:";
-    submitText = "Xóa sản phẩm";
+    if (currentItem?.hasPurchased) {      
+      title = "Xác nhận: Ẩn sản phẩm";
+      subTitle = "Sản phẩm này sẽ bị ẩn, hãy xác nhận:";
+      submitText = "Ẩn sản phẩm";
+    } else {
+      title = "Xác nhận: Xóa sản phẩm";
+      subTitle = "Sản phẩm này sẽ bị xóa, hãy xác nhận:";
+      submitText = "Xóa sản phẩm";
+    }
   }
 
   const buttonClass =
@@ -337,6 +343,11 @@ function ProductForm({
             className="form-input"
           />
         </div>
+        { mode === 'delete' && currentItem?.hasPurchased && (
+          <div className="info-box">
+            <strong>Lưu ý:</strong> Sản phẩm đã được ghi nhận trong ít nhất một đơn hàng, do đó sản phẩm sẽ được ẩn đi thay vì xóa.
+          </div>
+        )}
         <div className="form-actions">
           <button onClick={onCancel} className="form-btn cancel-btn">
             Hủy
