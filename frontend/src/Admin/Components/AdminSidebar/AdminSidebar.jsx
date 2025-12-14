@@ -29,11 +29,14 @@ function AdminSidebar({ isOpen, onClose }) {
           <nav className="AdminSidebar-nav">
             {menuItems.map((item, index) => {
               const Icon = item.icon;
+              const pathname = window.location.pathname;
+              const pathParts = pathname.split('/').filter(Boolean);
+              const currentPage = pathParts.pop();
               return (
                 <a
                   key={index}
                   href={item.href}
-                  className={`AdminSidebar-link ${item.active ? "active" : ""}`}
+                  className={`AdminSidebar-link ${`./${currentPage}` === item.href ? "active" : ""}`}
                 >
                   <Icon size={20} />
                   <span>{item.label}</span>

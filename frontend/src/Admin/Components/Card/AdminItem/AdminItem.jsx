@@ -15,7 +15,7 @@ const AdminItem = (props) => {
   };
 
   return (
-    <tr className="AdminItem-row">
+    <tr className={`AdminItem-row ${props.isHidden ? 'is-hidden' : ''}`}>
       <td>{index}</td>
       <td>
         <img
@@ -42,10 +42,10 @@ const AdminItem = (props) => {
       </td>
       <td>
         <div className="action-buttons">
-          <button className="action-btn edit-btn" onClick={onEdit}>
+          <button className="action-btn edit-btn" onClick={onEdit} disabled={props.isHidden}>
             <FaEdit fill="white" />
           </button>
-          <button className="action-btn delete-btn" onClick={onDelete}>
+          <button className="action-btn delete-btn" onClick={onDelete} disabled={props.isHidden}>
             <FaTrash fill="white" />
           </button>
         </div>

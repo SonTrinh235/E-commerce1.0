@@ -51,6 +51,7 @@ function AdminDashboard() {
   };
 
   const fetchGeneralStats = async (page = 1, limit = 4) => {
+    setLoading(true);
     try {
       const currentDate = new Date();
       const currentYear = currentDate.getFullYear();
@@ -70,9 +71,10 @@ function AdminDashboard() {
       alert("Failed to get general stats from server");
       console.log(error);
     }
-
+    setLoading(false);
   };
   const fetchTopProducts = async (page = 1, limit = 4) => {
+    setLoading(true);
     try {
       const response = await dataService.getTopSellingProducts();
       setTopProducts(response.data);
@@ -80,8 +82,10 @@ function AdminDashboard() {
       console.log(error);
       alert("Fetch products failed, see console");
     }
+    setLoading(false);
   };
   const fetchTopOrders = async (page = 1, limit = 10) => {
+    setLoading(true);
     try {
       const response = await getAllOrders(page, limit);
       setTopOrders(response.data.list);
@@ -89,14 +93,13 @@ function AdminDashboard() {
       console.log(error);
       alert("Fetch products failed, see console");
     }
+    setLoading(false);
   };
 
   useEffect(async () => {
-    setLoading(true);
     await fetchTopProducts();
     await fetchTopOrders();
     await fetchGeneralStats();
-    setLoading(false);
   }, []);
 
   const stats = [

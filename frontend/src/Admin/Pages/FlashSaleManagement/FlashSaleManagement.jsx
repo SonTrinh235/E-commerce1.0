@@ -46,10 +46,10 @@ export function FlashSaleManagement() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchBatches();
-    fetchFlashSaleProducts();
-    fetchAllProducts();
+  useEffect(async () => {
+    await fetchBatches();
+    await fetchFlashSaleProducts();
+    await fetchAllProducts();
   }, []);
 
   const fetchBatches = async () => {
