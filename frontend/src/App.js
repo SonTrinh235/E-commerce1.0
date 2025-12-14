@@ -22,6 +22,7 @@ import Checkout from "./Pages/Checkout";
 import Profile from "./Pages/Profile";
 import Orders from "./Pages/Orders";
 import { Notifications } from './Pages/Notifications';
+import PaymentResult from './Pages/PaymentResult';
 
 // Admin Pages
 import AdminLayout from "./Admin/AdminLayout";
@@ -253,6 +254,7 @@ function App() {
 
             {/* User Protected Routes */}
             <Route path="/checkout" element={<RequireUser><Checkout /></RequireUser>} />
+            <Route path="/payment-result" element={<PaymentResult />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/notifications" element={<Notifications />} />
