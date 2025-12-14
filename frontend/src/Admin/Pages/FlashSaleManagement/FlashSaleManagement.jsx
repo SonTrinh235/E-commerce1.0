@@ -1,22 +1,43 @@
-import { useState, useEffect } from 'react';
-import { Search, Zap, Plus, Edit2, Trash2, Calendar, Clock, Package, Percent } from 'lucide-react';
-import { AddBatchModal } from '../../Components/AddBatchModal/AddBatchModal';
-import { EditBatchModal } from '../../Components/EditBatchModal/EditBatchModal';
-import { AddFlashSaleProductModal } from '../../Components/AddFlashSaleProductModal/AddFlashSaleProductModal';
-import { EditFlashSaleProductModal } from '../../Components/EditFlashSaleProductModal/EditFlashSaleProductModal';
-import './FlashSaleManagement.css';
+import { useState, useEffect } from "react";
+import {
+  Search,
+  Zap,
+  Plus,
+  Edit2,
+  Trash2,
+  Calendar,
+  Clock,
+  Package,
+  Percent,
+} from "lucide-react";
+import { AddBatchModal } from "../../Components/AddBatchModal/AddBatchModal";
+import { EditBatchModal } from "../../Components/EditBatchModal/EditBatchModal";
+import { AddFlashSaleProductModal } from "../../Components/AddFlashSaleProductModal/AddFlashSaleProductModal";
+import { EditFlashSaleProductModal } from "../../Components/EditFlashSaleProductModal/EditFlashSaleProductModal";
+import "./FlashSaleManagement.css";
 
 // Import API
-import { fetchBatchesAPI, fetchFlashSaleProductsAPI } from '../../../api/flashSaleService';
-import { getAllProducts } from '../../../api/productService';
+import {
+  fetchBatchesAPI,
+  fetchFlashSaleProductsAPI,
+  getAllFlashSaleProductAPI,
+  deleteFlashSaleBatchAPI,
+  fetchNoFlashSaleProductsAPI,
+  deleteFlashSaleProductAPI
+} from "../../../api/flashSaleService";
+import { getAllProducts } from "../../../api/productService";
+
+// Import utils
+import { formatDate } from "../../../utils/dateUtils";
+import { vnd } from "../../../utils/currencyUtils";
 
 export function FlashSaleManagement() {
   const [batches, setBatches] = useState([]);
   const [flashSaleProducts, setFlashSaleProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
   const [selectedBatch, setSelectedBatch] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [isAddBatchModalOpen, setIsAddBatchModalOpen] = useState(false);
   const [isEditBatchModalOpen, setIsEditBatchModalOpen] = useState(false);
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
@@ -35,7 +56,8 @@ export function FlashSaleManagement() {
     setLoading(true);
     try {
       const response = await fetchBatchesAPI();
-      setBatches(response.data || [])
+      const batchesObject = response.data;
+      setBatches(Object.values(batchesObject) || []);
     } catch (error) {
       console.log(error);
       alert("Fetch batches failed, see console");
@@ -47,7 +69,7 @@ export function FlashSaleManagement() {
     setLoading(true);
     try {
       const response = await fetchFlashSaleProductsAPI();
-      setFlashSaleProducts(response.data.list || [])
+      setFlashSaleProducts(response.data.list || []);
     } catch (error) {
       console.log(error);
       alert("Fetch flash sale products failed, see console");
@@ -58,8 +80,8 @@ export function FlashSaleManagement() {
   const fetchAllProducts = async () => {
     setLoading(true);
     try {
-      const response = await getAllProducts(1, 100);
-      setAllProducts(response.data.list);
+      const response = await fetchNoFlashSaleProductsAPI();
+      setAllProducts(response.data);
     } catch (error) {
       console.log(error);
       alert("Fetch products failed, see console");
@@ -68,42 +90,32 @@ export function FlashSaleManagement() {
   };
 
   const handleDeleteBatch = async (batchId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa đợt flash sale này?')) return;
+    if (!window.confirm("Bạn có chắc chắn muốn xóa đợt flash sale này?"))
+      return;
 
     try {
-      const response = await fetch(`/product/flash-sale/batches/${batchId}`, {
-        method: 'DELETE',
-      });
-      const result = await response.json();
-      if (result.success) {
-        await fetchBatches();
-        await fetchFlashSaleProducts();
-        if (selectedBatch?._id === batchId) {
-          setSelectedBatch(null);
-        }
-        alert('Xóa đợt flash sale thành công!');
-      }
+      const response = await deleteFlashSaleBatchAPI(batchId);
+      alert("Xóa đợt flash sale thành công!");
+      fetchBatches();
     } catch (error) {
-      console.error('Error deleting batch:', error);
-      alert('Lỗi khi xóa đợt flash sale!');
+      console.error("Error deleting batch:", error);
+      alert("Lỗi khi xóa đợt flash sale!");
     }
   };
 
   const handleDeleteProduct = async (productId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa sản phẩm này khỏi flash sale?')) return;
+    if (
+      !window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này khỏi flash sale?")
+    )
+      return;
 
     try {
-      const response = await fetch(`/product/flash-sale/products/${productId}`, {
-        method: 'DELETE',
-      });
-      const result = await response.json();
-      if (result.success) {
-        await fetchFlashSaleProducts();
-        alert('Xóa sản phẩm khỏi flash sale thành công!');
-      }
+      const response = await deleteFlashSaleProductAPI(productId);
+      fetchBatches();
+      alert("Xóa sản phẩm khỏi flash sale thành công!");
     } catch (error) {
-      console.error('Error deleting flash sale product:', error);
-      alert('Lỗi khi xóa sản phẩm khỏi flash sale!');
+      console.error("Error deleting flash sale product:", error);
+      alert("Lỗi khi xóa sản phẩm khỏi flash sale!");
     }
   };
 
@@ -122,40 +134,40 @@ export function FlashSaleManagement() {
     const start = new Date(batch.startTime);
     const end = new Date(batch.endTime);
 
-    if (now < start) return 'upcoming';
-    if (now > end) return 'ended';
-    return 'active';
+    if (now < start) return "upcoming";
+    if (now > end) return "ended";
+    return "active";
   };
 
   const getStatusText = (status) => {
     switch (status) {
-      case 'active':
-        return 'Đang diễn ra';
-      case 'upcoming':
-        return 'Sắp diễn ra';
-      case 'ended':
-        return 'Đã kết thúc';
+      case "active":
+        return "Đang diễn ra";
+      case "upcoming":
+        return "Sắp diễn ra";
+      case "ended":
+        return "Đã kết thúc";
       default:
-        return '';
+        return "";
     }
   };
 
   const getStatusClass = (status) => {
     switch (status) {
-      case 'active':
-        return 'status-active';
-      case 'upcoming':
-        return 'status-upcoming';
-      case 'ended':
-        return 'status-ended';
+      case "active":
+        return "status-active";
+      case "upcoming":
+        return "status-upcoming";
+      case "ended":
+        return "status-ended";
       default:
-        return '';
+        return "";
     }
   };
 
   const filteredBatches = batches.filter((batch) => {
-    const matchesSearch = batch.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const status = getBatchStatus(batch);
+    const matchesSearch = batch.batchInfo.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const status = getBatchStatus(batch.batchInfo);
     const matchesStatus = statusFilter === 'all' || status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -164,24 +176,11 @@ export function FlashSaleManagement() {
     return flashSaleProducts.filter((product) => product.batchId === batchId);
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
   return (
     <div className="flash-sale-management">
       <div className="page-header flash-sale-header">
         <div className="page-header-content">
-          <div className="page-header-icon">
-            ⚡
-          </div>
+          <div className="page-header-icon">⚡</div>
           <h1 className="page-header-title">Quản lí Flash Sale</h1>
         </div>
       </div>
@@ -202,12 +201,10 @@ export function FlashSaleManagement() {
             </select>
           </div>
 
-          <div className="filter-group search-group">
-
-          </div>
+          <div className="filter-group search-group"></div>
 
           <div className="filter-group">
-            <button 
+            <button
               onClick={() => setIsAddBatchModalOpen(true)}
               className="add-batch-btn"
             >
@@ -230,7 +227,7 @@ export function FlashSaleManagement() {
               <Zap size={64} className="empty-icon" />
               <h3>Chưa có đợt flash sale nào</h3>
               <p>Tạo đợt flash sale đầu tiên để bắt đầu</p>
-              <button 
+              <button
                 onClick={() => setIsAddBatchModalOpen(true)}
                 className="add-batch-btn-empty"
               >
@@ -240,30 +237,35 @@ export function FlashSaleManagement() {
             </div>
           ) : (
             filteredBatches.map((batch) => {
-              const status = getBatchStatus(batch);
-              const productsInBatch = getProductsForBatch(batch._id);
+              const batchInfo = batch.batchInfo;
+              const status = getBatchStatus(batchInfo);
+              const productsInBatch = batch.products;
 
               return (
-                <div key={batch._id} className="batch-card">
+                <div key={batchInfo._id} className="batch-card">
                   <div className="batch-header">
                     <div className="batch-header-left">
-                      <h2 className="batch-name">{batch.name}</h2>
-                      <span className={`batch-status ${getStatusClass(status)}`}>
+                      <h2 className="batch-name">{batchInfo.name}</h2>
+                      <span
+                        className={`batch-status ${getStatusClass(status)}`}
+                      >
                         {getStatusText(status)}
                       </span>
                     </div>
                     <div className="batch-actions">
                       <button
-                        onClick={() => handleEditBatch(batch)}
+                        onClick={() => handleEditBatch(batchInfo)}
                         className="batch-action-btn edit-btn"
                         title="Chỉnh sửa"
+                        disabled={status === 'ended'}
                       >
                         <Edit2 size={18} />
                       </button>
                       <button
-                        onClick={() => handleDeleteBatch(batch._id)}
+                        onClick={() => handleDeleteBatch(batchInfo._id)}
                         className="batch-action-btn delete-btn"
                         title="Xóa"
+                        disabled={status === 'ended'}
                       >
                         <Trash2 size={18} />
                       </button>
@@ -274,12 +276,16 @@ export function FlashSaleManagement() {
                     <div className="time-item">
                       <Calendar size={16} />
                       <span className="time-label">Bắt đầu:</span>
-                      <span className="time-value">{formatDate(batch.startTime)}</span>
+                      <span className="time-value">
+                        {formatDate(batchInfo.startTime)}
+                      </span>
                     </div>
                     <div className="time-item">
                       <Clock size={16} />
                       <span className="time-label">Kết thúc:</span>
-                      <span className="time-value">{formatDate(batch.endTime)}</span>
+                      <span className="time-value">
+                        {formatDate(batchInfo.endTime)}
+                      </span>
                     </div>
                   </div>
 
@@ -291,10 +297,11 @@ export function FlashSaleManagement() {
                       </h3>
                       <button
                         onClick={() => {
-                          setSelectedBatch(batch);
+                          setSelectedBatch(batchInfo);
                           setIsAddProductModalOpen(true);
                         }}
                         className="add-product-btn"
+                        disabled={status === 'ended'}
                       >
                         <Plus size={16} />
                         Thêm sản phẩm
@@ -310,54 +317,76 @@ export function FlashSaleManagement() {
                         <table className="products-table">
                           <thead>
                             <tr>
+                              <th>Sản phẩm</th>
                               <th>Tên sản phẩm</th>
-                              <th>ID sản phẩm</th>
+                              <th>Giá gốc</th>
                               <th>Giảm giá</th>
-                              <th>Tồn kho Flash Sale</th>
+                              <th>Giá bán</th>
+                              <th>Số lượng Sale</th>
+                              <th>Số lượng đã bán</th>
                               <th>Thao tác</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {productsInBatch.map((product) => (
-                              <tr key={product._id}>
-                                <td>
-                                  <div className="product-name-cell">
-                                    <Package size={16} />
-                                    {product.productId?.name || product.productId || 'N/A'}
-                                  </div>
-                                </td>
-                                <td className="product-id-cell">
-                                  {typeof product.productId === 'string' 
-                                    ? product.productId 
-                                    : product.productId?._id || 'N/A'}
-                                </td>
-                                <td>
-                                  <span className="discount-badge">
-                                    <Percent size={14} />
-                                    {product.discountPercentage}%
-                                  </span>
-                                </td>
-                                <td>{product.stock}</td>
-                                <td>
-                                  <div className="product-actions">
-                                    <button
-                                      onClick={() => handleEditProduct(product)}
-                                      className="product-action-btn edit-btn"
-                                      title="Chỉnh sửa"
-                                    >
-                                      <Edit2 size={16} />
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteProduct(product._id)}
-                                      className="product-action-btn delete-btn"
-                                      title="Xóa"
-                                    >
-                                      <Trash2 size={16} />
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
+                            {productsInBatch.map((product) => {
+                              const productInfo = product.product;
+                              return (
+                                <tr key={product.productId}>
+                                  <td>
+                                    <img
+                                      src={productInfo.imageInfo?.url}
+                                      className="cell-product-image"
+                                    />
+                                  </td>
+                                  <td>
+                                    <div className="product-name-cell">
+                                      {productInfo.name ||
+                                        product.productId ||
+                                        "N/A"}
+                                    </div>
+                                  </td>
+                                  <td className="product-old-price-cell">
+                                    {vnd(productInfo.price)}
+                                  </td>
+                                  <td>
+                                    <span className="discount-badge">
+                                      {productInfo.flashSaleInfo?.flashSaleInfo.discountPercentage || 0}%
+                                    </span>
+                                  </td>
+                                  <td>
+                                    <span className="product-price-cell">
+                                      {vnd(productInfo.flashSaleInfo?.flashSaleInfo.discountPrice || productInfo.price)}
+                                    </span>
+                                  </td>
+                                  <td>{product.stock}</td>
+                                  <td>{productInfo.flashSaleInfo?.flashSaleInfo.sold || 0}</td>
+                                  <td>
+                                    <div className="product-actions">
+                                      <button
+                                        onClick={() =>
+                                          handleEditProduct(product)
+                                        }
+                                        className="product-action-btn edit-btn"
+                                        title="Chỉnh sửa"
+                                        disabled={status === 'ended'}
+                                      >
+                                        <Edit2 size={16} />
+                                      </button>
+                                      <button
+                                        onClick={() =>
+                                          handleDeleteProduct(product.productId)
+                                        }
+                                        className="product-action-btn delete-btn"
+                                        title="Xóa"
+                                        disabled={status === 'ended'}
+                                      >
+                                        <Trash2 size={16} />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
@@ -405,7 +434,8 @@ export function FlashSaleManagement() {
             setSelectedBatch(null);
           }}
           onSuccess={() => {
-            fetchFlashSaleProducts();
+            fetchBatches();
+            fetchAllProducts();
             setIsAddProductModalOpen(false);
             setSelectedBatch(null);
           }}
@@ -421,7 +451,7 @@ export function FlashSaleManagement() {
             setEditingProduct(null);
           }}
           onSuccess={() => {
-            fetchFlashSaleProducts();
+            fetchBatches();
             setIsEditProductModalOpen(false);
             setEditingProduct(null);
           }}

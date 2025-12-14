@@ -386,6 +386,9 @@
   color: #374151;
 }
 
+.products-table td:first-child {
+  padding: 0 1rem;
+}
 .products-table tbody tr:last-child td {
   border-bottom: none;
 }
@@ -394,10 +397,25 @@
   background: #f9fafb;
 }
 
+.flash-sale-management .cell-product-image {
+  width: 3rem;
+  height: 3rem;
+  object-fit: cover;
+  border-radius: 0.5rem;
+}
+
 .product-name-cell {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.flash-sale-management .product-old-price-cell {
+  color: #0b5024;
+  text-decoration: line-through;
+}
+.flash-sale-management .product-price-cell {
+  color: #16a34a;
 }
 
 .product-id-cell {
@@ -414,8 +432,8 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  background: #fef3c7;
-  color: #92400e;
+  background: #fecfc7;
+  color: #920e0e;
   padding: 0.25rem 0.75rem;
   border-radius: 12px;
   font-size: 0.875rem;
@@ -453,6 +471,21 @@
 
 .product-action-btn.delete-btn:hover {
   background: #fecaca;
+}
+
+.product-action-btn:disabled,
+.batch-action-btn:disabled,
+.flash-sale-management .add-product-btn:disabled {
+  background: rgb(235, 235, 235);
+  color: rgb(155, 155, 155);
+  border: none;
+  cursor: not-allowed;
+}
+.product-action-btn:disabled:hover,
+.batch-action-btn:disabled:hover,
+.flash-sale-management .add-product-btn:disabled:hover {
+  background: rgb(218, 218, 218);
+  color: rgb(136, 136, 136);
 }
 
 @media (max-width: 768px) {

@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { X, Package, Percent, Archive } from 'lucide-react';
 import './AddFlashSaleProductModal.css';
 
+// Import API
+import { addFlashSaleProductAPI } from '../../../api/flashSaleService';
+
 export function AddFlashSaleProductModal({ batch, allProducts, existingProducts, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     productId: '',
@@ -42,47 +45,20 @@ export function AddFlashSaleProductModal({ batch, allProducts, existingProducts,
       return;
     }
 
+    setLoading(true);
+
     try {
-      setLoading(true);
-      const response = await fetch('/product/flash-sale/products', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          productId: formData.productId,
-          discountPercentage: discount,
-          batchId: batch._id,
-          stock: stock,
-        }),
-      });
-
-      // Check if response is OK
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Check if response is JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('API endpoint không khả dụng. Vui lòng kiểm tra lại server.');
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        alert('Thêm sản phẩm vào flash sale thành công!');
-        onSuccess();
-      } else {
-        setError(result.message || 'Có lỗi xảy ra');
-      }
+      const response = await addFlashSaleProductAPI(batch._id, formData.productId, discount, stock);
+      
+      alert('Thêm sản phẩm vào flash sale thành công!');
+      onSuccess();
     } catch (error) {
+      alert('Lỗi khi thêm sản phẩm vào flash sale.');
       console.error('Error adding flash sale product:', error);
-      setError(error.message || 'Lỗi khi thêm sản phẩm vào flash sale. Vui lòng kiểm tra API endpoint.');
-    } finally {
-      setLoading(false);
-    }
-  };
+
+    setLoading(false);
+    };
+  }
 
   const handleChange = (e) => {
     setFormData({

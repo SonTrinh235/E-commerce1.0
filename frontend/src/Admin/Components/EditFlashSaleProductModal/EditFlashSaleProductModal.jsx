@@ -1,33 +1,45 @@
-import { useState, useEffect } from 'react';
-import { X, Package, Percent, Archive } from 'lucide-react';
-import '../../Components/AddFlashSaleProductModal/AddFlashSaleProductModal';
+import { useState, useEffect } from "react";
+import { X, Package, Percent, Archive } from "lucide-react";
+import "../../Components/AddFlashSaleProductModal/AddFlashSaleProductModal";
 
-export function EditFlashSaleProductModal({ product, batches, onClose, onSuccess }) {
+// Import API
+import { editFlashSaleProductAPI } from "../../../api/flashSaleService";
+
+export function EditFlashSaleProductModal({
+  product,
+  batches,
+  onClose,
+  onSuccess,
+}) {
+  const productInfo = product.product;
+
   const [formData, setFormData] = useState({
-    discountPercentage: '',
-    batchId: '',
-    stock: '',
+    discountPercentage: "",
+    batchId: "",
+    stock: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (product) {
       setFormData({
-        discountPercentage: product.discountPercentage?.toString() || '',
-        batchId: product.batchId || '',
-        stock: product.stock?.toString() || '',
+        discountPercentage:
+          productInfo.flashSaleInfo?.flashSaleInfo.discountPercentage?.toString() ||
+          "",
+        batchId: productInfo.flashSaleInfo?.flashSaleInfo.batchId || "",
+        stock: product.stock?.toString() || "",
       });
     }
   }, [product]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     // Validate
     if (!formData.discountPercentage || !formData.batchId || !formData.stock) {
-      setError('Vui lòng điền đầy đủ thông tin');
+      setError("Vui lòng điền đầy đủ thông tin");
       return;
     }
 
@@ -35,58 +47,33 @@ export function EditFlashSaleProductModal({ product, batches, onClose, onSuccess
     const stock = parseInt(formData.stock);
 
     if (discount < 1 || discount > 99) {
-      setError('Giảm giá phải từ 1% đến 99%');
+      setError("Giảm giá phải từ 1% đến 99%");
       return;
     }
 
     if (stock < 1) {
-      setError('Tồn kho phải lớn hơn 0');
+      setError("Tồn kho phải lớn hơn 0");
       return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true);
-      const productId = typeof product.productId === 'string' 
-        ? product.productId 
-        : product.productId?._id;
+      const productId = product.productId;
 
-      const response = await fetch(`/product/flash-sale/products/${productId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          discountPercentage: discount,
-          batchId: formData.batchId,
-          stock: stock,
-        }),
-      });
+      const response = await editFlashSaleProductAPI(
+        productId,
+        formData.batchId,
+        discount,
+        stock
+      );
 
-      // Check if response is OK
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Check if response is JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('API endpoint không khả dụng. Vui lòng kiểm tra lại server.');
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        alert('Cập nhật sản phẩm flash sale thành công!');
-        onSuccess();
-      } else {
-        setError(result.message || 'Có lỗi xảy ra');
-      }
+      alert("Cập nhật sản phẩm flash sale thành công!");
+      onSuccess();
     } catch (error) {
-      console.error('Error updating flash sale product:', error);
-      setError(error.message || 'Lỗi khi cập nhật sản phẩm flash sale. Vui lòng kiểm tra API endpoint.');
-    } finally {
-      setLoading(false);
+      console.error("Error updating flash sale product:", error);
+      alert("Lỗi khi cập nhật sản phẩm flash sale");
     }
+    setLoading(false);
   };
 
   const handleChange = (e) => {
@@ -96,13 +83,12 @@ export function EditFlashSaleProductModal({ product, batches, onClose, onSuccess
     });
   };
 
-  const productName = typeof product.productId === 'string' 
-    ? product.productId 
-    : product.productId?.name || 'N/A';
-
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content flash-product-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal-content flash-product-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-header">
           <h2>Chỉnh sửa sản phẩm Flash Sale</h2>
           <button onClick={onClose} className="modal-close-btn">
@@ -112,11 +98,7 @@ export function EditFlashSaleProductModal({ product, batches, onClose, onSuccess
 
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
-            {error && (
-              <div className="error-message">
-                {error}
-              </div>
-            )}
+            {error && <div className="error-message">{error}</div>}
 
             <div className="form-group">
               <label className="form-label">
@@ -125,7 +107,7 @@ export function EditFlashSaleProductModal({ product, batches, onClose, onSuccess
               </label>
               <input
                 type="text"
-                value={productName}
+                value={productInfo.name}
                 className="form-input"
                 disabled
                 readOnly
@@ -146,8 +128,8 @@ export function EditFlashSaleProductModal({ product, batches, onClose, onSuccess
               >
                 <option value="">-- Chọn đợt --</option>
                 {batches.map((batch) => (
-                  <option key={batch._id} value={batch._id}>
-                    {batch.name}
+                  <option key={batch.batchInfo._id} value={batch.batchInfo._id}>
+                    {batch.batchInfo.name}
                   </option>
                 ))}
               </select>
@@ -188,31 +170,30 @@ export function EditFlashSaleProductModal({ product, batches, onClose, onSuccess
                   className="form-input"
                   required
                 />
-                <span className="input-hint">Số lượng khả dụng cho flash sale</span>
+                <span className="input-hint">
+                  Số lượng khả dụng cho flash sale
+                </span>
               </div>
             </div>
 
             <div className="info-box">
-              <strong>Lưu ý:</strong> Tồn kho Flash Sale khác với tồn kho sản phẩm gốc. 
-              Đây là số lượng giới hạn dành riêng cho đợt flash sale này.
+              <strong>Lưu ý:</strong> Tồn kho Flash Sale khác với tồn kho sản
+              phẩm gốc. Đây là số lượng giới hạn dành riêng cho đợt flash sale
+              này.
             </div>
           </div>
 
           <div className="modal-footer">
-            <button 
-              type="button" 
-              onClick={onClose} 
+            <button
+              type="button"
+              onClick={onClose}
               className="btn-cancel"
               disabled={loading}
             >
               Hủy
             </button>
-            <button 
-              type="submit" 
-              className="btn-submit"
-              disabled={loading}
-            >
-              {loading ? 'Đang cập nhật...' : 'Cập nhật'}
+            <button type="submit" className="btn-submit" disabled={loading}>
+              {loading ? "Đang cập nhật..." : "Cập nhật"}
             </button>
           </div>
         </form>

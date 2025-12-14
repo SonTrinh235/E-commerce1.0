@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
-import { X, Calendar, Clock } from 'lucide-react';
+import { X, Calendar, Clock, Bath } from 'lucide-react';
 import '../../Components/AddBatchModal/AddBatchModal';
+
+// Import API
+import { editFlashSaleBatchAPI } from '../../../api/flashSaleService';
 
 export function EditBatchModal({ batch, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -48,45 +51,17 @@ export function EditBatchModal({ batch, onClose, onSuccess }) {
       return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await fetch(`/product/flash-sale/batches/${batch._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          startTime: startDateTime.toISOString(),
-          endTime: endDateTime.toISOString(),
-        }),
-      });
-
-      // Check if response is OK
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Check if response is JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('API endpoint không khả dụng. Vui lòng kiểm tra lại server.');
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
+      const response = await editFlashSaleBatchAPI(batch._id, formData.name, startDateTime.toISOString(), endDateTime.toISOString())
         alert('Cập nhật đợt flash sale thành công!');
         onSuccess();
-      } else {
-        setError(result.message || 'Có lỗi xảy ra');
-      }
+
     } catch (error) {
       console.error('Error updating batch:', error);
       setError(error.message || 'Lỗi khi cập nhật đợt flash sale. Vui lòng kiểm tra API endpoint.');
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   const handleChange = (e) => {
@@ -143,7 +118,7 @@ export function EditBatchModal({ batch, onClose, onSuccess }) {
                   name="startDate"
                   value={formData.startDate}
                   onChange={handleChange}
-                  min={today}
+                  // min={today}
                   className="form-input"
                   required
                 />

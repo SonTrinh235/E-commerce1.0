@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { X, Calendar, Clock } from 'lucide-react';
 import './AddBatchModal.css';
 
+// Import API
+import { addFlashSaleBatchAPI } from '../../../api/flashSaleService';
+
 export function AddBatchModal({ onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     name: '',
@@ -33,45 +36,17 @@ export function AddBatchModal({ onClose, onSuccess }) {
       return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await fetch('/product/flash-sale/batches', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          startTime: startDateTime.toISOString(),
-          endTime: endDateTime.toISOString(),
-        }),
-      });
+      const response = await addFlashSaleBatchAPI(formData.name, startDateTime.toISOString(), endDateTime.toISOString());
 
-      // Check if response is OK
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Check if response is JSON
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        throw new Error('API endpoint không khả dụng. Vui lòng kiểm tra lại server.');
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
         alert('Thêm đợt flash sale thành công!');
         onSuccess();
-      } else {
-        setError(result.message || 'Có lỗi xảy ra');
-      }
     } catch (error) {
       console.error('Error adding batch:', error);
       setError(error.message || 'Lỗi khi thêm đợt flash sale. Vui lòng kiểm tra API endpoint.');
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   const handleChange = (e) => {
