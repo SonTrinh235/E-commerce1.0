@@ -38,6 +38,7 @@ import ManageVouchers from "./Admin/Pages/ManageVouchers/ManageVouchers";
 import { getFcmToken, onForegroundMessage } from "./firebase";
 import { getCartByUserId, addProductToCart, updateProductQuantity } from "./api/cartService";
 import PublicLayout from "./PublicLayout";
+import { FlashSaleManagement } from "./Admin/Pages/FlashSaleManagement/FlashSaleManagement";
 
 // --- Helper Components & Functions ---
 
@@ -267,6 +268,7 @@ function App() {
             <Route path="products" element={<ManageProducts />} />
             <Route path="orders" element={<ManageOrders />} />
             <Route path="vouchers" element={<ManageVouchers />} />
+            <Route path="flash-sale" element={<FlashSaleManagement />} />
           </Route>
           <Route 
             path="/category/:categorySlug" 

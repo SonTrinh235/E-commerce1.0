@@ -2,6 +2,7 @@ import "./AdminDashboard.css";
 import { useState, useEffect } from "react";
 // Import components
 import ReportsModal from "../../Components/ReportsModal/ReportsModal";
+import LoadingOverlay from "../../../Components/LoadingOverlay/LoadingOverlay";
 
 // Import APIs
 import { getAllOrders } from "../../../api/orderService";
@@ -70,7 +71,6 @@ function AdminDashboard() {
       alert("Failed to get general stats from server");
       console.log(error);
     }
-
     setLoading(false);
   };
   const fetchTopProducts = async (page = 1, limit = 4) => {
@@ -96,10 +96,10 @@ function AdminDashboard() {
     setLoading(false);
   };
 
-  useEffect(() => {
-    fetchTopProducts();
-    fetchTopOrders();
-    fetchGeneralStats();
+  useEffect(async () => {
+    await fetchTopProducts();
+    await fetchTopOrders();
+    await fetchGeneralStats();
   }, []);
 
   const stats = [
@@ -176,6 +176,7 @@ function AdminDashboard() {
 
   return (
     <div className="dashboard">
+      {loading && <LoadingOverlay/>}
       <div className="dashboard-page-header">
         <div className="dashboard-page-header-content">
           <div className="dashboard-page-header-left">
