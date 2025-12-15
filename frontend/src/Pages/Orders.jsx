@@ -10,11 +10,8 @@ import { getOrdersByUserId } from "../api/orderService";
 import { getPaymentByOrderId, refundOrder } from "../api/paymentService"; 
 import { ImageWithFallback } from '../Components/figma/ImageWithFallback.tsx';
 import "./CSS/Orders.css";
-
-// Import hàm lấy IP
 import { getPublicIp } from "../api/getPublicIp";
 
-// Component đếm ngược 15 phút
 const PaymentCountdown = ({ createdAt, onExpire }) => {
     const [timeLeft, setTimeLeft] = useState(null);
 
@@ -130,7 +127,7 @@ function Orders() {
               alert("Không tìm thấy đường dẫn thanh toán. Vui lòng liên hệ hỗ trợ.");
           }
       } else {
-        alert("Không tìm thấy thông tin giao dịch (Transaction not found). Vui lòng liên hệ Admin.");
+        alert("Không tìm thấy thông tin giao dịch. Vui lòng liên hệ Admin.");
       }
     } catch (error) {
       console.error("Lỗi hệ thống:", error);
@@ -140,49 +137,37 @@ function Orders() {
     }
   };
 
-// --- LOGIC HOÀN TIỀN (REFUND) - ĐÃ SỬA ---
   const handleRefund = async (order) => {
-    // 1. Kiểm tra ID đơn hàng trước
-    console.log("DEBUG - Order Info:", order);
-    if (!order?._id) {
-        alert("Lỗi: Không lấy được ID đơn hàng.");
-        return;
-    }
-
+    if (!order?._id) return;
     if (!window.confirm(`Bạn có chắc muốn yêu cầu hoàn tiền số tiền ${order.grandTotal?.toLocaleString('vi-VN')}đ cho đơn này?`)) return;
 
     try {
       setActionLoading(order._id);
-      console.log(`DEBUG - Calling getPaymentByOrderId(${order._id})...`);
+      
       const paymentRes = await getPaymentByOrderId(order._id);
       
-      console.log("DEBUG - Payment Response:", paymentRes);
-
       if (!paymentRes?.success || !paymentRes?.data) {
-        console.error("Refund Error: Transaction not found", paymentRes);
-        alert(`Lỗi: Không tìm thấy lịch sử thanh toán. (API Success: ${paymentRes?.success})`);
+        alert("Lỗi: Không tìm thấy lịch sử thanh toán của đơn hàng này.");
         return;
       }
+
       const userIp = await getPublicIp();
-      console.log("DEBUG - Refund IP:", userIp);
+
       const transactionDate = paymentRes.data.vnpPayDate || paymentRes.data.transDate || paymentRes.data.createdAt;
       
       if (!transactionDate) {
-          alert("Lỗi: Không tìm thấy ngày giao dịch (vnpPayDate) để hoàn tiền.");
+          alert("Lỗi: Không tìm thấy ngày giao dịch để hoàn tiền.");
           return;
       }
 
       const refundData = {
         userId: userId,
-        transDate: transactionDate,
+        transDate: transactionDate, 
         amount: order.grandTotal || order.amount || 0,
         ipAddr: userIp || "127.0.0.1" 
       };
 
-      console.log("DEBUG - Sending Refund Data:", refundData);
-
       const res = await refundOrder(order._id, refundData);
-      console.log("DEBUG - Refund Result:", res);
       
       if (res && res.success) {
         alert("Yêu cầu hoàn tiền thành công! Hệ thống đang xử lý.");
@@ -191,7 +176,7 @@ function Orders() {
         alert(res?.message || "Yêu cầu hoàn tiền thất bại. Vui lòng thử lại sau.");
       }
     } catch (error) {
-      console.error("Lỗi hoàn tiền (Exception):", error);
+      console.error("Lỗi hoàn tiền:", error);
       alert("Có lỗi xảy ra khi kết nối đến server hoàn tiền.");
     } finally {
       setActionLoading(null);
@@ -204,20 +189,16 @@ function Orders() {
     const oStatus = (order.status || '').toLowerCase().trim();
 
     const isOnlinePayment = ['VNBANK', 'INTCARD'].includes(method);
-    if (!isOnlinePayment) return null;
-
     const isLoading = actionLoading === order._id;
 
-    // --- BUTTON THANH TOÁN LẠI ---
     const isUnpaid = ['unpaid', 'failed'].includes(pStatus);
     const isNotCancelled = !oStatus.includes('cancel');
-    
     const createdTime = new Date(order.createdAt).getTime();
     const now = new Date().getTime();
     const isOverTime = (now - createdTime) > 15 * 60 * 1000;
     const isExpiredLocal = isOverTime || expiredOrders[order._id];
 
-    if (isUnpaid && isNotCancelled) {
+    if (isOnlinePayment && isUnpaid && isNotCancelled) {
       if (isExpiredLocal) {
           return (
              <div style={{ marginTop: 15, width: '100%', textAlign: 'center', color: '#ef4444', fontStyle: 'italic', fontSize: '0.9rem' }}>
@@ -233,19 +214,11 @@ function Orders() {
             onClick={(e) => { e.stopPropagation(); handleRepay(order._id); }}
             disabled={!!actionLoading}
             style={{
-                width: '100%', 
-                padding: '10px', 
-                backgroundColor: '#1488DB', 
-                color: 'white', 
-                border: 'none', 
-                borderRadius: 4, 
-                cursor: 'pointer', 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                gap: 8, 
-                fontWeight: '600', 
-                fontSize: '1rem',
+                width: '100%', padding: '10px', 
+                backgroundColor: '#1488DB', color: 'white', 
+                border: 'none', borderRadius: 4, 
+                cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, 
+                fontWeight: '600', fontSize: '1rem',
                 boxShadow: '0 2px 4px rgba(20, 136, 219, 0.2)'
             }}
             >
@@ -261,25 +234,45 @@ function Orders() {
       );
     }
 
-    // --- BUTTON HOÀN TIỀN (REFUND) ---
-    const refundableStatuses = ['processing', 'canceled', 'cancelled_due_to_insufficient_stock', 'delivered'];
-    
-    if (pStatus === 'paid' && refundableStatuses.includes(oStatus)) {
-      return (
-        <button 
-          onClick={(e) => { e.stopPropagation(); handleRefund(order); }}
-          disabled={!!actionLoading}
-          style={{
-            marginTop: 15, width: '100%', padding: '10px', 
-            backgroundColor: '#fff', color: '#ef4444', 
-            border: '1px solid #ef4444', borderRadius: 4, 
-            cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, 
-            fontWeight: '600', fontSize: '1rem'
-          }}
-        >
-          {isLoading ? <Loader2 className="animate-spin" size={18} /> : "Yêu cầu hoàn tiền"}
-        </button>
-      );
+    if (pStatus === 'paid') {
+        const refundableStatuses = ['processing', 'canceled', 'cancelled_due_to_insufficient_stock', 'delivered'];
+        const canRefund = refundableStatuses.includes(oStatus) && isOnlinePayment;
+
+        return (
+             <div style={{ marginTop: 15, display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+                 <button
+                    onClick={(e) => { 
+                        e.stopPropagation(); 
+                        navigate(`/payment-result?orderId=${order._id}`);
+                    }}
+                    style={{
+                        width: '100%', padding: '10px',
+                        backgroundColor: '#fff', color: '#10b981',
+                        border: '1px solid #10b981', borderRadius: 4,
+                        cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8,
+                        fontWeight: '600', fontSize: '0.95rem'
+                    }}
+                 >
+                    <CheckCircle size={18} /> Xem kết quả giao dịch
+                 </button>
+
+                 {canRefund && (
+                     <button 
+                        onClick={(e) => { e.stopPropagation(); handleRefund(order); }}
+                        disabled={!!actionLoading}
+                        style={{
+                            width: '100%', padding: '10px', 
+                            backgroundColor: '#fff', color: '#ef4444', 
+                            border: '1px solid #ef4444', borderRadius: 4, 
+                            cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, 
+                            fontWeight: '600', fontSize: '0.95rem'
+                        }}
+                        >
+                        {isLoading ? <Loader2 className="animate-spin" size={18} /> : "Yêu cầu hoàn tiền"}
+                    </button>
+                 )}
+             </div>
+        );
     }
 
     return null;

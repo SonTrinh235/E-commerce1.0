@@ -1,8 +1,6 @@
-// CartContext.js
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { ShopContext } from "./ShopContext";
 
-// Import APIs
 import {
   getCartByUserId,
   addProductToCart,
@@ -11,297 +9,264 @@ import {
 } from "../api/cartService";
 import { getProductById } from "../api/productService";
 
-// 1. Create the Context object
 export const CartContext = createContext();
 
 export const CartContextProvider = ({ children }) => {
-  // userId: Should be fetched from shop context or auth context
-  // userId could be null
   const { userId } = useContext(ShopContext);
 
-  // Cart Is Loading
   const [isCartLoading, setIsCartLoading] = useState(false);
-
-  // cartTotal: Total price of cart
-  const [cartTotal, setCartTotal] = useState();
-  // cartItems: Lookup objects of items in cart (productId and count)
+  const [cartTotal, setCartTotal] = useState(0);
   const [cartItems, setCartItems] = useState({});
-  // productsLookup: Lookup objects of products in cart (full product data)
   const [productsLookup, setProductsLookup] = useState({});
-
   const [appliedVoucher, setAppliedVoucher] = useState(null);
-  
-  // cartTotalItem: Total item count of cart
+
   const cartTotalItems = Object.values(cartItems).reduce((total, item) => {
-    return total + item.quantity;
+    return total + (Number(item.quantity) || 0);
   }, 0);
-  
-  // function: Fetch cart with product id and count
-  const fetchCart = async (userId) => {
-    const response = await getCartByUserId(userId);
 
-    setCartTotal(response.data.totalPrice);
+  // Dùng useCallback để hàm này không bị tạo lại mỗi lần render
+  const fetchCart = useCallback(async (uId) => {
+    try {
+      const response = await getCartByUserId(uId);
+      if (response && response.success && response.data) {
+        setCartTotal(response.data.totalPrice);
+        const newCart = response.data.productsInfo || [];
+        
+        const cartMap = {};
+        newCart.forEach((entry) => {
+          cartMap[entry.productId] = entry;
+        });
 
-    const newCart = response.data.productsInfo;
-    const cartMap = {};
-    newCart.forEach((entry) => {
-      cartMap[entry.productId] = entry;
-    });
+        setCartItems(cartMap);
+        return newCart;
+      }
+    } catch (error) {
+      console.error("Error fetching cart:", error);
+    }
+    return [];
+  }, []);
 
-    setCartItems(cartMap);
-    return newCart;
-  };
+  // Dùng useCallback và functional update (prev => ...) để không phụ thuộc state productsLookup
+  const fetchProductsData = useCallback(async (productIds) => {
+    try {
+      const uniqueIds = [...new Set(productIds)]; 
+      const fetchPromises = uniqueIds.map((id) => getProductById(id));
+      const results = await Promise.all(fetchPromises);
 
-  // function: Fetch product data for each product in cart
-  const fetchProductsData = async (productIds) => {
-    // Fetch product data for each and await all
-    const fetchPromises = productIds.map((id) => getProductById(id));
-    const results = await Promise.all(fetchPromises);
+      const newProductsMap = {};
+      results.forEach((response) => {
+        if (response && response.success && response.data) {
+           const product = response.data;
+           newProductsMap[product._id] = product;
+        }
+      });
 
-    // Set lookup map
-    const productsMap = {};
-    results.forEach((response) => {
-      const product = response.data;
-      productsMap[product._id] = product;
-    });
+      setProductsLookup(prev => ({ ...prev, ...newProductsMap }));
+    } catch (error) {
+      console.error("Error fetching product data:", error);
+    }
+  }, []);
 
-    setProductsLookup(productsMap);
-  };
-
-  // function: fetch cart and product data
-  const initializeCartAndProductsLookup = async () => {
+  const initializeCartAndProductsLookup = useCallback(async () => {
     setIsCartLoading(true);
-
     const newCart = await fetchCart(userId);
-    const productIds = newCart.map((item) => item.productId);
-    await fetchProductsData(productIds);
-
+    if (newCart && newCart.length > 0) {
+        const productIds = newCart.map((item) => item.productId);
+        await fetchProductsData(productIds);
+    }
     setIsCartLoading(false);
-  };
+  }, [userId, fetchCart, fetchProductsData]);
 
-  const resetCart = () => {
+  const resetCart = useCallback(() => {
     if (userId) {
       initializeCartAndProductsLookup();
     } else {
       setIsCartLoading(true);
-      // Local cart for not logged in
-      // Clear localStorage then grab
       localStorage.removeItem("localCart");
       const storedCart = localStorage.getItem("localCart");
       setCartItems(storedCart ? JSON.parse(storedCart) : {});
-      // Local lookup for not logged in
-      // Clear localStorage then grab
+      
       localStorage.removeItem("localCartLookup");
       const storedCartLookup = localStorage.getItem("localCartLookup");
       setProductsLookup(storedCartLookup ? JSON.parse(storedCartLookup) : {});
       setIsCartLoading(false);
     }
     setAppliedVoucher(null);
-  }
+  }, [userId, initializeCartAndProductsLookup]);
 
-  // function: Add product
-  //  params: productId
+  const refreshCartState = (serverCartData) => {
+      if (!serverCartData || !serverCartData.productsInfo) return;
+
+      const newCartItems = {};
+      serverCartData.productsInfo.forEach(item => {
+          newCartItems[item.productId] = item; 
+      });
+
+      setCartItems(newCartItems);
+      
+      if (serverCartData.totalPrice !== undefined) {
+          setCartTotal(serverCartData.totalPrice);
+      }
+  };
+
   const cartAddProductToCart = async (productId) => {
-    const productResponse = await getProductById(productId);
-    const productData = productResponse.data;
+    let productData = productsLookup[productId];
+    
+    if (!productData) {
+        try {
+            const productResponse = await getProductById(productId);
+            if (productResponse && productResponse.success) {
+                productData = productResponse.data;
+                setProductsLookup(prev => ({
+                    ...prev,
+                    [productId]: productData
+                }));
+            }
+        } catch (error) {
+            console.error("Failed to fetch product for adding to cart:", error);
+            return;
+        }
+    }
 
-    // Only call API if logged in
+    if (!productData) return;
+
     if (userId) {
       try {
-        await addProductToCart(userId, {
-          productId: productId,
-          productName: productData.name,
-          productImageUrl: productData.imageInfo?.url || null,
-          quantity: 1,
-          price: productData.price,
-        });
-        // Call fetch needed for product info (price, image)
-        await initializeCartAndProductsLookup();
+        const res = await addProductToCart(userId, productData, 1);
+        if (res && res.success && res.data) {
+             refreshCartState(res.data);
+        }
+      } catch (error) {
+        console.error("cartAddProductToCart failed: ", error);
       }
-      catch (error) {
-        console.log("cartAddProductToCart failed: ",error)
-      }
-    }
-    
-
-    // Else not logged in: manually touch local cart
-    else {
-      // Set local cart
+    } else {
+      // Local cart logic
       setCartItems((prevCart) => {
         const existingItem = prevCart[productId];
-
         if (existingItem) {
-          // Case A: EXISTS Item
           return {
-            ...prevCart, // Copy other items
+            ...prevCart,
             [productId]: {
-              ...existingItem, // Copy existing item details
-              quantity: existingItem.quantity + 1, // +1 quantity
+              ...existingItem,
+              quantity: existingItem.quantity + 1,
             },
           };
         } else {
-          // Case B: Item NEW
           return {
-            ...prevCart, // Copy all existing items
+            ...prevCart,
             [productId]: {
-              // Add new item
               productId: productId,
               quantity: 1,
               price: productData.price,
+              productImageUrl: productData.imageInfo?.url || null,
+              productName: productData.name
             },
           };
         }
       });
 
       setProductsLookup((prevLookup) => {
-        const existingItem = prevLookup[productId];
-
-        if (existingItem) {
-          // Case A: EXISTS Item
-          return {
-            ...prevLookup, // Copy other items
-          };
-        } else {
-          // Case B: Item NEW
-          return {
-            ...prevLookup, // Copy all existing items
-            [productId]: {
-              // Add new item
-              ...productData,
-            },
-          };
-        }
+        if (prevLookup[productId]) return prevLookup;
+        return {
+          ...prevLookup,
+          [productId]: { ...productData },
+        };
       });
     }
   };
 
-  // function: Update product quantity
-  // params: productId, quantity
-  const cartUpdateProductQuantity = (productId, quantity) => {
-    setCartItems((prevCart) => {
-      return {
-        ...prevCart,
-        [productId]: {
-          ...prevCart[productId],
-          quantity: quantity,
-        },
-      };
-    });
-
-    // Only call API if logged in
-    if (userId) {
-      updateProductQuantity(userId, {
-        productId: productId,
-        quantity: quantity,
-        price: productsLookup[productId].price,
-      });
+  const cartUpdateProductQuantity = async (productId, quantity) => {
+    if (quantity <= 0) {
+        cartRemoveProductFromCart(productId);
+        return;
     }
 
-    // For local cart: remove item on quantity 0
-    // Remote cart is handled already
-    if (quantity === 0) {
+    if (userId) {
+      try {
+          const res = await updateProductQuantity(userId, productId, quantity);
+          if (res && res.success && res.data) {
+              refreshCartState(res.data);
+          }
+      } catch (error) {
+          console.error("cartUpdateProductQuantity failed: ", error);
+      }
+    } else {
+      setCartItems((prevCart) => {
+        return {
+          ...prevCart,
+          [productId]: {
+            ...prevCart[productId],
+            quantity: quantity,
+          },
+        };
+      });
+    }
+  };
+
+  const cartRemoveProductFromCart = async (productId) => {
+    if (userId) {
+      try {
+          const res = await removeProductFromCart(userId, productId);
+          if (res && res.success && res.data) {
+               refreshCartState(res.data);
+          }
+      } catch (error) {
+          console.error("cartRemoveProductFromCart failed: ", error);
+      }
+    } else {
       setCartItems((prevCart) => {
         const { [productId]: removedItem, ...restOfCart } = prevCart;
         return restOfCart;
       });
-      setProductsLookup((prevProductsLookup) => {
-        const { [productId]: removedItem, ...restOfProductsLookup } =
-          prevProductsLookup;
-        return restOfProductsLookup;
-      });
     }
   };
 
-  // function: Update product quantity
-  // params: productId, quantity
-  const cartRemoveProductFromCart = (productId) => {
-    // For local cart: remove item
-    setCartItems((prevCart) => {
-      const { [productId]: removedItem, ...restOfCart } = prevCart;
-      return restOfCart;
-    });
-    setProductsLookup((prevProductsLookup) => {
-      const { [productId]: removedItem, ...restOfProductsLookup } =
-        prevProductsLookup;
-      return restOfProductsLookup;
-    });
-
-    // Only call API if logged in
-    if (userId) {
-      removeProductFromCart(userId, productId);
-    }
-  };
-
-  function getCartTotal() {
+  const getCartTotal = useCallback(() => {
     let totalAmount = 0;
-    Object.values(cartItems).map((item, i) => {
-      totalAmount += item.price * item.quantity;
-      return 0;
+    Object.values(cartItems).forEach((item) => {
+        if (item.computedPrice && item.computedPrice.totalForItemPrice !== undefined) {
+            totalAmount += Number(item.computedPrice.totalForItemPrice);
+        } else {
+            const price = Number(item.price) || (productsLookup[item.productId]?.price) || 0;
+            totalAmount += price * (Number(item.quantity) || 0);
+        }
     });
     return totalAmount;
-  }
+  }, [cartItems, productsLookup]);
 
-  // useEffect: init cart
-  // Currently bugged: userId is not changing
   useEffect(() => {
-    console.log("USER ID CHANGE: ", userId);
     if (userId) {
       initializeCartAndProductsLookup();
     } else {
-      // Local cart for not logged in
       setIsCartLoading(true);
       const storedCart = localStorage.getItem("localCart");
       setCartItems(storedCart ? JSON.parse(storedCart) : {});
-      // Local lookup for not logged in
+      
       const storedCartLookup = localStorage.getItem("localCartLookup");
       setProductsLookup(storedCartLookup ? JSON.parse(storedCartLookup) : {});
       setIsCartLoading(false);
     }
-  }, [userId]);
+  }, [userId, initializeCartAndProductsLookup]);
 
   useEffect(() => {
-    console.log("Cart: cartItems changed: ", cartItems);
-    setCartTotal(getCartTotal());
     if (!userId) {
-      localStorage.setItem("localCart", JSON.stringify(cartItems));
-      localStorage.setItem("localCartLookup", JSON.stringify(productsLookup));
+        setCartTotal(getCartTotal());
+        localStorage.setItem("localCart", JSON.stringify(cartItems));
+        localStorage.setItem("localCartLookup", JSON.stringify(productsLookup));
     }
-  }, [cartItems]);
+  }, [cartItems, userId, productsLookup, getCartTotal]);
 
-  useEffect(() => {
-    console.log("Cart: productsLookup changed: ", productsLookup);
-  }, [productsLookup]);
-
-  // SEE CONTEXT VALUE
   const contextValue = {
-    // Cart is loading
     isCartLoading,
-
-    // cartTotal: Total cart price in int
     cartTotal,
     cartTotalItems,
-    // cartItems: Lookup obj of items in cart with prod id and count (productsInfo of API return)
-    // Use: cartItems[productId]
     cartItems,
-    // productsLookup: Lookup objects of products in cart (full product data)
-    // Use: productsLookup[productId]
     productsLookup,
-
-    // voucher
-    appliedVoucher, setAppliedVoucher,
-
-    // Implemented API callers
-    // cartAddProductToCart(productId)
-    // Cart is fully  re-fetched from API when done
+    appliedVoucher, 
+    setAppliedVoucher,
     cartAddProductToCart,
-    // cartUpdateProductQuantity(productId,quantity)
-    // Update local cart and call API
     cartUpdateProductQuantity,
-    // cartRemoveProductFromCart(productId)
-    // Update local cart and call API
     cartRemoveProductFromCart,
-
-    // Clear localStorage cart or match backend cart if logged in
     resetCart
   };
 

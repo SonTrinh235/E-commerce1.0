@@ -4,8 +4,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import "./App.css";
 
 // Components
-import { Header } from "./Components/Header/Header";
-import { FloatingCart } from "./Components/FloatingCart/FloatingCart";
+// import { Header } from "./Components/Header/Header";
+// import { FloatingCart } from "./Components/FloatingCart/FloatingCart";
 
 // Public Pages
 import Shop from "./Pages/Shop";

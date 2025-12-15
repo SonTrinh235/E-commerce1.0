@@ -34,16 +34,17 @@ export function FloatingCart() {
 
       const computed = itemParams.computedPrice || {};
       const quantity = Number(itemParams.quantity) || 1;
+      const unitPrice = Number(itemParams.price) || Number(productInfo.price) || 0;
 
       const lineTotal = computed.totalForItemPrice !== undefined 
                         ? Number(computed.totalForItemPrice) 
-                        : (Number(itemParams.price) || 0) * quantity;
+                        : unitPrice * quantity;
 
       return {
         _id: productId,
         name: productInfo.name,
         image: itemParams.productImageUrl || productInfo.imageInfo?.url || null,
-        price: Number(itemParams.price) || 0,
+        price: unitPrice, 
         computedPrice: computed,
         lineTotal: lineTotal,
         quantity: quantity
@@ -88,6 +89,7 @@ export function FloatingCart() {
               ) : (
                 renderList.map((item) => (
                   <div key={item._id} className="cart-item">
+                    
                     <div className="cart-item-image">
                       <ImageWithFallback
                         src={item.image}
@@ -99,9 +101,10 @@ export function FloatingCart() {
                             position: 'absolute', bottom: 0, right: 0, 
                             background: '#eab308', color: 'white', 
                             fontSize: '9px', padding: '2px 4px', 
-                            borderRadius: '4px 0 0 0'
+                            borderRadius: '4px 0 0 0',
+                            display: 'flex', alignItems: 'center', gap: 2
                         }}>
-                           <Zap size={8} style={{display: 'inline'}}/> FS
+                           <Zap size={8} fill="white"/> FS
                         </div>
                       )}
                     </div>
@@ -112,13 +115,20 @@ export function FloatingCart() {
                       <div className="item-price">
                         {item.computedPrice?.flashQty > 0 ? (
                            <div style={{display: 'flex', flexDirection: 'column', fontSize: '0.85rem'}}>
-                              <span style={{color: '#eab308', display: 'flex', alignItems: 'center', gap: 4}}>
-                                 <Zap size={10} fill="#eab308"/> 
-                                 {item.computedPrice.flashQty}x{Number(item.computedPrice.flashPrice).toLocaleString('vi-VN')}đ
+                              <span style={{color: '#eab308', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, fontWeight: 500}}>
+                                 <span style={{display: 'flex', alignItems: 'center', gap: 2}}>
+                                    <Zap size={10} fill="#eab308"/> 
+                                    {item.computedPrice.flashQty} x {Number(item.computedPrice.flashPrice).toLocaleString('vi-VN')}đ
+                                 </span>
+                                 
+                                 <span style={{textDecoration: 'line-through', color: '#9ca3af', fontSize: '0.85rem'}}>
+                                    {Number(item.computedPrice.normalPrice).toLocaleString('vi-VN')}đ
+                                 </span>
                               </span>
+                              
                               {item.computedPrice.normalQty > 0 && (
-                                 <span style={{color: '#666', fontSize: '0.8rem'}}>
-                                    {item.computedPrice.normalQty}x{Number(item.computedPrice.normalPrice).toLocaleString('vi-VN')}đ
+                                 <span style={{color: '#666', fontSize: '0.8rem', marginTop: 2}}>
+                                    {item.computedPrice.normalQty} x {Number(item.computedPrice.normalPrice).toLocaleString('vi-VN')}đ
                                  </span>
                               )}
                            </div>

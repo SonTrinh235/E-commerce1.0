@@ -1,7 +1,7 @@
 import "./PublicLayout.css";
 
-import Navbar from "./Components/Navbar/Navbar";
-import Footer from "./Components/Footer/Footer";
+// import Navbar from "./Components/Navbar/Navbar";
+// import Footer from "./Components/Footer/Footer";
 import { Header } from "./Components/Header/Header";
 import { FloatingCart } from "./Components/FloatingCart/FloatingCart";
 

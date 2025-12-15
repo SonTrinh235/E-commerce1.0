@@ -44,7 +44,10 @@ export default function Cart() {
   const subtotal = items.reduce((acc, item) => acc + item.lineTotal, 0);
 
   const discountAmount = items.reduce((sum, item) => {
-    // Nếu giá gốc > giá hiển thị (đã tính flash sale hoặc giá thường)
+    if (item.computedPrice?.flashQty > 0) {
+        const savingPerItem = (Number(item.computedPrice.normalPrice) - Number(item.computedPrice.flashPrice));
+        return sum + (savingPerItem * item.computedPrice.flashQty);
+    }
     if (item.originalPrice > item.displayPrice) {
       return sum + ((item.originalPrice - item.displayPrice) * item.quantity);
     }
@@ -75,17 +78,23 @@ export default function Cart() {
     
     if (computedPrice && computedPrice.flashQty > 0) {
       return (
-        <div className="price-breakdown" style={{ fontSize: '0.9rem' }}>
-          <div style={{ color: '#eab308', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Zap size={12} fill="#eab308" />
-            <span>
-              {computedPrice.flashQty} x {Number(computedPrice.flashPrice).toLocaleString("vi-VN")}đ
+        <div className="price-breakdown" style={{ fontSize: '0.95rem' }}>
+          <div style={{ color: '#eab308', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
+                <Zap size={14} fill="#eab308" />
+                <span>
+                {computedPrice.flashQty} x {Number(computedPrice.flashPrice).toLocaleString("vi-VN")}đ
+                </span>
+            </div>
+            
+            <span style={{ textDecoration: 'line-through', color: '#9ca3af', fontSize: '0.85rem' }}>
+                {Number(computedPrice.normalPrice).toLocaleString("vi-VN")}đ
             </span>
           </div>
           
           {computedPrice.normalQty > 0 && (
-            <div style={{ color: '#666', marginTop: 2 }}>
-              {computedPrice.normalQty} x {Number(computedPrice.normalPrice).toLocaleString("vi-VN")}đ
+            <div style={{ color: '#666', marginTop: 4, fontSize: '0.85rem' }}>
+              + {computedPrice.normalQty} sản phẩm tính giá gốc: <strong>{Number(computedPrice.normalPrice).toLocaleString("vi-VN")}đ</strong>
             </div>
           )}
         </div>
@@ -202,13 +211,29 @@ export default function Cart() {
             <div className="cart-sidebar">
               <div className="order-summary">
                 <h2>Tóm tắt đơn hàng</h2>
+
+                {/* --- PHẦN MỚI THÊM: DANH SÁCH SẢN PHẨM RÚT GỌN --- */}
+                <div className="summary-products-list">
+                    {items.map(item => (
+                        <div key={item.id} className="summary-product-item">
+                            <div className="summary-item-left">
+                                <span className="summary-qty">{item.quantity}x</span>
+                                <span className="summary-name">{item.name}</span>
+                            </div>
+                            <span className="summary-price">
+                                {item.lineTotal.toLocaleString("vi-VN")}đ
+                            </span>
+                        </div>
+                    ))}
+                </div>
+                {/* -------------------------------------------------- */}
+
                 <div className="summary-section">
                   <div className="summary-row">
-                    <span>Tạm tính ({items.length} sản phẩm)</span>
+                    <span>Tạm tính</span>
                     <span>{subtotal.toLocaleString("vi-VN")}đ</span>
                   </div>
                   
-                  {/* --- ĐÃ THÊM LẠI PHẦN HIỂN THỊ TIẾT KIỆM (SỬ DỤNG discountAmount) --- */}
                   {discountAmount > 0 && (
                     <div className="summary-row discount-row" style={{ color: '#10b981' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -217,7 +242,6 @@ export default function Cart() {
                       <span>-{discountAmount.toLocaleString("vi-VN")}đ</span>
                     </div>
                   )}
-                  {/* ----------------------------------------------------------------- */}
 
                   <div className="summary-row">
                     <span>Phí vận chuyển</span>

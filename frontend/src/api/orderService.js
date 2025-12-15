@@ -1,6 +1,5 @@
 import { apiFetch } from "./apiClient";
 
-// Lấy tất cả đơn hàng (phân trang)
 export function getAllOrders(page = 1, limit = 20) {
   console.log(`Calling getAllOrders(${page}, ${limit})`);
   return apiFetch(`/order/orders?page=${page}&limit=${limit}`, {
@@ -8,7 +7,6 @@ export function getAllOrders(page = 1, limit = 20) {
   });
 }
 
-// Search order
 export function searchOrders(query, page = 1, limit = 20) {
   console.log(`Calling searchOrders(${query}, ${page}, ${limit})`);
   return apiFetch(`/order/orders/search`, {
@@ -21,7 +19,6 @@ export function searchOrders(query, page = 1, limit = 20) {
   });
 }
 
-// Lấy chi tiết 1 đơn hàng theo id
 export async function getOrderById(orderId) {
   console.log(`🧾 Calling getOrderById(${orderId})`);
   try {
@@ -36,7 +33,6 @@ export async function getOrderById(orderId) {
   }
 }
 
-// Lấy đơn hàng theo userId
 export async function getOrdersByUserId(userId, page = 1, limit = 20) {
   console.log(`📦 Calling getOrdersByUserId(${userId}), page=${page}, limit=${limit}`);
   try {
@@ -52,23 +48,27 @@ export async function getOrdersByUserId(userId, page = 1, limit = 20) {
   }
 }
 
-
-// Tạo mới đơn hàng (thanh toán bằng cash)
 export function createOrder(orderData) {
   console.log("Calling createOrder", orderData);
+  const new_ProductsInfo = orderData.productsInfo.map(item => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      productName: item.productName || item.name,
+      productImageUrl: item.productImageUrl || item.image
+  }));
+
   return apiFetch(`/order/create-order`, {
     method: "POST",
     body: {
       userId: orderData.userId,
       paymentMethod: orderData.paymentMethod,
-      productsInfo: orderData.productsInfo,
+      productsInfo: new_ProductsInfo,
       voucherCode: orderData.voucherCode,
       ipAddr: orderData.ipAddr,
-      // include shippingFee and shippingAddressInfo (match Checkout payload)
+      
       shippingFee: orderData.shippingFee || null,
       shippingAddressInfo: orderData.shippingAddressInfo || null,
-      // backwards-compatible fields
-      // shipping information (optional) — include both structured object and printable string
+      
       shippingAddress: orderData.shippingAddress || null,
       shippingAddressString: orderData.shippingAddressString || null,
       contactName: orderData.contactName || null,
@@ -78,7 +78,6 @@ export function createOrder(orderData) {
   });
 }
 
-// Cập nhật trạng thái đơn hàng
 export function updateOrderStatus(orderId, status) {
   console.log(`Calling updateOrderStatus(${orderId})`);
   return apiFetch(`/order/orders/${orderId}/status`, {
@@ -87,7 +86,6 @@ export function updateOrderStatus(orderId, status) {
   });
 }
 
-// (Tùy backend) Xoá đơn hàng — nếu backend chưa có, có thể bỏ
 export function deleteOrder(orderId) {
   console.log(`Calling deleteOrder(${orderId})`);
   return apiFetch(`/order/orders/${orderId}`, {

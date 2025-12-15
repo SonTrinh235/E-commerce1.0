@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useMemo } from "react";
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Phone, User, CreditCard, Truck, Calendar, Clock, Check, Mail, Zap } from 'lucide-react';
 import { CartContext } from "../Context/CartContext";
@@ -144,27 +144,29 @@ export default function Checkout() {
     })();
   }, [addressObj, lastLocationKey]);
 
-  const displayItems = Object.values(cartItems).map(item => {
-    const productInfo = productsLookup[item.productId];
-    const computed = item.computedPrice || {};
-    const quantity = Number(item.quantity) || 1;
+  const displayItems = useMemo(() => {
+    return Object.values(cartItems).map(item => {
+        const productInfo = productsLookup[item.productId];
+        const computed = item.computedPrice || {};
+        const quantity = Number(item.quantity) || 1;
+        
+        const lineTotal = computed.totalForItemPrice !== undefined 
+                          ? Number(computed.totalForItemPrice) 
+                          : (Number(item.price) || 0) * quantity;
     
-    const lineTotal = computed.totalForItemPrice !== undefined 
-                      ? Number(computed.totalForItemPrice) 
-                      : (Number(item.price) || 0) * quantity;
-
-    return {
-      ...item,
-      id: item.productId,
-      name: item.productName || productInfo?.name || "Đang tải...",
-      image: item.productImageUrl || productInfo?.imageInfo?.url || "",
-      originalPrice: productInfo?.originalPrice,
-      price: item.price,
-      computedPrice: computed,
-      lineTotal: lineTotal,
-      quantity: quantity
-    };
-  });
+        return {
+          ...item,
+          id: item.productId,
+          name: item.productName || productInfo?.name || "Đang tải...",
+          image: item.productImageUrl || productInfo?.imageInfo?.url || "",
+          originalPrice: productInfo?.originalPrice,
+          price: item.price,
+          computedPrice: computed,
+          lineTotal: lineTotal,
+          quantity: quantity
+        };
+      });
+  }, [cartItems, productsLookup]);
 
   const subtotal = displayItems.reduce((acc, item) => acc + item.lineTotal, 0);
 
@@ -255,13 +257,21 @@ export default function Checkout() {
 
         const res = await createOrder(payload);
         
-        if (paymentMethod === "VNBANK" || paymentMethod === "INTCARD") {
-            const paymentUrl = res.data?.newPayment?.paymentUrl;
-            if (paymentUrl) window.location.href = paymentUrl;
+        if (res.success) {
+             if (paymentMethod === "VNBANK" || paymentMethod === "INTCARD") {
+                const paymentUrl = res.data?.newPayment?.paymentUrl;
+                if (paymentUrl) {
+                    window.location.href = paymentUrl;
+                } else {
+                    alert("Không lấy được link thanh toán. Vui lòng thử lại.");
+                }
+            } else {
+                alert('Đặt hàng thành công! Cảm ơn bạn đã mua sắm.');
+                resetCart(); 
+                navigate('/'); 
+            }
         } else {
-            alert('Đặt hàng thành công! Cảm ơn bạn đã mua sắm.');
-            resetCart();
-            navigate('/'); 
+             alert(res.message || "Có lỗi xảy ra khi tạo đơn hàng.");
         }
 
     } catch (error) {
@@ -451,19 +461,61 @@ export default function Checkout() {
                   <div key={item.id} className="order-item">
                     <div className="item-image-wrapper">
                       <ImageWithFallback src={item.image} alt={item.name} className="item-image" />
-                      <span className="item-quantity">{item.quantity}</span>
+                      
+                      {item.computedPrice?.flashQty > 0 && (
+                        <div className="item-image-wrapper-badge" style={{
+                            position: 'absolute', bottom: -5, right: -5,
+                            background: '#eab308', color: 'white',
+                            fontSize: '9px', padding: '2px 4px', borderRadius: 4, zIndex: 2
+                        }}>
+                           <Zap size={8} fill="white"/>
+                        </div>
+                      )}
+                      <span className="item-quantity-badge" style={{
+                           position: 'absolute', top: -6, right: -6,
+                           background: '#10b981', color: 'white',
+                           width: '20px', height: '20px', borderRadius: '50%',
+                           display: 'flex', alignItems: 'center', justifyContent: 'center',
+                           fontSize: '0.7rem', zIndex: 2
+                      }}>{item.quantity}</span>
                     </div>
+                    
                     <div className="item-details">
                       <h4>{item.name}</h4>
-                      <p className="item-price">
-                        {item.computedPrice?.flashQty > 0 ? (
-                           <span style={{color: '#eab308', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 'bold'}}>
-                              <Zap size={12} fill="#eab308"/> {vnd(item.lineTotal)}
-                           </span>
-                        ) : (
-                           vnd(item.lineTotal)
-                        )}
-                      </p>
+                      
+                      <span style={{fontSize: '0.8rem', color: '#6b7280', display: 'block', marginBottom: '4px'}}>
+                        Số lượng: {item.quantity}
+                      </span>
+                      
+                      {item.computedPrice?.flashQty > 0 ? (
+                        <div className="item-price-breakdown">
+                           <div style={{color: '#eab308', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6, fontWeight: 'bold'}}>
+                              <span style={{display: 'flex', alignItems: 'center', gap: 4}}>
+                                <Zap size={12} fill="#eab308"/> 
+                                {item.computedPrice.flashQty} x {vnd(item.computedPrice.flashPrice)}
+                              </span>
+                              
+                              <span style={{textDecoration: 'line-through', color: '#9ca3af', fontSize: '0.85rem', fontWeight: 400}}>
+                                {vnd(item.computedPrice.normalPrice)}
+                              </span>
+                           </div>
+                           
+                           {item.computedPrice.normalQty > 0 && (
+                              <div style={{color: '#666', fontSize: '0.85rem'}}>
+                                 + {item.computedPrice.normalQty} sản phẩm giá gốc: {vnd(item.computedPrice.normalPrice)}
+                              </div>
+                           )}
+                        </div>
+                      ) : (
+                        <div style={{display: 'flex', alignItems: 'center', gap: 8}}>
+                           <p className="item-price">{vnd(item.lineTotal)}</p>
+                           {item.originalPrice > item.price && (
+                                <span style={{textDecoration: 'line-through', color: '#9ca3af', fontSize: '0.85rem'}}>
+                                    {vnd(item.originalPrice * item.quantity)}
+                                </span>
+                           )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -498,7 +550,7 @@ export default function Checkout() {
 
               <div className="security-info">
                 <div className="security-item">
-                  <span className="security-icon"></span><span>Thanh toán an toàn & bảo mật</span>
+                  <span className="security-icon">🔒</span><span>Thanh toán an toàn & bảo mật</span>
                 </div>
                 <div className="security-item">
                   <span className="security-icon">✓</span><span>Hoàn tiền 100% nếu không hài lòng</span>
