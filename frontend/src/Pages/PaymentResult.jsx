@@ -19,7 +19,6 @@ const PaymentResult = () => {
 
   useEffect(() => {
     const checkResult = async () => {
-        // TRƯỜNG HỢP 1: Thanh toán Tiền mặt (Có state từ trang Checkout chuyển sang)
         if (location.state && location.state.orderId) {
             if (location.state.status === 'success') {
                 setStatus('success');
@@ -35,19 +34,16 @@ const PaymentResult = () => {
             return;
         }
 
-        // TRƯỜNG HỢP 2: VNPAY trả về (Có tham số vnp_TxnRef trên URL)
-        const vnpTxnRef = searchParams.get('vnp_TxnRef'); // Đây là Order ID
+        const vnpTxnRef = searchParams.get('vnp_TxnRef'); 
         const vnpResponseCode = searchParams.get('vnp_ResponseCode');
 
         if (vnpTxnRef) {
             try {
-                // Gọi API getPaymentByOrderId như yêu cầu
                 const res = await getPaymentByOrderId(vnpTxnRef);
                 
                 if (res && res.success && res.data) {
-                    const payment = res.data; // Dữ liệu trả về từ dòng 
+                    const payment = res.data;
                     
-                    // Kiểm tra status từ Database (chuẩn nhất)
                     if (payment.status === 'paid') {
                         setStatus('success');
                         resetCart(); 
@@ -55,12 +51,11 @@ const PaymentResult = () => {
                         setStatus('failed');
                         setErrorMsg("Giao dịch thanh toán thất bại.");
                     } else {
-                        // Trường hợp 'unpaid' nhưng VNPAY trả về 00 (có thể do backend update chậm)
                         if (vnpResponseCode === '00') {
                              setStatus('success'); 
                              resetCart();
                         } else {
-                             setStatus('info'); // Đang chờ xử lý
+                             setStatus('info'); 
                         }
                     }
 
@@ -76,8 +71,6 @@ const PaymentResult = () => {
                 }
             } catch (error) {
                 console.error("Lỗi xác thực thanh toán:", error);
-                
-                // Fallback: Nếu API lỗi nhưng VNPAY trả code 00
                 if (vnpResponseCode === '00') {
                      setStatus('info'); 
                      setPaymentInfo({ orderId: vnpTxnRef, method: 'VNPAY', amount: 0 });
@@ -89,7 +82,40 @@ const PaymentResult = () => {
             return;
         }
 
-        // Không có thông tin gì -> Về trang chủ
+        const orderIdParam = searchParams.get('orderId');
+        if (orderIdParam) {
+            try {
+                const res = await getPaymentByOrderId(orderIdParam);
+                if (res && res.success && res.data) {
+                    const payment = res.data;
+                    
+                    if (payment.status === 'paid') {
+                        setStatus('success');
+                    } else if (payment.status === 'failed') {
+                        setStatus('failed');
+                        setErrorMsg("Giao dịch thất bại.");
+                    } else {
+                        setStatus('info');
+                    }
+
+                    setPaymentInfo({
+                        orderId: payment.orderId,
+                        amount: payment.amount,
+                        method: payment.method === 'VNBANK' ? 'VNPAY QR' : payment.method,
+                        paymentDate: payment.updatedAt
+                    });
+                } else {
+                    setStatus('failed');
+                    setErrorMsg("Không tìm thấy thông tin giao dịch.");
+                }
+            } catch (error) {
+                console.error(error);
+                setStatus('failed');
+                setErrorMsg("Lỗi kết nối đến hệ thống.");
+            }
+            return;
+        }
+
         navigate('/');
     };
 
@@ -100,7 +126,7 @@ const PaymentResult = () => {
     <div className="payment-result-page">
         <div className="loading-container">
             <Loader2 className="animate-spin" size={48} color="#10b981" />
-            <p style={{marginTop: 15}}>Đang xác thực kết quả thanh toán...</p>
+            <p style={{marginTop: 15}}>Đang xác thực kết quả...</p>
         </div>
     </div>
   );
@@ -115,7 +141,7 @@ const PaymentResult = () => {
                 <CheckCircle size={80} className="status-success" />
             </div>
             <h1 className="result-title status-success">Giao dịch thành công</h1>
-            <p className="result-message">Cảm ơn bạn đã mua hàng. Đơn hàng đã được thanh toán thành công.</p>
+            <p className="result-message">Giao dịch đã được ghi nhận và thanh toán thành công.</p>
           </>
         )}
 
@@ -125,7 +151,7 @@ const PaymentResult = () => {
                 <Receipt size={80} className="status-warning" />
             </div>
             <h1 className="result-title status-warning">Đang xử lý</h1>
-            <p className="result-message">Giao dịch đã được ghi nhận. Hệ thống đang cập nhật trạng thái đơn hàng.</p>
+            <p className="result-message">Giao dịch đang chờ xử lý hoặc chưa hoàn tất thanh toán.</p>
            </>
         )}
 

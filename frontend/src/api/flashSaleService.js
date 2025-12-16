@@ -102,3 +102,11 @@ export async function deleteFlashSaleProductAPI(productId) {
   });
   return data;
 }
+
+export async function getActiveFlashSalesAPI() {
+  console.log("[Flash sale Service] Calling getActiveFlashSalesAPI");
+  const data = await apiFetch(`/product/flash-sale/products/active-batch-products`, {
+    method: "GET",
+  });
+  return data;
+}

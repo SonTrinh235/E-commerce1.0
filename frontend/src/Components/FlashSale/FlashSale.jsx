@@ -1,96 +1,76 @@
-import { Clock, Zap, ShoppingCart } from 'lucide-react'; // Thêm ShoppingCart
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Clock, Zap, ShoppingCart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ImageWithFallback } from '../figma/ImageWithFallback.tsx';
+import { getActiveFlashSalesAPI } from '../../api/flashSaleService';
 import './FlashSale.css';
 
-const flashSaleProducts = [
-  {
-    id: 'fs1',
-    name: 'Táo Envy Mỹ',
-    price: 35000,
-    originalPrice: 55000,
-    image: 'https://images.unsplash.com/photo-1556011284-54aa6466d402?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMGZydWl0cyUyMG1hcmtldHxlbnwxfHx8fDE3NjQwMzgyOTV8MA&ixlib=rb-4.1.0&q=80&w=400',
-    unit: 'kg',
-    discount: 36,
-    sold: 45,
-    stock: 100,
-  },
-  {
-    id: 'fs2',
-    name: 'Thịt heo nạc vai',
-    price: 95000,
-    originalPrice: 130000,
-    image: 'https://images.unsplash.com/photo-1649974139791-b981d106278b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwb3JrJTIwbWVhdCUyMGJ1dGNoZXJ8ZW58MXx8fHwxNzY1NDI4MTk1fDA&ixlib=rb-4.1.0&q=80&w=400',
-    unit: 'kg',
-    discount: 27,
-    sold: 72,
-    stock: 100,
-  },
-  {
-    id: 'fs3',
-    name: 'Sữa tươi TH true MILK',
-    price: 38000,
-    originalPrice: 48000,
-    image: 'https://images.unsplash.com/photo-1621458472871-d8b6a409aba1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtaWxrJTIwZGFpcnklMjBwcm9kdWN0c3xlbnwxfHx8fDE3NjU0MjgxOTl8MA&ixlib=rb-4.1.0&q=80&w=400',
-    unit: 'hộp',
-    discount: 21,
-    sold: 88,
-    stock: 100,
-  },
-  {
-    id: 'fs4',
-    name: 'Tôm sú tươi',
-    price: 280000,
-    originalPrice: 350000,
-    image: 'https://images.unsplash.com/photo-1609559376851-9a995930702a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzZWFmb29kJTIwZnJlc2glMjBmaXNofGVufDF8fHx8MTc2NTQyODE5N3ww&ixlib=rb-4.1.0&q=80&w=400',
-    unit: 'kg',
-    discount: 20,
-    sold: 56,
-    stock: 100,
-  },
-  {
-    id: 'fs5',
-    name: 'Gạo Jasmine hữu cơ',
-    price: 99000,
-    originalPrice: 135000,
-    image: 'https://images.unsplash.com/photo-1743674452796-ad8d0cf38005?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyaWNlJTIwZ3JhaW5zJTIwYm93bHxlbnwxfHx8fDE3NjUzODU4MTJ8MA&ixlib=rb-4.1.0&q=80&w=400',
-    unit: '5kg',
-    discount: 27,
-    sold: 63,
-    stock: 100,
-  },
-];
+const calculateTimeLeft = (endTimeStr) => {
+  if (!endTimeStr) return { hours: 0, minutes: 0, seconds: 0 };
+  const difference = new Date(endTimeStr) - new Date();
+  if (difference > 0) {
+    return {
+      hours: Math.floor((difference / (1000 * 60 * 60))),
+      minutes: Math.floor((difference / 1000 / 60) % 60),
+      seconds: Math.floor((difference / 1000) % 60),
+    };
+  }
+  return { hours: 0, minutes: 0, seconds: 0 };
+};
 
 export function FlashSale({ onAddToCart }) {
-  const [timeLeft, setTimeLeft] = useState({
-    hours: 2,
-    minutes: 45,
-    seconds: 30,
-  });
+  const navigate = useNavigate();
+  const [activeBatch, setActiveBatch] = useState(null);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev.seconds > 0) {
-          return { ...prev, seconds: prev.seconds - 1 };
-        } else if (prev.minutes > 0) {
-          return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        } else if (prev.hours > 0) {
-          return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
+    const fetchFlashSale = async () => {
+      try {
+        setLoading(true);
+        const res = await getActiveFlashSalesAPI();
+        
+        if (res && res.success && res.data) {
+          const batchIds = Object.keys(res.data);
+          if (batchIds.length > 0) {
+            const currentBatchData = res.data[batchIds[0]];
+            setActiveBatch(currentBatchData.batchInfo);
+            setProducts(currentBatchData.products || []);
+          }
         }
-        return prev;
-      });
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFlashSale();
+  }, []);
+
+  useEffect(() => {
+    if (!activeBatch?.endTime) return;
+    
+    setTimeLeft(calculateTimeLeft(activeBatch.endTime));
+
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft(activeBatch.endTime));
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [activeBatch]);
+
+  if (loading) return null;
+  if (!activeBatch || products.length === 0) return null;
 
   return (
     <div className="flash-sale-section">
       <div className="container">
-        <div className="flash-sale-header">
+        <div className="flash-sale-header1">
           <div className="flash-sale-title">
             <Zap className="flash-icon" />
-            <h2>FLASH SALE</h2>
+            <h2>{activeBatch.name ? activeBatch.name.toUpperCase() : "FLASH SALE"}</h2>
           </div>
           <div className="flash-sale-timer">
             <Clock className="clock-icon" />
@@ -112,43 +92,77 @@ export function FlashSale({ onAddToCart }) {
         </div>
 
         <div className="flash-sale-products">
-          {flashSaleProducts.map((product) => (
-            <div key={product.id} className="flash-sale-card">
-              <div className="flash-sale-badge">-{product.discount}%</div>
-              <div className="flash-sale-image">
-                <img src={product.image} alt={product.name} />
-              </div>
-              <div className="flash-sale-info">
-                <h3>{product.name}</h3>
-                <div className="flash-sale-price">
-                  <span className="price-current">
-                    {product.price.toLocaleString('vi-VN')}đ
-                  </span>
-                  <span className="price-original">
-                    {product.originalPrice.toLocaleString('vi-VN')}đ
-                  </span>
-                </div>
-                <div className="flash-sale-progress">
-                  <div className="progress-bar">
-                    <div
-                      className="progress-fill"
-                      style={{ width: `${product.sold}%` }}
-                    ></div>
-                  </div>
-                  <span className="progress-text">Đã bán {product.sold}/{product.stock}</span>
+          {products.map((item) => {
+            const productDetail = item.product || {};
+            const flashInfo = productDetail.flashSaleInfo || {};
+
+            const originalPrice = productDetail.price || 0;
+            const discount = flashInfo.discountPercentage || 0;
+            const salePrice = flashInfo.discountPrice || (originalPrice * (1 - discount / 100));
+            
+            const stock = flashInfo.stock || item.stock || 1;
+            const sold = flashInfo.sold || 0;
+            const percentSold = stock > 0 ? Math.min(100, Math.round((sold / stock) * 100)) : 0;
+
+            const imageUrl = productDetail.imageInfo?.url || productDetail.image || "";
+
+            return (
+              <div key={item.productId} className="flash-sale-card" onClick={() => navigate(`/product/${productDetail.slug || item.productId}`)}>
+                <div className="flash-sale-badge">-{discount}%</div>
+                
+                <div className="flash-sale-image">
+                  <ImageWithFallback 
+                    src={imageUrl} 
+                    alt={productDetail.name} 
+                    className="flash-img"
+                  />
                 </div>
                 
-                <button
-                  className="flash-sale-btn"
-                  onClick={() => onAddToCart(product)}
-                >
-                  <ShoppingCart size={16} />
-                  Thêm vào giỏ
-                </button>
-
+                <div className="flash-sale-info">
+                  <h3>{productDetail.name || "Sản phẩm Flash Sale"}</h3>
+                  
+                  <div className="flash-sale-price">
+                    <span className="price-current">
+                      {salePrice.toLocaleString('vi-VN')}đ
+                    </span>
+                    <span className="price-original">
+                      {originalPrice.toLocaleString('vi-VN')}đ
+                    </span>
+                  </div>
+                  
+                  <div className="flash-sale-progress">
+                    <div className="progress-bar">
+                      <div
+                        className="progress-fill"
+                        style={{ width: `${percentSold}%` }}
+                      ></div>
+                    </div>
+                    <span className="progress-text">
+                        {sold > 0 ? `Đã bán ${sold}` : 'Vừa mở bán'}
+                    </span>
+                  </div>
+                  
+                  <button
+                    className="flash-sale-btn"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onAddToCart({
+                            _id: productDetail._id || item.productId,
+                            name: productDetail.name,
+                            price: salePrice,
+                            originalPrice: originalPrice,
+                            image: imageUrl,
+                            ...productDetail
+                        });
+                    }}
+                  >
+                    <ShoppingCart size={16} />
+                    Thêm vào giỏ
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

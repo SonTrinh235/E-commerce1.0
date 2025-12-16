@@ -1,19 +1,23 @@
 .category-nav {
   margin-left: 200px;
   background: white;
-  border-bottom: 1px solid #e5e7eb;
+  border: 1px solid #e5e7eb; 
   position: sticky;
   top: 88px;
   z-index: 40;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   width: 78.6%;
+  padding: 0 10px;
+  border-radius: 40px; 
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .category-list {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 20px; 
+  padding: 16px 10px;
   overflow-x: auto;
   scrollbar-width: none;
   scroll-behavior: smooth;
@@ -21,6 +25,40 @@
 
 .category-list::-webkit-scrollbar {
   display: none;
+}
+
+.nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 50;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #4b5563;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.nav-arrow:hover {
+  background: #f3f4f6;
+  color: #10b981;
+  border-color: #10b981;
+  transform: translateY(-50%) scale(1.1);
+}
+
+.nav-arrow-left {
+  left: 10px;
+}
+
+.nav-arrow-right {
+  right: 10px;
 }
 
 .category-btn {
@@ -51,23 +89,44 @@
 .category-fruits { background: #fef2f2; color: #dc2626; }
 .category-fruits:hover { background: #fee2e2; }
 
-.category-meat { background: #fdf2f8; color: #db2777; }
-.category-meat:hover { background: #fce7f3; }
+.category-meat { background: #fff1f2; color: #be123c; }
+.category-meat:hover { background: #ffe4e6; }
 
-.category-vegetables { background: #f0fdf4; color: #16a34a; }
+.category-seafood { background: #ecfeff; color: #0e7490; }
+.category-seafood:hover { background: #cffafe; }
+
+.category-vegetables { background: #f0fdf4; color: #15803d; }
 .category-vegetables:hover { background: #dcfce7; }
 
-.category-dairy { background: #eff6ff; color: #2563eb; }
+.category-dairy { background: #eff6ff; color: #1d4ed8; }
 .category-dairy:hover { background: #dbeafe; }
 
-.category-snacks { background: #fff7ed; color: #ea580c; }
-.category-snacks:hover { background: #ffedd5; }
+.category-eggs { background: #fffbeb; color: #b45309; }
+.category-eggs:hover { background: #fef3c7; }
 
-.category-hot { background: #fef2f2; color: #ef4444; }
-.category-hot:hover { background: #fee2e2; }
+.category-frozen { background: #f0f9ff; color: #0369a1; }
+.category-frozen:hover { background: #e0f2fe; }
 
-.category-new { background: #faf5ff; color: #9333ea; }
-.category-new:hover { background: #f3e8ff; }
+.category-processed { background: #fff7ed; color: #c2410c; }
+.category-processed:hover { background: #ffedd5; }
+
+.category-grains { background: #fefce8; color: #a16207; }
+.category-grains:hover { background: #fef9c3; }
+
+.category-spices { background: #fafaf9; color: #57534e; }
+.category-spices:hover { background: #f5f5f4; }
+
+.category-drinks { background: #faf5ff; color: #7e22ce; }
+.category-drinks:hover { background: #f3e8ff; }
+
+.category-snacks { background: #fdf2f8; color: #be185d; }
+.category-snacks:hover { background: #fce7f3; }
+
+.category-healthy { background: #f0fdfa; color: #0f766e; }
+.category-healthy:hover { background: #ccfbf1; }
+
+.category-default { background: #f9fafb; color: #4b5563; }
+.category-default:hover { background: #e5e7eb; }
 
 .category-active {
   background: linear-gradient(90deg, #10b981 0%, #059669 100%) !important;
