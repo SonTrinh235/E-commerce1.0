@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { CheckCircle, XCircle, Home, ShoppingBag, Loader2, Receipt } from 'lucide-react';
+import { CartContext } from '../Context/CartContext';
 import { vnd } from "../utils/currencyUtils"; 
-import { getOrderById } from "../api/orderService"; 
+import { getPaymentByOrderId } from "../api/paymentService"; 
 
 import './CSS/PaymentResult.css';
 
@@ -10,17 +11,19 @@ const PaymentResult = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
+  const { resetCart } = useContext(CartContext);
   
   const [status, setStatus] = useState('loading'); 
-  const [orderInfo, setOrderInfo] = useState(null);
+  const [paymentInfo, setPaymentInfo] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     const checkResult = async () => {
-        if (location.state) {
+        // TRƯỜNG HỢP 1: Thanh toán Tiền mặt (Có state từ trang Checkout chuyển sang)
+        if (location.state && location.state.orderId) {
             if (location.state.status === 'success') {
                 setStatus('success');
-                setOrderInfo({
+                setPaymentInfo({
                     orderId: location.state.orderId,
                     amount: location.state.amount,
                     method: location.state.method === 'CASH' ? 'Tiền mặt (COD)' : location.state.method
@@ -32,69 +35,72 @@ const PaymentResult = () => {
             return;
         }
 
+        // TRƯỜNG HỢP 2: VNPAY trả về (Có tham số vnp_TxnRef trên URL)
+        const vnpTxnRef = searchParams.get('vnp_TxnRef'); // Đây là Order ID
         const vnpResponseCode = searchParams.get('vnp_ResponseCode');
-        if (vnpResponseCode) {
-            const vnpTxnRef = searchParams.get('vnp_TxnRef');
-            const vnpAmount = searchParams.get('vnp_Amount');
 
-            if (vnpResponseCode === '00') {
-                setStatus('success');
-                setOrderInfo({
-                    orderId: vnpTxnRef,
-                    amount: vnpAmount ? parseInt(vnpAmount) / 100 : 0,
-                    method: 'VNPAY'
-                });
-            } else {
-                setStatus('failed');
-                setErrorMsg("Giao dịch thanh toán bị hủy hoặc xảy ra lỗi.");
-            }
-            return;
-        }
-
-        const orderIdParam = searchParams.get('orderId');
-        if (orderIdParam) {
+        if (vnpTxnRef) {
             try {
-                const res = await getOrderById(orderIdParam);
+                // Gọi API getPaymentByOrderId như yêu cầu
+                const res = await getPaymentByOrderId(vnpTxnRef);
+                
                 if (res && res.success && res.data) {
-                    const order = res.data;
+                    const payment = res.data; // Dữ liệu trả về từ dòng 
                     
-                    if (order.paymentStatus === 'paid') {
+                    // Kiểm tra status từ Database (chuẩn nhất)
+                    if (payment.status === 'paid') {
                         setStatus('success');
-                    } else if (order.paymentStatus === 'failed') {
+                        resetCart(); 
+                    } else if (payment.status === 'failed') {
                         setStatus('failed');
-                        setErrorMsg("Thanh toán thất bại.");
+                        setErrorMsg("Giao dịch thanh toán thất bại.");
                     } else {
-                        setStatus('info'); 
+                        // Trường hợp 'unpaid' nhưng VNPAY trả về 00 (có thể do backend update chậm)
+                        if (vnpResponseCode === '00') {
+                             setStatus('success'); 
+                             resetCart();
+                        } else {
+                             setStatus('info'); // Đang chờ xử lý
+                        }
                     }
 
-                    setOrderInfo({
-                        orderId: order._id,
-                        amount: order.grandTotal,
-                        method: order.paymentMethod === 'CASH' ? 'Tiền mặt (COD)' : order.paymentMethod
+                    setPaymentInfo({
+                        orderId: payment.orderId,
+                        amount: payment.amount,
+                        method: payment.method === 'VNBANK' ? 'VNPAY QR' : payment.method,
+                        paymentDate: payment.updatedAt
                     });
                 } else {
                     setStatus('failed');
-                    setErrorMsg("Không tìm thấy thông tin đơn hàng.");
+                    setErrorMsg("Không tìm thấy thông tin thanh toán.");
                 }
             } catch (error) {
-                console.error(error);
-                setStatus('failed');
-                setErrorMsg("Lỗi kết nối đến hệ thống.");
+                console.error("Lỗi xác thực thanh toán:", error);
+                
+                // Fallback: Nếu API lỗi nhưng VNPAY trả code 00
+                if (vnpResponseCode === '00') {
+                     setStatus('info'); 
+                     setPaymentInfo({ orderId: vnpTxnRef, method: 'VNPAY', amount: 0 });
+                } else {
+                     setStatus('failed');
+                     setErrorMsg("Lỗi kết nối khi xác thực thanh toán.");
+                }
             }
             return;
         }
 
+        // Không có thông tin gì -> Về trang chủ
         navigate('/');
     };
 
     checkResult();
-  }, [location, searchParams, navigate]);
+  }, [location, searchParams, navigate, resetCart]);
 
   if (status === 'loading') return (
     <div className="payment-result-page">
         <div className="loading-container">
-            <Loader2 className="animate-spin" size={48} color="#1488DB" />
-            <p style={{marginTop: 15}}>Đang xử lý kết quả...</p>
+            <Loader2 className="animate-spin" size={48} color="#10b981" />
+            <p style={{marginTop: 15}}>Đang xác thực kết quả thanh toán...</p>
         </div>
     </div>
   );
@@ -109,7 +115,7 @@ const PaymentResult = () => {
                 <CheckCircle size={80} className="status-success" />
             </div>
             <h1 className="result-title status-success">Giao dịch thành công</h1>
-            <p className="result-message">Cảm ơn bạn đã mua hàng. Đơn hàng đã được thanh toán/ghi nhận.</p>
+            <p className="result-message">Cảm ơn bạn đã mua hàng. Đơn hàng đã được thanh toán thành công.</p>
           </>
         )}
 
@@ -118,8 +124,8 @@ const PaymentResult = () => {
             <div className="result-icon-wrapper">
                 <Receipt size={80} className="status-warning" />
             </div>
-            <h1 className="result-title status-warning">Thông tin đơn hàng</h1>
-            <p className="result-message">Trạng thái thanh toán: <strong>Chưa hoàn tất</strong></p>
+            <h1 className="result-title status-warning">Đang xử lý</h1>
+            <p className="result-message">Giao dịch đã được ghi nhận. Hệ thống đang cập nhật trạng thái đơn hàng.</p>
            </>
         )}
 
@@ -133,19 +139,19 @@ const PaymentResult = () => {
           </>
         )}
 
-        {orderInfo && (
+        {paymentInfo && (
             <div className="order-info-box">
                 <div className="info-row">
                     <span className="info-label">Mã đơn hàng:</span>
-                    <span className="info-value mono">#{orderInfo.orderId?.slice(-6).toUpperCase()}</span>
+                    <span className="info-value mono">#{paymentInfo.orderId?.slice(-6).toUpperCase()}</span>
                 </div>
                 <div className="info-row">
                     <span className="info-label">Phương thức:</span>
-                    <span className="info-value">{orderInfo.method}</span>
+                    <span className="info-value">{paymentInfo.method}</span>
                 </div>
                 <div className="info-row">
-                    <span className="info-label">Tổng thanh toán:</span>
-                    <span className="info-value amount-highlight">{vnd(orderInfo.amount)}</span>
+                    <span className="info-label">Số tiền:</span>
+                    <span className="info-value amount-highlight">{paymentInfo.amount ? vnd(paymentInfo.amount) : '---'}</span>
                 </div>
             </div>
         )}
