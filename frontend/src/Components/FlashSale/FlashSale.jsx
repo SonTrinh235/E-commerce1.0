@@ -105,9 +105,10 @@ export function FlashSale({ onAddToCart }) {
             const percentSold = stock > 0 ? Math.min(100, Math.round((sold / stock) * 100)) : 0;
 
             const imageUrl = productDetail.imageInfo?.url || productDetail.image || "";
-
+            const categorySlug = productDetail.categoryInfo?.slug || 'uncategorized';
+            
             return (
-              <div key={item.productId} className="flash-sale-card" onClick={() => navigate(`/product/${productDetail.slug || item.productId}`)}>
+              <div key={item.productId} className="flash-sale-card" onClick={() => navigate(`/product/${categorySlug}/${productDetail.slug || item.productId}`)}>
                 <div className="flash-sale-badge">-{discount}%</div>
                 
                 <div className="flash-sale-image">

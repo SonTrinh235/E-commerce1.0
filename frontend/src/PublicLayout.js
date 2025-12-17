@@ -1,7 +1,7 @@
 import "./PublicLayout.css";
 
 // import Navbar from "./Components/Navbar/Navbar";
-// import Footer from "./Components/Footer/Footer";
+import Footer from "./Components/Footer/Footer";
 import { Header } from "./Components/Header/Header";
 import { FloatingCart } from "./Components/FloatingCart/FloatingCart";
 
@@ -19,7 +19,7 @@ function PublicLayout() {
       <Header />
       <Outlet />
       <RequireUser><FloatingCart /></RequireUser>
-      {/* <Footer /> */}
+      <Footer />
     </div>
   );
 }

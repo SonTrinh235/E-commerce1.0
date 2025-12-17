@@ -1,10 +1,12 @@
-import { ShoppingCart, Tag, Check, Star } from 'lucide-react'; 
+import { ShoppingCart, Tag, Check, Star, Zap } from 'lucide-react';
 import { ImageWithFallback } from '../figma/ImageWithFallback.tsx';
-import { useState, useContext, useEffect } from 'react'; 
+import { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartContext } from '../../Context/CartContext';
-import { getReviewsByProductId } from '../../api/reviewService'; 
+import { getReviewsByProductId } from '../../api/reviewService';
 import './ProductCard.css';
+
+const BASE_URL = 'https://www.bachkhoaxanh.xyz';
 
 export function ProductCard({ product }) {
   const [isAdding, setIsAdding] = useState(false);
@@ -13,19 +15,37 @@ export function ProductCard({ product }) {
   const navigate = useNavigate();
   const { cartAddProductToCart } = useContext(CartContext);
 
+  const flashInfo = product.flashSaleInfo || {};
+  const isFlashSale = flashInfo.isActive;
+
+  let displayPrice = product.price;
+  let oldPrice = product.originalPrice;
+  let displayDiscount = product.discount;
+
+  if (isFlashSale) {
+      displayPrice = flashInfo.discountPrice;
+      oldPrice = product.price;
+      displayDiscount = flashInfo.discountPercentage;
+  }
+
   const getProductImage = () => {
-    if (product.imageInfo?.url) return product.imageInfo.url;
-    if (product.imageUrl) return product.imageUrl;
-    if (product.image) return product.image;
-    return null;
+    let url = product.imageInfo?.url || product.imageUrl || product.image;
+    if (!url || typeof url !== 'string' || url.trim() === "") {
+        return "https://placehold.co/400x400?text=No+Image";
+    }
+    if (url.startsWith('http') || url.startsWith('https')) {
+        return url;
+    }
+    const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
+    return `${BASE_URL}/${cleanUrl}`;
   };
 
   useEffect(() => {
     const fetchRating = async () => {
       if (product.averageRating !== undefined) {
-          setRatingStats({ 
-              average: product.averageRating, 
-              count: product.reviewCount || 0 
+          setRatingStats({
+              average: product.averageRating,
+              count: product.reviewCount || 0
           });
           return;
       }
@@ -52,7 +72,7 @@ export function ProductCard({ product }) {
 
   const handleAddToCart = async (e) => {
     e.stopPropagation();
-    if (isAdding) return; 
+    if (isAdding) return;
     setIsAdding(true);
 
     try {
@@ -74,14 +94,13 @@ export function ProductCard({ product }) {
         console.warn("Sản phẩm thiếu slug:", product.name);
     }
   };
-  // ---------------------------------------------
 
   return (
-    <div className="product-card">
-      {product.discount > 0 && (
-        <div className="product-discount">
-          <Tag className="discount-icon" />
-          <span>-{product.discount}%</span>
+    <div className={`product-card ${isFlashSale ? 'is-flash-sale' : ''}`}>
+      {displayDiscount > 0 && (
+        <div className="product-discount" style={isFlashSale ? { backgroundColor: '#ef4444' } : {}}>
+          {isFlashSale ? <Zap size={12} fill="white" style={{marginRight: 2}}/> : <Tag className="discount-icon" />}
+          <span>-{displayDiscount}%</span>
         </div>
       )}
 
@@ -90,6 +109,7 @@ export function ProductCard({ product }) {
           src={getProductImage()}
           alt={product.name}
           className="product-image"
+          fallbackSrc="https://placehold.co/400x400?text=Error"
         />
       </div>
 
@@ -100,10 +120,10 @@ export function ProductCard({ product }) {
 
         <div className="product-rating-summary">
             <div className="stars">
-                <Star 
-                  size={14} 
-                  fill={ratingStats.average > 0 ? "#FFD700" : "#e5e7eb"} 
-                  color={ratingStats.average > 0 ? "#FFD700" : "#e5e7eb"} 
+                <Star
+                  size={14}
+                  fill={ratingStats.average > 0 ? "#FFD700" : "#e5e7eb"}
+                  color={ratingStats.average > 0 ? "#FFD700" : "#e5e7eb"}
                 />
             </div>
             <span className="rating-number">
@@ -116,11 +136,11 @@ export function ProductCard({ product }) {
 
         <div className="product-price">
           <span className="price-current">
-            {product.price?.toLocaleString('vi-VN')}đ
+            {displayPrice?.toLocaleString('vi-VN')}đ
           </span>
-          {product.originalPrice && (
+          {oldPrice && (
             <span className="price-original">
-              {product.originalPrice.toLocaleString('vi-VN')}đ
+              {oldPrice.toLocaleString('vi-VN')}đ
             </span>
           )}
         </div>

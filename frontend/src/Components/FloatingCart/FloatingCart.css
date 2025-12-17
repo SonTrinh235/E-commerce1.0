@@ -172,25 +172,25 @@
   gap: 8px;
 }
 
-.quantity-btn {
-  background: rgb(18, 224, 210);
+.quantity-btn1 {
+  background: rgb(255, 255, 255);
   border: 1px solid #d1d5db;
   padding: 6px;
   border-radius: 8px;
   transition: all 0.3s;
 }
 
-.quantity-btn:hover {
+.quantity-btn1:hover {
   background: #f9fafb;
 }
 
-.quantity-btn-plus {
-  background: #2f83de;
+.quantity-btn1-plus {
+  background: #79c1e0;
   border-color: #221fec;
   color: rgb(231, 114, 114);
 }
 
-.quantity-btn-plus:hover {
+.quantity-btn1-plus:hover {
   background: #001fea;
 }
 

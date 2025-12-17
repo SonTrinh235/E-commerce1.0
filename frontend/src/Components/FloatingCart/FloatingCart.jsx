@@ -146,7 +146,7 @@ export function FloatingCart() {
                                 cartUpdateProductQuantity(item._id, item.quantity - 1);
                              }
                           }}
-                          className="quantity-btn"
+                          className="quantity-btn1"
                         >
                           <Minus className="quantity-icon" />
                         </button>
@@ -155,7 +155,7 @@ export function FloatingCart() {
 
                         <button
                           onClick={() => cartUpdateProductQuantity(item._id, item.quantity + 1)}
-                          className="quantity-btn quantity-btn-plus"
+                          className="quantity-btn1 quantity-btn1-plus"
                         >
                           <Plus className="quantity-icon" />
                         </button>
