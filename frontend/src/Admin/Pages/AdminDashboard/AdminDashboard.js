@@ -96,10 +96,13 @@ function AdminDashboard() {
     setLoading(false);
   };
 
-  useEffect(async () => {
-    await fetchTopProducts();
-    await fetchTopOrders();
-    await fetchGeneralStats();
+  useEffect(() => {
+    const getData = async () => {
+      await fetchTopProducts();
+      await fetchTopOrders();
+      await fetchGeneralStats();
+    }
+    getData();
   }, []);
 
   const stats = [
