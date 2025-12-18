@@ -101,7 +101,8 @@ export default function AdminOrder(props) {
                       <div>
                         <h3>{item.productName}</h3>
                         <p>
-                          Số lượng {item.computedPrice.flashPrice? `${item.computedPrice.flashQty} x ${vnd(item.computedPrice.flashPrice)} + ` : ``} {item.computedPrice.normalQty} x {vnd(item.computedPrice.normalPrice)} ={" "}
+                          Số lượng {item.computedPrice.flashPrice && `${item.computedPrice.flashQty} x ${vnd(item.computedPrice.flashPrice)}(sale) `}
+                          {item.computedPrice.normalQty !== 0 && `+ ${item.computedPrice.normalQty} x ${vnd(item.computedPrice.normalPrice)}`} ={" "}
                           <b>{vnd(item.computedPrice.totalForItemPrice)}</b>
                         </p>
                       </div>
