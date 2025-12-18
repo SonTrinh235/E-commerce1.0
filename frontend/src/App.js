@@ -1,13 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import toast, { Toaster } from 'react-hot-toast';
 
 import "./App.css";
 
-// Components
-// import { Header } from "./Components/Header/Header";
-// import { FloatingCart } from "./Components/FloatingCart/FloatingCart";
-
-// Public Pages
 import Shop from "./Pages/Shop";
 import ShopCategory from "./Pages/ShopCategory";
 import Product from "./Pages/Product";
@@ -17,30 +13,22 @@ import SearchResults from "./Pages/SearchResults";
 import ExclusiveOffers from "./Pages/ExclusiveOffers";
 import NotFound from "./Pages/NotFound";
 
-// User Pages
 import Checkout from "./Pages/Checkout";
 import Profile from "./Pages/Profile";
 import Orders from "./Pages/Orders";
 import { Notifications } from './Pages/Notifications';
 import PaymentResult from './Pages/PaymentResult';
 
-// Admin Pages
 import AdminLayout from "./Admin/AdminLayout";
 import AdminDashboard from "./Admin/Pages/AdminDashboard/AdminDashboard";
 import ManageProducts from "./Admin/Pages/ManageProducts/ManageProducts";
 import ManageOrders from "./Admin/Pages/ManageOrders/ManageOrders";
 import ManageVouchers from "./Admin/Pages/ManageVouchers/ManageVouchers";
+import { FlashSaleManagement } from "./Admin/Pages/FlashSaleManagement/FlashSaleManagement";
 
-// Assets
-// Đã xóa import banner (meat, veg, all) vì không còn dùng
-
-// Services & API
 import { getFcmToken, onForegroundMessage } from "./firebase";
 import { getCartByUserId, addProductToCart, updateProductQuantity } from "./api/cartService";
 import PublicLayout from "./PublicLayout";
-import { FlashSaleManagement } from "./Admin/Pages/FlashSaleManagement/FlashSaleManagement";
-
-// --- Helper Components & Functions ---
 
 const RequireUser = ({ children }) => {
   const token = localStorage.getItem("userToken");
@@ -107,14 +95,14 @@ function App() {
     const userId = getUserIdFromStorage();
     
     if (!userId) {
-      alert("Vui lòng đăng nhập để mua hàng!");
+      toast.error("Vui lòng đăng nhập để mua hàng!");
       return;
     }
 
     const pId = product._id || product.id;
     if (!pId) {
       console.error("Sản phẩm không có ID hợp lệ:", product);
-      alert("Lỗi dữ liệu sản phẩm.");
+      toast.error("Lỗi dữ liệu sản phẩm.");
       return;
     }
 
@@ -128,10 +116,11 @@ function App() {
       });
       
       await fetchCart(true); 
+      toast.success("Đã thêm vào giỏ hàng!");
       
     } catch (error) {
       console.error("Lỗi thêm giỏ hàng:", error);
-      alert("Không thể thêm vào giỏ hàng. Vui lòng thử lại sau.");
+      toast.error("Không thể thêm vào giỏ hàng. Vui lòng thử lại sau.");
     }
   };
 
@@ -147,9 +136,6 @@ function App() {
     }
   };
 
-  // --- Effects ---
-
-  // Auth & Cart Initialization
   useEffect(() => {
     const loadData = () => {
       const userInfo = localStorage.getItem("userInfo");
@@ -179,7 +165,6 @@ function App() {
     };
   }, [fetchCart]);
 
-  // FCM Initialization
   useEffect(() => {
     const initFcm = async () => {
       const userId = getUserIdFromStorage();
@@ -214,7 +199,45 @@ function App() {
   
     onForegroundMessage((payload) => {
       console.log("[App.js] Có thông báo foreground:", payload);
-      alert(`${payload.notification?.title}\n${payload.notification?.body}`);
+      
+      toast.custom((t) => (
+        <div
+          className={`${
+            t.visible ? 'animate-enter' : 'animate-leave'
+          } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
+          style={{ minWidth: '300px', padding: '10px', borderLeft: '4px solid #3b82f6' }}
+        >
+          <div className="flex-1 w-0 p-2">
+            <div className="flex items-start">
+              <div className="flex-shrink-0 pt-0.5">
+                <img
+                  className="h-10 w-10 rounded-full"
+                  src="https://cdn-icons-png.flaticon.com/512/3602/3602145.png"
+                  alt=""
+                  style={{ width: 40, height: 40 }}
+                />
+              </div>
+              <div className="ml-3 flex-1">
+                <p className="text-sm font-medium text-gray-900" style={{ fontWeight: 'bold', margin: '0 0 5px 0' }}>
+                  {payload.notification?.title}
+                </p>
+                <p className="mt-1 text-sm text-gray-500" style={{ margin: 0, fontSize: '0.9rem' }}>
+                  {payload.notification?.body}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex border-l border-gray-200">
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#666', padding: '0 15px' }}
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      ), { duration: 5000, position: 'top-right' });
     });
   }, []);
 
@@ -229,9 +252,9 @@ function App() {
   return (
     <Router>
       <div className="app">
+        <Toaster position="top-right" reverseOrder={false} />
 
         <Routes>
-          {/* Seperated public layout, header and floating cart contained in publiclayout  Public layout simply wrap existing routes*/}
           <Route path="/" element={<PublicLayout/>}>
             <Route index element={<Shop onAddToCart={addToCart} />} />
 
@@ -276,7 +299,6 @@ function App() {
           />
           <Route path="*" element={<NotFound />} />
         </Routes>
-
       </div>
     </Router>
   );

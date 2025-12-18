@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, Package, MapPin, Phone, User, 
   Calendar, ChevronDown, ChevronUp, ShoppingBag, Truck, AlertCircle,
-  Loader2, CreditCard, Clock, XCircle, CheckCircle, Timer
+  Loader2, CreditCard, Clock, XCircle, CheckCircle, Timer, Copy
 } from 'lucide-react';
+import toast from 'react-hot-toast'; 
+
 import { ShopContext } from "../Context/ShopContext"; 
 import { getOrdersByUserId } from "../api/orderService"; 
 import { getPaymentByOrderId, refundOrder } from "../api/paymentService"; 
@@ -114,6 +116,12 @@ function Orders() {
       setExpiredOrders(prev => ({...prev, [orderId]: true}));
   };
 
+  const handleCopyOrderId = (e, orderId) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(orderId);
+    toast.success("Đã sao chép mã đơn hàng!");
+  };
+
   const handleRepay = async (orderId) => {
     try {
       setActionLoading(orderId);
@@ -124,14 +132,14 @@ function Orders() {
           if (res.data.paymentUrl) {
               window.location.href = res.data.paymentUrl;
           } else {
-              alert("Không tìm thấy đường dẫn thanh toán. Vui lòng liên hệ hỗ trợ.");
+              toast.error("Không tìm thấy đường dẫn thanh toán.");
           }
       } else {
-        alert("Không tìm thấy thông tin giao dịch. Vui lòng liên hệ Admin.");
+        toast.error("Không tìm thấy thông tin giao dịch.");
       }
     } catch (error) {
       console.error("Lỗi hệ thống:", error);
-      alert("Lỗi kết nối khi lấy link thanh toán.");
+      toast.error("Lỗi kết nối khi lấy link thanh toán.");
     } finally {
       setActionLoading(null);
     }
@@ -147,7 +155,7 @@ function Orders() {
       const paymentRes = await getPaymentByOrderId(order._id);
       
       if (!paymentRes?.success || !paymentRes?.data) {
-        alert("Lỗi: Không tìm thấy lịch sử thanh toán của đơn hàng này.");
+        toast.error("Không tìm thấy lịch sử thanh toán.");
         return;
       }
 
@@ -156,7 +164,7 @@ function Orders() {
       const transactionDate = paymentRes.data.vnpPayDate || paymentRes.data.transDate || paymentRes.data.createdAt;
       
       if (!transactionDate) {
-          alert("Lỗi: Không tìm thấy ngày giao dịch để hoàn tiền.");
+          toast.error("Không tìm thấy ngày giao dịch để hoàn tiền.");
           return;
       }
 
@@ -170,14 +178,14 @@ function Orders() {
       const res = await refundOrder(order._id, refundData);
       
       if (res && res.success) {
-        alert("Yêu cầu hoàn tiền thành công! Hệ thống đang xử lý.");
+        toast.success("Yêu cầu hoàn tiền thành công! Hệ thống đang xử lý.");
         fetchOrders(currentPage); 
       } else {
-        alert(res?.message || "Yêu cầu hoàn tiền thất bại. Vui lòng thử lại sau.");
+        toast.error(res?.message || "Yêu cầu hoàn tiền thất bại.");
       }
     } catch (error) {
       console.error("Lỗi hoàn tiền:", error);
-      alert("Có lỗi xảy ra khi kết nối đến server hoàn tiền.");
+      toast.error("Có lỗi xảy ra khi kết nối đến server hoàn tiền.");
     } finally {
       setActionLoading(null);
     }
@@ -423,8 +431,18 @@ function Orders() {
                         <Package size={20} color="#555" />
                       </div>
                       <div>
-                        <h3 className="order-id">
+                        <h3 className="order-id" title={`Mã đầy đủ: ${order._id}`}>
                           #{order._id.slice(-6).toUpperCase()} 
+                          
+                          <button 
+                            className="copy-btn"
+                            onClick={(e) => handleCopyOrderId(e, order._id)}
+                            title="Sao chép mã đầy đủ"
+                            style={{ marginLeft: 8, background: 'none', border: 'none', cursor: 'pointer', verticalAlign: 'middle' }}
+                          >
+                            <Copy size={14} color="#666"/>
+                          </button>
+
                           <span className="order-date-mobile"> • {formatDate(order.createdAt)}</span>
                         </h3>
                         <p className="order-date-desktop">

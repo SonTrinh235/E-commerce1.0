@@ -54,7 +54,7 @@ const Footer = () => {
         </div>
 
         <div className="footer-bottom">
-            <p>&copy; 2025 BachKhoaXanh. Personal project for learning purpose.</p>
+            <p>&copy; 2025 bachkhoaxanh. Personal project for learning purpose.</p>
         </div>
     </footer>
   )

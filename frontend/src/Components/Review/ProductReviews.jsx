@@ -4,7 +4,7 @@ import { getReviewsByProductId, createReview } from '../../api/reviewService';
 import { User, CheckCircle } from 'lucide-react';
 import './ProductReviews.css';
 
-const ProductReviews = ({ productId }) => {
+const ProductReviews = ({ productId, onReviewSubmit }) => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -55,7 +55,6 @@ const ProductReviews = ({ productId }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate
     if (!isLoggedIn) {
         setError('Bạn cần đăng nhập để viết đánh giá.');
         return;
@@ -73,7 +72,6 @@ const ProductReviews = ({ productId }) => {
     setError('');
 
     try {
-      // console.log("Submitting review for:", { userId, productId, rating });
       await createReview({
         userId: userId, 
         productId: productId,
@@ -86,6 +84,9 @@ const ProductReviews = ({ productId }) => {
       alert('Cảm ơn bạn đã đánh giá!');
       
       await fetchReviews();
+      if (onReviewSubmit) {
+          onReviewSubmit();
+      }
     } catch (err) {
       console.error("Lỗi gửi đánh giá (Body):", err.body);
       

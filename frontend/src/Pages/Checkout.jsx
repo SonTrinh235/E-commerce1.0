@@ -1,6 +1,8 @@
 import React, { useContext, useState, useEffect, useMemo } from "react";
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, MapPin, Phone, User, CreditCard, Truck, Calendar, Clock, Check, Mail, Zap } from 'lucide-react';
+import toast from 'react-hot-toast'; // 1. Import toast
+
 import { CartContext } from "../Context/CartContext";
 import { ShopContext } from "../Context/ShopContext";
 import { ImageWithFallback } from '../Components/figma/ImageWithFallback.tsx';
@@ -207,10 +209,13 @@ export default function Checkout() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    if (!validateForm()) {
+        toast.error("Vui lòng kiểm tra lại thông tin giao hàng!");
+        return;
+    }
 
     if (cartTotalItems === 0) {
-        alert("Giỏ hàng trống!");
+        toast.error("Giỏ hàng trống!");
         return;
     }
 
@@ -263,20 +268,20 @@ export default function Checkout() {
                 if (paymentUrl) {
                     window.location.href = paymentUrl;
                 } else {
-                    alert("Không lấy được link thanh toán. Vui lòng thử lại.");
+                    toast.error("Không lấy được link thanh toán. Vui lòng thử lại."); 
                 }
             } else {
-                alert('Đặt hàng thành công! Cảm ơn bạn đã mua sắm.');
+                toast.success('Đặt hàng thành công! Cảm ơn bạn đã mua sắm.');
                 resetCart(); 
                 navigate('/'); 
             }
         } else {
-             alert(res.message || "Có lỗi xảy ra khi tạo đơn hàng.");
+             toast.error(res.message || "Có lỗi xảy ra khi tạo đơn hàng.");
         }
 
     } catch (error) {
         console.error("Order failed:", error);
-        alert("Đặt hàng thất bại. Vui lòng thử lại.");
+        toast.error("Đặt hàng thất bại. Vui lòng thử lại.");
     } finally {
         setLoading(false);
     }

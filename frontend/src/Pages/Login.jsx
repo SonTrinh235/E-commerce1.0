@@ -4,30 +4,28 @@ import { ArrowLeft, Phone, ShoppingBag, User, Lock, Shield, Eye, EyeOff } from '
 import { auth, getFcmToken, registerFcmToken } from '../firebase';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { getCartByUserId } from "../api/cartService";
+import toast from 'react-hot-toast';
 import './CSS/Login.css';
 
 const BASE_URL = "https://www.bachkhoaxanh.xyz";
 
 export function Login({ onBack, onLogin }) {
   const navigate = useNavigate();
-  const [loginType, setLoginType] = useState('user'); // 'user' hoặc 'admin'
-  const [step, setStep] = useState('phone'); // 'phone' hoặc 'otp' (cho user)
+  const [loginType, setLoginType] = useState('user'); 
+  const [step, setStep] = useState('phone'); 
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [countdown, setCountdown] = useState(0);
   const [isResending, setIsResending] = useState(false);
 
-  // Admin form
   const [adminUsername, setAdminUsername] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  // Recaptcha
   const [recaptchaVerifier, setRecaptchaVerifier] = useState(null);
 
   const otpRefs = useRef([]);
 
-  // --- Countdown OTP ---
   useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
@@ -35,7 +33,6 @@ export function Login({ onBack, onLogin }) {
     }
   }, [countdown]);
 
-  // --- Reset form khi đổi loại đăng nhập ---
   const handleToggleLoginType = (type) => {
     setLoginType(type);
     setStep('phone');
@@ -46,7 +43,6 @@ export function Login({ onBack, onLogin }) {
     setCountdown(0);
   };
 
-  // --- Setup Recaptcha ---
   const setupRecaptcha = () => {
     if (!recaptchaVerifier) {
       const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
@@ -60,13 +56,12 @@ export function Login({ onBack, onLogin }) {
     return recaptchaVerifier;
   };
 
-  // --- USER LOGIN - Gửi OTP ---
   const handlePhoneSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
 
     const phoneTrim = phoneNumber.trim();
     if (!/^(\+84|0)\d{8,9}$/.test(phoneTrim)) {
-      alert('Số điện thoại không hợp lệ!');
+      toast.error('Số điện thoại không hợp lệ!');
       return;
     }
 
@@ -79,15 +74,20 @@ export function Login({ onBack, onLogin }) {
       setStep('otp');
       setCountdown(60);
       setOtp(['', '', '', '', '', '']);
-      setTimeout(() => otpRefs.current[0]?.focus(), 100);
-      alert('✅ OTP đã gửi đến số điện thoại');
+      
+      // Fix lỗi ESLint: Kiểm tra tồn tại trước khi focus
+      setTimeout(() => {
+          const firstInput = otpRefs.current[0];
+          if (firstInput) firstInput.focus();
+      }, 100);
+      
+      toast.success('Mã OTP đã được gửi đến số điện thoại của bạn');
     } catch (err) {
       console.error('❌ Lỗi gửi OTP:', err);
-      alert('Không gửi được OTP: ' + (err.message || ''));
+      toast.error('Không gửi được OTP: ' + (err.message || ''));
     }
   };
 
-  // --- USER LOGIN - OTP Change ---
   const handleOtpChange = (index, value) => {
     if (!/^\d*$/.test(value)) return;
 
@@ -95,12 +95,16 @@ export function Login({ onBack, onLogin }) {
     newOtp[index] = value;
     setOtp(newOtp);
 
-    if (value && index < 5) otpRefs.current[index + 1]?.focus();
+    if (value && index < 5) {
+        const nextInput = otpRefs.current[index + 1];
+        if (nextInput) nextInput.focus();
+    }
   };
 
   const handleOtpKeyDown = (index, e) => {
     if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      otpRefs.current[index - 1]?.focus();
+      const prevInput = otpRefs.current[index - 1];
+      if (prevInput) prevInput.focus();
     }
   };
 
@@ -112,20 +116,23 @@ export function Login({ onBack, onLogin }) {
     const newOtp = pastedData.split('');
     while (newOtp.length < 6) newOtp.push('');
     setOtp(newOtp);
-    otpRefs.current[Math.min(pastedData.length, 5)]?.focus();
+    
+    const focusIndex = Math.min(pastedData.length, 5);
+    const targetInput = otpRefs.current[focusIndex];
+    if (targetInput) targetInput.focus();
   };
 
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
     const otpCode = otp.join('');
     if (otpCode.length !== 6) {
-      alert('Vui lòng nhập đủ 6 số OTP!');
+      toast.error('Vui lòng nhập đủ 6 số OTP!');
       return;
     }
   
     try {
       if (!window.confirmationResult) {
-        alert('⚠️ Phiên OTP không hợp lệ, vui lòng thử lại!');
+        toast.error('Phiên OTP không hợp lệ, vui lòng thử lại!');
         return;
       }
   
@@ -142,14 +149,13 @@ export function Login({ onBack, onLogin }) {
   
       const json = await res.json();
       if (json.success) {
-        // --- Lưu trạng thái user ---
         localStorage.setItem('userToken', json.data?.token || idToken);
         localStorage.setItem('userInfo', JSON.stringify(json.data || { phone: user.phoneNumber }));
         window.dispatchEvent(new Event('auth-changed'));
   
-        // --- Lấy giỏ hàng của user ---
+        // Lấy giỏ hàng
         try {
-          const cartData = await getCartByUserId(user.uid); // dùng UID hoặc ID từ server trả về
+          const cartData = await getCartByUserId(user.uid); 
           localStorage.setItem('userCart', JSON.stringify(cartData || []));
           window.dispatchEvent(new Event('cart-updated'));
           console.log('✅ Giỏ hàng đã load xong');
@@ -157,22 +163,21 @@ export function Login({ onBack, onLogin }) {
           console.error('❌ Lỗi lấy giỏ hàng:', cartErr);
         }
   
-        // --- Gửi FCM token ---
+        // Đăng ký FCM
         const fcmToken = await getFcmToken();
         if (fcmToken) {
           await registerFcmToken(user.uid, fcmToken);
           console.log('✅ FCM token đã được đăng ký cho user');
         }
   
-        // --- Chuyển về trang chủ ---
-        alert('✅ Đăng nhập thành công!');
+        toast.success('Đăng nhập thành công!');
         window.location.href = '/';
       } else {
-        alert('❌ Đăng nhập thất bại: ' + (json.message || 'Không rõ lỗi'));
+        toast.error('Đăng nhập thất bại: ' + (json.message || 'Không rõ lỗi'));
       }
     } catch (err) {
       console.error('❌ Lỗi xác nhận OTP:', err);
-      alert('OTP không hợp lệ hoặc hết hạn! ' + (err.message || ''));
+      toast.error('OTP không hợp lệ hoặc hết hạn! ' + (err.message || ''));
     }
   };
 
@@ -182,17 +187,18 @@ export function Login({ onBack, onLogin }) {
     setIsResending(true);
 
     try {
-      await handlePhoneSubmit(new Event('submit'));
+      // Fix lỗi ESLint: Tạo mock event thay vì new Event('submit')
+      const mockEvent = { preventDefault: () => {} };
+      await handlePhoneSubmit(mockEvent);
     } finally {
       setIsResending(false);
     }
   };
 
-  // --- ADMIN LOGIN ---
   const handleAdminSubmit = async (e) => {
     e.preventDefault();
     if (!adminUsername || !adminPassword) {
-      alert('Vui lòng nhập đầy đủ thông tin!');
+      toast.error('Vui lòng nhập đầy đủ thông tin!');
       return;
     }
 
@@ -208,22 +214,24 @@ export function Login({ onBack, onLogin }) {
         localStorage.setItem('adminToken', json.data?.token ?? 'admin-session');
         localStorage.setItem('admin', JSON.stringify({ role: 'admin', username: adminUsername }));
 
-        // Gửi FCM token cho admin
         const fcmToken = await getFcmToken();
-        if (fcmToken) await registerFcmToken(adminUsername, fcmToken);
+        if (fcmToken) {
+            await registerFcmToken(adminUsername, fcmToken);
+            console.log('✅ FCM token đã được đăng ký cho admin');
+        }
 
         window.dispatchEvent(new Event('auth-changed'));
         
-        // --- THÊM DÒNG NÀY ĐỂ CHUYỂN TRANG ADMIN ---
+        toast.success('Đăng nhập quản trị viên thành công!');
         navigate('/admin/dashboard'); 
         
         if (onLogin) onLogin({ username: adminUsername, type: 'admin' });
       } else {
-        alert('❌ Đăng nhập thất bại: ' + (json.message || 'Sai username hoặc mật khẩu'));
+        toast.error('Đăng nhập thất bại: ' + (json.message || 'Sai username hoặc mật khẩu'));
       }
     } catch (err) {
       console.error('❌ Lỗi khi gọi API admin:', err);
-      alert('Lỗi mạng hoặc server');
+      toast.error('Lỗi kết nối đến máy chủ');
     }
   };
 
@@ -245,7 +253,7 @@ export function Login({ onBack, onLogin }) {
                 <ShoppingBag className="bag-icon" />
               </div>
               <h1>Chào mừng đến với</h1>
-              <h2>Bách Khoa Xanh</h2>
+              <h2>bachkhoaxanh</h2>
               <p>Mua sắm thực phẩm tươi ngon mỗi ngày</p>
             </div>
           </div>
@@ -261,7 +269,6 @@ export function Login({ onBack, onLogin }) {
                 </button>
               </div>
 
-              {/* USER LOGIN */}
               {loginType === 'user' && (
                 <>
                   {step === 'phone' ? (
@@ -319,7 +326,6 @@ export function Login({ onBack, onLogin }) {
                 </>
               )}
 
-              {/* ADMIN LOGIN */}
               {loginType === 'admin' && (
                 <form onSubmit={handleAdminSubmit} className="login-form">
                   <div className="form-group">

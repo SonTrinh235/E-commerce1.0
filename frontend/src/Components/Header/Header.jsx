@@ -145,12 +145,12 @@ export function Header() {
               <div className="logo-icon">
                 <img
                   src={LogoImg}
-                  alt="BachKhoaXanh"
+                  alt="bachkhoaxanh"
                   style={{ width: '48px', height: '48px', borderRadius: '12px', objectFit: 'cover' }}
                 />
               </div>
               <div className="logo-text">
-                <h1>BachKhoaXanh</h1>
+                <h1>bachkhoaxanh</h1>
                 <p>Tươi ngon mỗi ngày</p>
               </div>
             </div>

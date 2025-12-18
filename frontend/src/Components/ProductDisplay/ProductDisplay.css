@@ -512,3 +512,125 @@
     }
   }
   
+
+  /* --- CSS CŨ GIỮ NGUYÊN, THÊM CÁC PHẦN DƯỚI ĐÂY --- */
+
+/* Style cho ảnh */
+.product-main-image {
+  position: relative; /* Để badge Flash Sale đè lên được */
+}
+
+.detail-flash-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: #ef4444;
+  color: white;
+  padding: 5px 10px;
+  font-weight: bold;
+  border-radius: 4px;
+  z-index: 2;
+  font-size: 12px;
+}
+
+/* Phần Giá và Flash Sale */
+.product-price-section {
+  background-color: #f9fafb;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #f3f4f6;
+}
+
+.fs-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #ef4444;
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.price-current {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.price-current.price-flash {
+  color: #ef4444; /* Màu đỏ cho giá Flash Sale */
+}
+
+.price-old {
+  font-size: 16px;
+  color: #9ca3af;
+  text-decoration: line-through;
+}
+
+.fs-timer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  color: #ef4444;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.stock-info {
+  margin-top: 10px;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* SỬA LỖI VIỀN ĐEN NÚT BẤM */
+button {
+  border: none;
+  outline: none;
+}
+
+.quantity-btn {
+  border: 1px solid #e5e7eb !important; /* Riêng nút cộng trừ cần viền nhẹ */
+  outline: none;
+}
+
+.quantity-btn:hover {
+  border-color: #d1d5db !important;
+}
+
+.add-to-cart-large {
+  border: none;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-to-cart-large:focus {
+  outline: none;
+}
+
+.back-button {
+  border: none;
+  outline: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #4b5563;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.back-button:hover {
+  color: #1f2937;
+  text-decoration: underline;
+}
