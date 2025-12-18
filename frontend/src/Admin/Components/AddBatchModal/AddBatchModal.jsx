@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { X, Calendar, Clock } from 'lucide-react';
 import './AddBatchModal.css';
 
@@ -40,7 +41,7 @@ export function AddBatchModal({ onClose, onSuccess }) {
     try {
       const response = await addFlashSaleBatchAPI(formData.name, startDateTime.toISOString(), endDateTime.toISOString());
 
-        alert('Thêm đợt flash sale thành công!');
+        toast.success('Thêm đợt flash sale thành công!');
         onSuccess();
     } catch (error) {
       console.error('Error adding batch:', error);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from 'react-hot-toast';
 
 import "./App.css";
 
@@ -229,7 +230,7 @@ function App() {
   return (
     <Router>
       <div className="app">
-
+        <Toaster position="top-right" reverseOrder={false} />
         <Routes>
           {/* Seperated public layout, header and floating cart contained in publiclayout  Public layout simply wrap existing routes*/}
           <Route path="/" element={<PublicLayout/>}>

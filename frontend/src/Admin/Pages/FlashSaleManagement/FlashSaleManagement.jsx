@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import Swal from "sweetalert2";
+import toast from "react-hot-toast";
 import {
   Search,
   Zap,
@@ -78,13 +80,22 @@ export function FlashSaleManagement() {
     setLoading(false);
   };
 
-  const handleDeleteBatch = async (batchId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa đợt flash sale này?"))
+  const handleDeleteBatch = async (batchInfo) => {
+    const result = await Swal.fire({
+      title: `Bạn có muốn xóa đợt flash sale này?`,
+      text: `Xóa flash sale: ${batchInfo.name}`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: 'rgba(221, 51, 51, 1)',
+      confirmButtonText: 'Xác nhận xóa',
+      cancelButtonText: 'Hủy'
+    });
+    if (!result.isConfirmed)
       return;
 
     try {
-      const response = await deleteFlashSaleBatchAPI(batchId);
-      alert("Xóa đợt flash sale thành công!");
+      const response = await deleteFlashSaleBatchAPI(batchInfo._id);
+      toast.success("Xóa đợt flash sale thành công!");
       fetchBatches();
       fetchNonFlashSaleProducts();
     } catch (error) {
@@ -94,16 +105,23 @@ export function FlashSaleManagement() {
   };
 
   const handleDeleteProduct = async (productId) => {
-    if (
-      !window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này khỏi flash sale?")
-    )
+    const result = await Swal.fire({
+      title: `Bạn có muốn xóa SP này khỏi đợt flash sale?`,
+      text: ``,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: 'rgba(221, 51, 51, 1)',
+      confirmButtonText: 'Xác nhận xóa',
+      cancelButtonText: 'Hủy'
+    });
+    if (!result.isConfirmed)
       return;
 
     try {
       const response = await deleteFlashSaleProductAPI(productId);
       fetchBatches();
       fetchNonFlashSaleProducts();
-      alert("Xóa sản phẩm khỏi flash sale thành công!");
+      toast.success("Xóa sản phẩm khỏi flash sale thành công!");
     } catch (error) {
       console.error("Error deleting flash sale product:", error);
       alert("Lỗi khi xóa sản phẩm khỏi flash sale!");
@@ -250,7 +268,7 @@ export function FlashSaleManagement() {
                         <Edit2 size={18} />
                       </button>
                       <button
-                        onClick={() => handleDeleteBatch(batchInfo._id)}
+                        onClick={() => handleDeleteBatch(batchInfo)}
                         className="batch-action-btn delete-btn"
                         title="Xóa"
                       >
