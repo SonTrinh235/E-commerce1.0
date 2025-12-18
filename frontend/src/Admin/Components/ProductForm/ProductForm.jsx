@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import toast from 'react-hot-toast';
 import "./ProductForm.css";
 import DefaultImage from "../../../assets/placeholder-image.png";
 import { FaArrowLeft } from "react-icons/fa";
@@ -119,7 +120,7 @@ function ProductForm({
           updateProductImageInfo(createdProductId, uploadedImageInfo);
         }
 
-        alert("Product created successfully!");
+        toast.success("Tạo sản phẩm mới thành công!");
       } else if (mode === "edit") {
         // 2. EDIT MODE: Call the API to update the existing product
         // productId required
@@ -157,14 +158,14 @@ function ProductForm({
           updateProductImageInfo(productId, uploadedImageInfo);
         }
 
-        alert("Product updated successfully!");
+        toast.success("Cập nhật sản phẩm thành công!");
       } else if (mode === "delete") {
         // 3. DELETE MODE: Call the API to delete the existing product
         //  productId required
         const productId = currentItem._id;
         console.log(`Deleting product ${productId}...`);
         deleteProduct(productId);
-        alert("Product Deleted successfully!");
+        toast.success("Xóa sản phẩm thành công!");
       }
 
       onSuccess();
