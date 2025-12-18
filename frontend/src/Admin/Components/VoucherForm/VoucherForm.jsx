@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import toast from 'react-hot-toast';
 import "./VoucherForm.css";
 import { FiX } from "react-icons/fi";
 import { FaArrowLeft } from "react-icons/fa";
@@ -98,7 +99,7 @@ function VoucherForm({ mode, currentItem = null, onCancel, onSuccess }) {
           usageLimit: formData.voucherUsageLimit,
         });
 
-        alert("Voucher created successfully!");
+        toast.success("Thêm voucher thành công!");
       } else if (mode === "edit") {
         // 2. EDIT MODE: Call the API to update the existing voucher
         // voucherId required
@@ -114,14 +115,14 @@ function VoucherForm({ mode, currentItem = null, onCancel, onSuccess }) {
           usageLimit: formData.voucherUsageLimit,
         });
 
-        alert("Voucher updated successfully!");
+        toast.success("Voucher cập nhật thành công!");
       } else if (mode === "delete") {
         // 3. DELETE MODE: Call the API to delete the existing voucher
         //  voucherId required
         const voucherId = currentItem._id;
         console.log(`Deleting voucher ${voucherId}...`);
         deleteVoucher(voucherId);
-        alert("Voucher Deleted successfully!");
+        toast.success("Xóa voucher thành công!");
       }
 
       onSuccess();

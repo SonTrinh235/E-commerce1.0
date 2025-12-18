@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { X, Calendar, Clock, Bath } from 'lucide-react';
 import '../../Components/AddBatchModal/AddBatchModal';
 
@@ -54,7 +55,7 @@ export function EditBatchModal({ batch, onClose, onSuccess }) {
     setLoading(true);
     try {
       const response = await editFlashSaleBatchAPI(batch._id, formData.name, startDateTime.toISOString(), endDateTime.toISOString())
-        alert('Cập nhật đợt flash sale thành công!');
+        toast.success('Cập nhật đợt flash sale thành công!');
         onSuccess();
 
     } catch (error) {

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 import { X, Package, Percent, Archive } from 'lucide-react';
 import './AddFlashSaleProductModal.css';
 
@@ -44,7 +45,7 @@ export function AddFlashSaleProductModal({ batch, allProducts, onClose, onSucces
     try {
       const response = await addFlashSaleProductAPI(batch._id, formData.productId, discount, stock);
       
-      alert('Thêm sản phẩm vào flash sale thành công!');
+      toast.success('Thêm sản phẩm vào flash sale thành công!');
       onSuccess();
     } catch (error) {
       alert('Lỗi khi thêm sản phẩm vào flash sale.');
