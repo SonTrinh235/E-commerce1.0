@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import toast from 'react-hot-toast';
 import { X, Package, Percent, Archive } from "lucide-react";
 import "../../Components/AddFlashSaleProductModal/AddFlashSaleProductModal";
 
@@ -66,7 +67,7 @@ export function EditFlashSaleProductModal({
         stock
       );
 
-      alert("Cập nhật sản phẩm flash sale thành công!");
+      toast.success("Cập nhật sản phẩm flash sale thành công!");
       onSuccess();
     } catch (error) {
       console.error("Error updating flash sale product:", error);
