@@ -12,26 +12,30 @@ export function BestSellers({ onAddToCart }) {
     const fetchTopSelling = async () => {
       try {
         const res = await getTopSellingProducts();
-        if (res.success && Array.isArray(res.data)) {
+        const list = Array.isArray(res.data) ? res.data : (res.data?.list || []);
+
+        if (res.success && list.length > 0) {
           
-          const mappedProducts = res.data.map(item => ({
-             _id: item._id || item.productId, 
-             name: item.name || item.productName,
-             price: item.price,
-             originalPrice: item.originalPrice, 
-             image: item.image || item.imageUrl || item.productImageUrl, 
-             imageInfo: item.imageInfo, 
-             slug: item.slug,
-             categoryInfo: item.categoryInfo,
-             discount: item.discount || 0,
-             rating: item.score || item.rating || 0,
-             reviewCount: item.reviewCount || 0,
-             soldCount: item.soldCount || item.sold || 0
-          }));
+          const mappedProducts = list.map(item => {
+             const finalRating = item.rating || item.averageRating || item.score || 0;
+             const finalReviewCount = item.ratings?.length || item.ratingIds?.length || item.reviewCount || 0;
+
+             return {
+                 ...item,
+                 _id: item._id || item.productId,
+                 id: item._id || item.productId,
+                 name: item.name || item.productName,
+                 image: item.imageInfo?.url || item.image || item.imageUrl || item.productImageUrl || "",
+                 rating: finalRating,
+                 reviewCount: finalReviewCount,
+                 price: item.price,
+                 originalPrice: item.originalPrice || null,
+             };
+          });
           
           const uniqueProducts = mappedProducts.filter((obj, index, self) =>
             index === self.findIndex((t) => (
-              (t._id === obj._id)
+              t._id === obj._id
             ))
           );
 

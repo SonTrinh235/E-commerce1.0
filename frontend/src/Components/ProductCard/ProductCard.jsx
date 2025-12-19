@@ -1,22 +1,20 @@
 import { ShoppingCart, Tag, Check, Star, Zap } from 'lucide-react';
 import { ImageWithFallback } from '../figma/ImageWithFallback.tsx';
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CartContext } from '../../Context/CartContext';
-import { getReviewsByProductId } from '../../api/reviewService';
 import './ProductCard.css';
 
 const BASE_URL = 'https://www.bachkhoaxanh.xyz';
 
 export function ProductCard({ product }) {
+  // console.log(`Card [${product.name}]: Rating=${product.rating}, Count=${product.reviewCount}, FlashSale=${product.flashSaleInfo?.isActive}`);
   const [isAdding, setIsAdding] = useState(false);
-  const [ratingStats, setRatingStats] = useState({ average: 0, count: 0 });
-
   const navigate = useNavigate();
   const { cartAddProductToCart } = useContext(CartContext);
 
   const flashInfo = product.flashSaleInfo || {};
-  const isFlashSale = flashInfo.isActive;
+  const isFlashSale = flashInfo.isActive === true; 
 
   let displayPrice = product.price;
   let oldPrice = product.originalPrice;
@@ -27,6 +25,9 @@ export function ProductCard({ product }) {
       oldPrice = product.price;
       displayDiscount = flashInfo.discountPercentage;
   }
+
+  const ratingScore = product.rating || 0;
+  const reviewCount = product.reviewCount || 0;
 
   const getProductImage = () => {
     let url = product.imageInfo?.url || product.imageUrl || product.image;
@@ -39,36 +40,6 @@ export function ProductCard({ product }) {
     const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
     return `${BASE_URL}/${cleanUrl}`;
   };
-
-  useEffect(() => {
-    const fetchRating = async () => {
-      if (product.averageRating !== undefined) {
-          setRatingStats({
-              average: product.averageRating,
-              count: product.reviewCount || 0
-          });
-          return;
-      }
-
-      try {
-        const id = product._id || product.id;
-        const res = await getReviewsByProductId(id);
-        const reviews = res.data || [];
-
-        if (reviews.length > 0) {
-          const totalScore = reviews.reduce((acc, curr) => acc + (curr.rating || curr.score || 0), 0);
-          const avg = totalScore / reviews.length;
-          setRatingStats({
-            average: avg,
-            count: reviews.length
-          });
-        }
-      } catch (error) {
-      }
-    };
-
-    fetchRating();
-  }, [product]);
 
   const handleAddToCart = async (e) => {
     e.stopPropagation();
@@ -91,7 +62,7 @@ export function ProductCard({ product }) {
     if (productSlug) {
         navigate(`/product/${categorySlug}/${productSlug}`);
     } else {
-        console.warn("Sản phẩm thiếu slug:", product.name);
+        navigate(`/product/${product._id || product.id}`);
     }
   };
 
@@ -122,15 +93,15 @@ export function ProductCard({ product }) {
             <div className="stars">
                 <Star
                   size={14}
-                  fill={ratingStats.average > 0 ? "#FFD700" : "#e5e7eb"}
-                  color={ratingStats.average > 0 ? "#FFD700" : "#e5e7eb"}
+                  fill={ratingScore > 0 ? "#FFD700" : "none"}
+                  color={ratingScore > 0 ? "#FFD700" : "#e5e7eb"}
                 />
             </div>
             <span className="rating-number">
-                {ratingStats.average > 0 ? ratingStats.average.toFixed(1) : '0'}
+                {ratingScore > 0 ? ratingScore.toFixed(1) : '0'}
             </span>
             <span className="review-count">
-                ({ratingStats.count} đánh giá)
+                ({reviewCount} đánh giá)
             </span>
         </div>
 
@@ -138,7 +109,7 @@ export function ProductCard({ product }) {
           <span className="price-current">
             {displayPrice?.toLocaleString('vi-VN')}đ
           </span>
-          {oldPrice && (
+          {oldPrice && oldPrice > displayPrice && (
             <span className="price-original">
               {oldPrice.toLocaleString('vi-VN')}đ
             </span>

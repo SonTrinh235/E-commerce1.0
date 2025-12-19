@@ -12,11 +12,14 @@ export default function ProductGrid({ selectedCategory = "all", searchQuery = ""
       try {
         let url = "";
         
+        // SỬA: Dùng API lấy tất cả sản phẩm để có đủ ratings và flashSaleInfo
         if (selectedCategory === "all" || !selectedCategory) {
-          url = "https://www.bachkhoaxanh.xyz/search/products?query=a&page=1&limit=50";
+          url = "https://www.bachkhoaxanh.xyz/product/products/all?page=1&limit=50";
         } else {
           url = `https://www.bachkhoaxanh.xyz/product/products/category/${selectedCategory}?page=1&limit=50`;
         }
+
+        console.log("ProductGrid: Calling API:", url);
 
         const res = await fetch(url, {
           method: "GET",
@@ -30,14 +33,27 @@ export default function ProductGrid({ selectedCategory = "all", searchQuery = ""
         if (data.success) {
           const list = Array.isArray(data.data) ? data.data : (data.data?.list || []);
           
-          const mappedList = list.map((p) => ({
-            id: p._id,
-            ...p,
-            image: p.imageInfo?.url || "",
-            discount: p.discount || 0,
-            originalPrice: p.originalPrice || null,
-          }));
+          const mappedList = list.map((p) => {
+             // Logic chuẩn hóa dữ liệu
+             const finalRating = p.rating || p.averageRating || p.score || 0;
+             // API /products/all trả về mảng ratings hoặc ratingIds, ta ưu tiên đếm nó
+             const finalReviewCount = p.ratings?.length || p.ratingIds?.length || p.reviewCount || 0;
 
+             return {
+                ...p, // Copy toàn bộ dữ liệu gốc (bao gồm flashSaleInfo)
+                id: p._id,
+                
+                // Ghi đè các trường đã tính toán cho ProductCard dùng
+                rating: finalRating,       
+                reviewCount: finalReviewCount, 
+                
+                image: p.imageInfo?.url || p.imageUrl || "",
+                // Lưu ý: Không gán discount mặc định = 0 để tránh mất Flash Sale
+                originalPrice: p.originalPrice || null,
+             };
+          });
+
+          console.log("ProductGrid: Mapped Data Sample:", mappedList[0]);
           setProducts(mappedList);
         } else {
           setProducts([]);
@@ -54,10 +70,8 @@ export default function ProductGrid({ selectedCategory = "all", searchQuery = ""
   }, [selectedCategory]);
 
   const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    return matchesSearch;
+    if (!searchQuery) return true;
+    return product.name.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   return (

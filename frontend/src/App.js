@@ -32,17 +32,17 @@ import PublicLayout from "./PublicLayout";
 
 const RequireUser = ({ children }) => {
   const token = localStorage.getItem("userToken");
-  return token ? children : <Navigate to="/login" replace />;
+  return token ? children : <Navigate to="/login" Replace />;
 };
 
 const RequireAdmin = ({ children }) => {
   const token = localStorage.getItem("adminToken");
-  return token ? children : <Navigate to="/login" replace />;
+  return token ? children : <Navigate to="/login" Replace />;
 };
 
 const RedirectIfAuthed = ({ children }) => {
   const userInfo = localStorage.getItem("userInfo");
-  return userInfo ? <Navigate to="/" replace /> : children;
+  return userInfo ? <Navigate to="/" Replace /> : children;
 };
 
 const getUserIdFromStorage = () => {
@@ -286,7 +286,7 @@ function App() {
 
           {/* Admin Routes */}
           <Route path="/admin" element={<RequireAdmin><AdminLayout /></RequireAdmin>}>
-            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route index element={<Navigate to="dashboard" Replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="products" element={<ManageProducts />} />
             <Route path="orders" element={<ManageOrders />} />
