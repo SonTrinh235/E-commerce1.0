@@ -1,4 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
+import Swal from 'sweetalert2';
+import toast from "react-hot-toast";
+
 import {
   getAllOrders,
   searchOrders,
@@ -17,6 +20,7 @@ import { getPaymentByOrderId, refundOrder } from "../../../api/paymentService";
 // Import utils
 import { shipStatusMap } from "../../../utils/constantsMap";
 import useDebounce from "../../../utils/useDebounce";
+import { vnd } from "../../../utils/currencyUtils";
 
 export default function ManageOrder() {
   const [orders, setOrders] = useState([]);
@@ -105,7 +109,17 @@ export default function ManageOrder() {
 
   // Cập nhật trạng thái đơn hàng
   const handleUpdateStatus = async (orderId, newStatus) => {
-    if (!window.confirm(`Xác nhận trạng thái mới: ${shipStatusMap[newStatus]}`))
+
+    const result = await Swal.fire({
+      title: `Xác nhận trạng thái mới:`,
+      text: `Trạng thái đổi qua: ${shipStatusMap[newStatus]}`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: 'rgba(51, 96, 221, 1)',
+      confirmButtonText: 'Xác nhận cập nhật',
+      cancelButtonText: 'Hủy'
+    });
+    if (!result.isConfirmed)
       return;
     setLoading(true);
 
@@ -130,7 +144,7 @@ export default function ManageOrder() {
             order._id === orderId ? { ...order, status: newStatus } : order
           )
         );
-        alert("Cập nhật trạng thái thành công!");
+        toast.success("Cập nhật trạng thái thành công!");
       } else {
         // Show server-provided message if available for easier debugging
         const msg =
@@ -186,7 +200,7 @@ export default function ManageOrder() {
               : order
           )
         );
-        alert("Hoàn tiền thành công!");
+        toast.success("Hoàn tiền thành công!");
       } else {
         // Show server-provided message if available for easier debugging
         const msg =
@@ -403,9 +417,18 @@ export default function ManageOrder() {
           onEdit={(newStatus) =>
             handleUpdateStatus(formCurrentItem._id, newStatus)
           }
-          onRefund={(orderId) => {
-            if (window.confirm("Xác nhận hoàn tiền cho đơn hàng?"))
-              handleRefundOrder(orderId);
+          onRefund={async (orderId) => {
+            const result = await Swal.fire({
+              title: `Xác nhận hoàn tiền cho đơn hàng:`,
+              text: `Khách nhận lại số tiền bằng giá trị đơn hàng: ${vnd(formCurrentItem.grandTotal)}`,
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonColor: 'rgba(88, 51, 221, 1)',
+              confirmButtonText: 'Hoàn tiền',
+              cancelButtonText: 'Hủy'
+            });
+            if (result.isConfirmed)
+            handleRefundOrder(orderId);
           }}
           onCancel={() => setIsFormVisible(false)}
         />

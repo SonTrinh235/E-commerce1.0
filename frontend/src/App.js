@@ -254,6 +254,7 @@ function App() {
       <div className="app">
         <Toaster position="top-right" reverseOrder={false} />
 
+        <Toaster position="top-right" reverseOrder={false} />
         <Routes>
           <Route path="/" element={<PublicLayout/>}>
             <Route index element={<Shop onAddToCart={addToCart} />} />
